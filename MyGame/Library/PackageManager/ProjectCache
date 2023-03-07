@@ -5,16 +5,16 @@ m_ProjectFiles:
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 638136640081765822
-    m_Hash: 3261501255
+      ticks: 638137438982472005
+    m_Hash: 1876768381
   m_LockFileStatus:
     m_FilePath: C:/Users/SGA/Desktop/Git/Game/MyGame/Packages/packages-lock.json
     m_PathExists: 1
     m_ContentTrackingEnabled: 1
     m_ModificationDate:
       serializedVersion: 2
-      ticks: 638136640081985235
-    m_Hash: 4016386064
+      ticks: 638137438982481977
+    m_Hash: 3852363311
 m_EmbeddedPackageManifests:
   m_ManifestsStatus: {}
 m_LocalPackages:
