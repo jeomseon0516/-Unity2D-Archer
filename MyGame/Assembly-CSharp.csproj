@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assets\CustomPlayer\Player_Controllor.cs" />
+    <Compile Include="Assets\BulletControllor.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
