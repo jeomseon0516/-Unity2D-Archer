@@ -6,22 +6,30 @@ using UnityEngine;
 public class BackGroundsControllor : MonoBehaviour
 {
     public float _time;
-    private GameObject _player;
-    private Vector3 _movemane;
-    private Vector3 _offset = new Vector3(0.0f, 7.5f, 0.0f);
+    private Camera _camera;
+    private Vector3 _refPos;
 
     void Start()
     {
-        _player = GameObject.Find("Player").gameObject;
+        _camera = Camera.main;
+        _refPos = _camera.transform.position;
     }
 
     void Update()
     {
-        _movemane = new Vector3(
-            _player.transform.position.x - transform.position.x,
-            _player.transform.position.y - transform.position.y,
+        BackGroundCalc();
+    }
+
+    private void BackGroundCalc()
+    {
+        // 카메라의 이동속도
+        Vector3 cameraSpeed = new Vector3(
+            _camera.transform.position.x - _refPos.x,
+            _camera.transform.position.y - _refPos.y,
             0.0f);
-        
-        transform.position -= _movemane * Time.deltaTime * _time;
+
+        // 카메라의 이동속도가 이미 델타 타임을 구한 값이기 때문에 계산하지 않는다.
+        _refPos = _camera.transform.position;
+        transform.position -= cameraSpeed * _time;
     }
 }

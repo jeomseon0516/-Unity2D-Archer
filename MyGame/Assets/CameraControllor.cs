@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CameraControllor : MonoBehaviour
+public class VibratingCamera : MonoBehaviour
 {
     // 코루틴 함수 실행
     IEnumerator Start()
