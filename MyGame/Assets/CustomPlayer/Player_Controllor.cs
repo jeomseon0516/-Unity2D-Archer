@@ -23,19 +23,21 @@ public class Player_Controllor : MonoBehaviour
     // 점프중인가?
     private bool            _onJump;
 
+    public GameObject[] stageBacknew = new GameObject[7];
+
     private void Awake()
     {
-        _animator = this.GetComponent<Animator>();
-        _sprRen   = this.GetComponent<SpriteRenderer>();        
+        _animator = GetComponent<Animator>();
+        _sprRen   = GetComponent<SpriteRenderer>();        
     }
 
-    void Start() //Init()
+    private void Start() //Init()
     {
-        _speed    = 5.0f;
+        _speed = 5.0f;
         SetState();
     }
 
-    void Update()
+    private void Update()
     {
         // ** Player의 Animator를 받아온다
         Run();
@@ -53,6 +55,7 @@ public class Player_Controllor : MonoBehaviour
         if (Input.GetKey(KeyCode.Space))
             OnJump();
     }
+
     private void SetState()
     {
         // 활성화 전체 초기화
@@ -69,14 +72,12 @@ public class Player_Controllor : MonoBehaviour
         // obj.transform.name = "";
         // 총알의 포지션을 플레이어의 위치로 변경한다.
         obj.transform.position = transform.position;
-
         // 총알의 BulletControllor 스크립트를 받아온다.
-        BulletControllor controllor =  obj.AddComponent<BulletControllor>();
+        BulletControllor controllor =  obj.GetComponent<BulletControllor>();
         // 총알이 날아갈 방향을 플레이어의 방향으로 정해준다.
-        controllor._direction = _sprRen.flipX ? -transform.right : transform.right;
+        controllor.Direction = _sprRen.flipX ? -transform.right : transform.right;
         // 총알의 이미지 반전 상태를 플레이어의 이미지 반전 상태로 설정한다.
         controllor.SetFlipY(_sprRen.flipX);
-
         // 불렛 리스트에 보관한다.
         _bullets.Add(obj);
     }
@@ -90,16 +91,11 @@ public class Player_Controllor : MonoBehaviour
         ChangeFlipXToHor(hor);
 
         // 입력받은 값으로 플레이어를 움직인다.
-        _moveMent = new Vector3(
-             hor * _speed,
-             0.0f,
-             0.0f);
-
+        _moveMent = new Vector3(hor * _speed, 0.0f, 0.0f);
         // 플레이어의 움직임에 따라 이동 모션을 실행 한다.
         _animator.SetFloat("Speed", Mathf.Abs(hor));
-        
         // 실제 플레이어를 움직인다.
-        this.transform.position += _moveMent * Time.deltaTime;
+        transform.position += _moveMent * Time.deltaTime;
     }
 
     // 플레이어가 바라보고 있는 방향에 따라 설정
@@ -133,27 +129,12 @@ public class Player_Controllor : MonoBehaviour
     {
         // 이미 점프중이라면 함수를 종료시킨다.
         if (_onJump) return;
-
         // 함수가 종료되지 않았다면 공격 상태를 활성화시키고 모션을 실행한다.
         _onJump = true;
         _animator.SetTrigger("Jump");
     }
     
-    private void SetJump()
-    {
-        // 점프가 끝났다면 점프를 비활성화 시킨다.
-        SetState();
-    }
-
-    private void SetAttack()
-    {
-        // 공격이 끝났다면 모션을 비활성화 시킨다.
-        _onAttack = false;
-    }
-
-    private void SetHit()
-    {
-        // 피격 모션이 끝났다면 모션을 비활성화 시킨다.
-        SetState();
-    }
+    private void SetJump() { SetState(); }
+    private void SetAttack() { _onAttack = false; }
+    private void SetHit() { SetState(); }
 }
