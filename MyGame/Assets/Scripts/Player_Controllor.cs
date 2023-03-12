@@ -4,6 +4,18 @@ using UnityEngine;
 
 public class Player_Controllor : MonoBehaviour
 {
+    private enum STATE
+    {
+        IDLE = 0,
+        RUN,
+        JUMP,
+        DOWN,
+        ATTACK,
+        HIT,
+        ACROBATIC,
+        ROPE,
+        DIE
+    }
     // 복제된 총알의 저장공간
     public List<GameObject> _bullets = new List<GameObject>();
     // 현재 적용중인 스프라이트

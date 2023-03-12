@@ -13,8 +13,8 @@ public class FollowCamera : MonoBehaviour
     {
         _camera = Camera.main;
         _player = GameObject.Find("Player").gameObject; // GameObject.Find("Player").gameObject;
-        _maxSpeed = 2.0f;
         _offsetY = _camera.transform.position.y;
+        _maxSpeed = 2.0f;
     }
 
     void Update()

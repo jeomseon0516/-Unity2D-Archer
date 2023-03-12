@@ -3,6 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // 배경 움직이기
+/*
+ * 플레이어보다 앞에 있는 배경은 양수의 값으로 입력해야 합니다. 0 보다 큰 숫자
+ * 플레이어보다 뒤에 있는 배경은 음수의 값으로 입력해야 합니다. 0 ~ -1 -1에 가까워 질수록 느려집니다.
+ */
+
 public class BackGroundsControllor : MonoBehaviour
 {
     // 팔로우하는 객체가 어느방향에 있는지 판별한다.
@@ -38,7 +43,7 @@ public class BackGroundsControllor : MonoBehaviour
 
     private void BackGroundUpdate()
     {
-        GetDirToCameraPos();
+        _loc = GetDirToCameraPos(_camera.transform.position, transform.position);
         int numLoc = (int)_loc;
 
         float cameraX = _camera.transform.position.x; // Left 1 
@@ -56,16 +61,10 @@ public class BackGroundsControllor : MonoBehaviour
         }
     }
 
-    private void GetDirToCameraPos()
-    {
-        if      (_camera.transform.position.x > transform.position.x) _loc = LOCATION.LEFT;
-        else if (_camera.transform.position.x < transform.position.x) _loc = LOCATION.RIGHT;
-    }
-
     private void BackGroundCalc()
     {
         Vector3 cameraSpeed = new Vector3(
-            _camera.transform.position.x - _refPos.x,
+            _camera.transform.position.x - _refPos.x ,
             _camera.transform.position.y - _refPos.y,
             0.0f);
         // 카메라의 이동속도가 이미 델타 타임을 구한 값이기 때문에 계산하지 않는다.
@@ -73,4 +72,6 @@ public class BackGroundsControllor : MonoBehaviour
         transform.position -= cameraSpeed * _time;
         _refPos = _camera.transform.position;
     }
+
+    private LOCATION GetDirToCameraPos(Vector3 p1, Vector3 p2) { return p1.x >= p2.x ? LOCATION.LEFT : LOCATION.RIGHT; }
 }
