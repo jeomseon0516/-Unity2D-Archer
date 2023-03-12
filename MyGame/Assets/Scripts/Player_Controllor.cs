@@ -31,7 +31,7 @@ public class Player_Controllor : MonoBehaviour
 
     private void Start() //Init()
     {
-        _speed = 100.0f;
+        _speed = 5.0f;
         SetState();
     }
 
@@ -71,7 +71,7 @@ public class Player_Controllor : MonoBehaviour
         // 총알의 포지션을 플레이어의 위치로 변경한다.
         obj.transform.position = transform.position;
         // 총알의 BulletControllor 스크립트를 받아온다.
-        BulletControllor controllor =  obj.GetComponent<BulletControllor>();
+        BulletControllor controllor = obj.GetComponent<BulletControllor>();
         // 총알이 날아갈 방향을 플레이어의 방향으로 정해준다.
         controllor.Direction = _sprRen.flipX ? -transform.right : transform.right;
         // 총알의 이미지 반전 상태를 플레이어의 이미지 반전 상태로 설정한다.

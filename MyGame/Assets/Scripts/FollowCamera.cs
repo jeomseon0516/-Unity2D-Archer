@@ -8,10 +8,11 @@ public class FollowCamera : MonoBehaviour
     private GameObject _player;
     private float _offsetY;
     private float _maxSpeed; // 카메라를 얼마나 느리게 이동할 것인가?
+
     void Start()
     {
         _camera = Camera.main;
-        _player = GameObject.Find("Player").gameObject;
+        _player = GameObject.Find("Player").gameObject; // GameObject.Find("Player").gameObject;
         _maxSpeed = 2.0f;
         _offsetY = _camera.transform.position.y;
     }
@@ -28,10 +29,10 @@ public class FollowCamera : MonoBehaviour
         float distance = GetDistance(_player.transform.position, pos);
         float angle    = GetAngleToPosition(_player.transform.position, pos);
 
-        float x =  Mathf.Cos(angle * 3.141592653f * 0.005555555f) * distance * _maxSpeed * Time.deltaTime + _camera.transform.position.x;
-        float y = -Mathf.Sin(angle * 3.141592653f * 0.005555555f) * distance * _maxSpeed * Time.deltaTime + _camera.transform.position.y;
+        float x =  Mathf.Cos(angle * 3.141592653f * 0.005555555f) * distance * _maxSpeed * Time.deltaTime;
+        float y = -Mathf.Sin(angle * 3.141592653f * 0.005555555f) * distance * _maxSpeed * Time.deltaTime;
 
-        _camera.transform.position = new Vector3(x, y, -10.0f);
+        _camera.transform.position += new Vector3(x, y, 0.0f);
     }
 
     // 상대각으로 라디안 값을 구하고 도로 변환
