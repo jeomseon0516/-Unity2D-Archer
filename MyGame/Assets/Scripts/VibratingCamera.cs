@@ -4,22 +4,22 @@ using UnityEngine;
 
 public class VibratingCamera : MonoBehaviour
 {
-    // ÄÚ·çÆ¾ ÇÔ¼ö ½ÇÇà
+    // ì½”ë£¨í‹´ í•¨ìˆ˜ ì‹¤í–‰
     IEnumerator Start()
     {
         Camera camera = Camera.main;
-        // Ä«¸Ş¶óÀÇ Áøµ¿ ¹üÀ§.
+        // ì¹´ë©”ë¼ì˜ ì§„ë™ ë²”ìœ„.
         Vector3 offset = new Vector3(0.05f, 0.05f, 0.0f);
-        // Ä«¸Ş¶óÀÇ Áøµ¿ ½Ã°£.
+        // ì¹´ë©”ë¼ì˜ ì§„ë™ ì‹œê°„.
         float shokeTime = 0.15f;
 
-        // ¹İº¹¹®ÀÌ ½ÇÇàµÇ´Â µ¿¾È ¹İº¹ÀûÀ¸·Î È£Ãâ
+        // ë°˜ë³µë¬¸ì´ ì‹¤í–‰ë˜ëŠ” ë™ì•ˆ ë°˜ë³µì ìœ¼ë¡œ í˜¸ì¶œ
         while (shokeTime > 0.0f)
         {
             shokeTime -= Time.deltaTime;
             yield return null;
 
-            // Ä«¸Ş¶ó¸¦ Áøµ¿ ¹üÀ§ ¸¸Å­ Áøµ¿½ÃÅ²´Ù.
+            // ì¹´ë©”ë¼ë¥¼ ì§„ë™ ë²”ìœ„ ë§Œí¼ ì§„ë™ì‹œí‚¨ë‹¤.
             Vector3 oldPos = camera.transform.position;
             print(oldPos);
             camera.transform.position = new Vector3(
@@ -28,8 +28,8 @@ public class VibratingCamera : MonoBehaviour
                 -10.0f);
         }
 
-        // ¹İº¹¹®ÀÌ Á¾·áµÇ¸é Ä«¸Ş¶ó À§Ä¡¸¦ ´Ù½Ã ¿øÁ¡¿¡ ³õ´Â´Ù.
-        // Ä«¸Ş¶ó Å¬·¡½º¸¦ Á¾·áÇÑ´Ù.
+        // ë°˜ë³µë¬¸ì´ ì¢…ë£Œë˜ë©´ ì¹´ë©”ë¼ ìœ„ì¹˜ë¥¼ ë‹¤ì‹œ ì›ì ì— ë†“ëŠ”ë‹¤.
+        // ì¹´ë©”ë¼ í´ë˜ìŠ¤ë¥¼ ì¢…ë£Œí•œë‹¤.
         Destroy(this.gameObject);
     }
 }

@@ -2,28 +2,27 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-// ¹è°æ ¿òÁ÷ÀÌ±â
+// ë°°ê²½ ì›€ì§ì´ê¸°
 /*
- * ÇÃ·¹ÀÌ¾îº¸´Ù ¾Õ¿¡ ÀÖ´Â ¹è°æÀº ¾ç¼öÀÇ °ªÀ¸·Î ÀÔ·ÂÇØ¾ß ÇÕ´Ï´Ù. 0 º¸´Ù Å« ¼ıÀÚ
- * ÇÃ·¹ÀÌ¾îº¸´Ù µÚ¿¡ ÀÖ´Â ¹è°æÀº À½¼öÀÇ °ªÀ¸·Î ÀÔ·ÂÇØ¾ß ÇÕ´Ï´Ù. 0 ~ -1 -1¿¡ °¡±î¿ö Áú¼ö·Ï ´À·ÁÁı´Ï´Ù.
+ * í”Œë ˆì´ì–´ë³´ë‹¤ ì•ì— ìˆëŠ” ë°°ê²½ì€ ì–‘ìˆ˜ì˜ ê°’ìœ¼ë¡œ ì…ë ¥í•´ì•¼ í•©ë‹ˆë‹¤. 0 ë³´ë‹¤ í° ìˆ«ì
+ * í”Œë ˆì´ì–´ë³´ë‹¤ ë’¤ì— ìˆëŠ” ë°°ê²½ì€ ìŒìˆ˜ì˜ ê°’ìœ¼ë¡œ ì…ë ¥í•´ì•¼ í•©ë‹ˆë‹¤. 0 ~ -1 -1ì— ê°€ê¹Œì›Œ ì§ˆìˆ˜ë¡ ëŠë ¤ì§‘ë‹ˆë‹¤.
  */
 
-public class BackGroundsControllor : MonoBehaviour
+public class BackGroundsController : MonoBehaviour
 {
-    // ÆÈ·Î¿ìÇÏ´Â °´Ã¼°¡ ¾î´À¹æÇâ¿¡ ÀÖ´ÂÁö ÆÇº°ÇÑ´Ù.
+    // íŒ”ë¡œìš°í•˜ëŠ” ê°ì²´ê°€ ì–´ëŠë°©í–¥ì— ìˆëŠ”ì§€ íŒë³„í•œë‹¤.
     public enum LOCATION
     {
         LEFT  =  1,
         RIGHT = -1
     }
+    public float     _time;
 
-    public float    _time;
-    public LOCATION _loc;
-
-    private Sprite  _sprite;
-    private Camera  _camera;
-    private Vector3 _refPos;
-
+    private Sprite   _sprite;
+    private Camera   _camera;
+    private Vector3  _refPos;
+    private LOCATION _loc;
+    
     private void Awake()
     {
         _sprite = GetComponent<SpriteRenderer>().sprite;
@@ -37,8 +36,8 @@ public class BackGroundsControllor : MonoBehaviour
 
     private void Update()
     {
-       BackGroundUpdate();
-       BackGroundCalc();
+        BackGroundUpdate();
+        BackGroundCalc();
     }
 
     private void BackGroundUpdate()
@@ -67,8 +66,8 @@ public class BackGroundsControllor : MonoBehaviour
             _camera.transform.position.x - _refPos.x ,
             _camera.transform.position.y - _refPos.y,
             0.0f);
-        // Ä«¸Ş¶óÀÇ ÀÌµ¿¼Óµµ°¡ ÀÌ¹Ì µ¨Å¸ Å¸ÀÓÀ» ±¸ÇÑ °ªÀÌ±â ¶§¹®¿¡ °è»êÇÏÁö ¾Ê´Â´Ù.
  
+        // ì¹´ë©”ë¼ì˜ ì´ë™ì†ë„ê°€ ì´ë¯¸ ë¸íƒ€ íƒ€ì„ì„ êµ¬í•œ ê°’ì´ê¸° ë•Œë¬¸ì— ê³„ì‚°í•˜ì§€ ì•ŠëŠ”ë‹¤.
         transform.position -= cameraSpeed * _time;
         _refPos = _camera.transform.position;
     }

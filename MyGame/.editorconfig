@@ -1,0 +1,10 @@
+# .editorconfig???€???ì„¸???Œì•„ë³´ë ¤ë©??¤ìŒ??ì°¸ì¡°?˜ì„¸?? https://aka.ms/editorconfigdocs
+
+# All files
+[*]
+indent_style = space
+charset = utf-8
+
+# Xml files
+[*.xml]
+indent_size = 2

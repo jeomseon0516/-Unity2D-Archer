@@ -2,21 +2,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class BulletControllor : MonoBehaviour
+public class BulletController : MonoBehaviour
 {
-    // 총알의 방향
     public Vector3 Direction { get; set; }
-    // 스프라이트 구성요소 받아오기
-    public SpriteRenderer _sprRen;
-    public GameObject     _fxPrefab;
-    // 총알이 날아가는 속도
-    private float  _speed;
+
+    private GameObject _fxPrefab;
+    private SpriteRenderer _sprRen;
+    private float _speed;
     private int _hp;
 
     private void Awake()
     {
         _sprRen = GetComponent<SpriteRenderer>();
+        _fxPrefab = Resources.Load("Prefabs/FX/Smoke") as GameObject;
     }
+
     private void Start()
     {
         _speed = 10.0f;
@@ -28,18 +28,22 @@ public class BulletControllor : MonoBehaviour
         Fire();
     }
 
-    // 충돌체와 물리엔진이 포함된 오브젝트가 다른 충돌체와 충돌한다면 실행되는 함수다.
     private void OnTriggerEnter2D(Collider2D other)
     {
         --_hp;
-        GameObject colObj = other.gameObject;
-        Destroy(colObj);
-        CreateEffect(colObj.transform.position);
+        CollisionWall(other.gameObject);
+        ActionCamera(new GameObject("Camera Test"));
 
-        GameObject camera = new GameObject("Camera Test");
-        camera.AddComponent<VibratingCamera>();
+        if (other.gameObject.transform.tag != "wall")
+            Destroy(other.gameObject.transform.gameObject);
 
         CheckDeadToHp();
+    }
+
+    private void CollisionWall(GameObject obj)
+    {
+        CreateEffect(obj.transform.position);
+        Destroy(obj);
     }
 
     private void CreateEffect(Vector3 pos)
@@ -51,10 +55,10 @@ public class BulletControllor : MonoBehaviour
     private void CheckDeadToHp()
     {
         if (_hp > 0) return;
-
         Destroy(this.gameObject);
     }
 
+    private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); }
     private void Fire() { transform.position += Direction * _speed * Time.deltaTime; }
     public void SetFlipY(bool flipY) { _sprRen.flipY = flipY; }
 }

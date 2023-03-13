@@ -4,20 +4,32 @@ using UnityEngine;
 
 public class FollowCamera : MonoBehaviour
 {
+    static class Constants
+    {
+        public const float PI    = 3.141592653f;
+        public const float M_DEG = 0.318309886f;
+    }
+
     private Camera _camera;
     private GameObject _player;
     private float _offsetY;
-    private float _maxSpeed; // Ä«¸Ş¶ó¸¦ ¾ó¸¶³ª ´À¸®°Ô ÀÌµ¿ÇÒ °ÍÀÎ°¡?
+    private float _maxSpeed;
 
-    void Start()
+    /*
+     * ë¼ë””ì•ˆ(í˜¸ë„ë²•) ê°’ êµ¬í•˜ê¸° PI / 180;
+     * ë¼ë””ì•ˆ(í˜¸ë„ë²•) ê°’ = ìœ¡ì‹­ë¶„ë²• * Constants.PI / 180.0f
+     * ìœ¡ì‹­ë¶„ë²•(ë„) ê°’ = ë¼ë””ì•ˆ ê°’ * 180 / ë””ê·¸ë¦¬(ë¼ë””ì•ˆì„ ë„ë²•ìœ¼ë¡œ ë°”ê¿€ë•Œ) ê°’
+     */
+
+    private void Start()
     {
         _camera = Camera.main;
-        _player = GameObject.Find("Player").gameObject; // GameObject.Find("Player").gameObject;
+        _player = GameObject.Find("Player").gameObject;
         _offsetY = _camera.transform.position.y;
         _maxSpeed = 2.0f;
     }
 
-    void Update()
+    private void Update()
     {
         FollowPlayer();
     }
@@ -26,22 +38,17 @@ public class FollowCamera : MonoBehaviour
     {
         Vector3 pos = new Vector3(this.transform.position.x, this.transform.position.y - _offsetY, 10.0f);
 
-        float distance = GetDistance(_player.transform.position, pos);
-        float angle    = GetAngleToPosition(_player.transform.position, pos);
+        float distance  = GetDistance(_player.transform.position, pos);
+        float angle     = GetAngleToPosition(_player.transform.position, pos);
+        float direction = GetDirectionToAngle(angle);
 
-        float x =  Mathf.Cos(angle * 3.141592653f * 0.005555555f) * distance * _maxSpeed * Time.deltaTime;
-        float y = -Mathf.Sin(angle * 3.141592653f * 0.005555555f) * distance * _maxSpeed * Time.deltaTime;
+        float x =  Mathf.Cos(direction) * distance * _maxSpeed;
+        float y = -Mathf.Sin(direction) * distance * _maxSpeed;
 
-        _camera.transform.position += new Vector3(x, y, 0.0f);
+        _camera.transform.position += new Vector3(x, y, 0.0f) * Time.deltaTime;
     }
-
-    // »ó´ë°¢À¸·Î ¶óµğ¾È °ªÀ» ±¸ÇÏ°í µµ·Î º¯È¯
-    private float GetAngleToPosition(Vector3 p1, Vector3 p2)
-    {
-        return -Mathf.Atan2(p1.y - p2.y, p1.x - p2.x) * 180.0f * 0.318309886f;
-    }
-
-    // °Å¸® ±¸ÇÏ±â
+    //
+    // ê±°ë¦¬ë¥¼ êµ¬í•œë‹¤.
     private float GetDistance(Vector3 p1, Vector3 p2)
     {
         float x = p1.x - p2.x;
@@ -49,4 +56,8 @@ public class FollowCamera : MonoBehaviour
 
         return Mathf.Sqrt(x * x + y * y);
     }
+
+    // ìƒëŒ€ê°ìœ¼ë¡œ ë¼ë””ì•ˆ ê°’ êµ¬í•œí›„ ë””ê·¸ë¦¬ ê°’ìœ¼ë¡œ ë³€ê²½
+    private float GetAngleToPosition(Vector3 p1, Vector3 p2) { return -Mathf.Atan2(p1.y - p2.y, p1.x - p2.x) * 180.0f * Constants.M_DEG; }
+    private float GetDirectionToAngle(float angle) { return angle * Constants.PI / 180.0f; }
 }
