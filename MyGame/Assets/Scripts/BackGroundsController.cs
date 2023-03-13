@@ -48,10 +48,8 @@ public class BackGroundsController : MonoBehaviour
         float cameraX = _camera.transform.position.x; // Left 1 
         float imageX  = _sprite.bounds.size.x * numLoc + transform.position.x;
 
-        float maxX = _loc == LOCATION.LEFT ? cameraX : imageX;
-        float minX = _loc == LOCATION.LEFT ? imageX  : cameraX;
-
-        if (maxX > minX)
+        if ((_loc == LOCATION.LEFT ? cameraX : imageX) > 
+            (_loc == LOCATION.LEFT ? imageX : cameraX))
         {
             transform.position = new Vector3(
                 transform.position.x + _sprite.bounds.size.x * 2.0f * numLoc,
