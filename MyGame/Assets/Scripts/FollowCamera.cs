@@ -16,9 +16,9 @@ public class FollowCamera : MonoBehaviour
     private float _maxSpeed;
 
     /*
-     * 라디안(호도법) 값 구하기 PI / 180;
-     * 라디안(호도법) 값 = 육십분법 * Constants.PI / 180.0f
-     * 육십분법(도) 값 = 라디안 값 * 180 / 디그리(라디안을 도법으로 바꿀때) 값
+     * ??곕탵???紐껊즲甕? ????�뗫�?��?PI / 180;
+     * ??곕탵???紐껊즲甕? ??= ???�뼏?브쑬??* Constants.PI / 180.0f
+     * ???�뼏?브쑬???? ??= ??곕탵????* 180 / ??�쎈?????곕탵???�뱽 ?袁⑥???곗쨮 ?�쏅???? ??
      */
 
     private void Start()
@@ -48,7 +48,7 @@ public class FollowCamera : MonoBehaviour
         _camera.transform.position += new Vector3(x, y, 0.0f) * Time.deltaTime;
     }
     //
-    // 거리를 구한다.
+    // 椰꾧??�?��???�뗫�??
     private float GetDistance(Vector3 p1, Vector3 p2)
     {
         float x = p1.x - p2.x;
@@ -57,7 +57,7 @@ public class FollowCamera : MonoBehaviour
         return Mathf.Sqrt(x * x + y * y);
     }
 
-    // 상대각으로 라디안 값 구한후 디그리 값으로 변경
+    // ????�쏄????��???곕탵??????�뗫�????�쎈????�쏅????��??�궰???
     private float GetAngleToPosition(Vector3 p1, Vector3 p2) { return -Mathf.Atan2(p1.y - p2.y, p1.x - p2.x) * 180.0f * Constants.M_DEG; }
     private float GetDirectionToAngle(float angle) { return angle * Constants.PI / 180.0f; }
 }
