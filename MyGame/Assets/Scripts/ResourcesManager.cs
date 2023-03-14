@@ -1,10 +1,19 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
+using RESOURCESMANAGER = ResourcesManager;
 
 public class ResourcesManager : MonoBehaviour
 {
-    // Start is called before the first frame update
+    private static ResourcesManager _instance = null;
+
+    public static ResourcesManager GetInstance()
+    {
+        return _instance = _instance == null ? new ResourcesManager() : _instance;
+    }
+
+    private void Awake()
+    {
+        
+    }
     void Start()
     {
         
