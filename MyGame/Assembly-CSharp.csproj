@@ -8,8 +8,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>10.0.20506</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <RootNamespace>
-    </RootNamespace>
+    <RootNamespace></RootNamespace>
     <ProjectGuid>{9FFA8360-0BBF-7AA7-0617-18280CA03E00}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
@@ -65,9 +64,7 @@
     <Compile Include="Assets\Scripts\FollowCamera.cs" />
     <Compile Include="Assets\99. Resource\Yoge\ParallaxBackground 1\Scripts\CameraMovement.cs" />
     <Compile Include="Assets\99. Resource\JMO Assets\Cartoon FX (legacy)\Demo\Assets\CFX_Demo_RandomDir.cs" />
-    <Compile Include="..\..\..\새 폴더\BackGroundsController.cs">
-      <Link>Assets\Scripts\BackGroundsController.cs</Link>
-    </Compile>
+    <Compile Include="Assets\Scripts\BackGroundsController.cs" />
     <Compile Include="Assets\99. Resource\JMO Assets\Cartoon FX (legacy)\Scripts\CFX_AutoDestructShuriken.cs" />
     <Compile Include="Assets\Scripts\MyGizmo.cs" />
     <Compile Include="Assets\99. Resource\JMO Assets\Cartoon FX (legacy)\Demo\Assets\CFX_Demo_RotateCamera.cs" />
@@ -78,6 +75,8 @@
     <Compile Include="Assets\99. Resource\JMO Assets\Cartoon FX (legacy)\Demo\Assets\CFX_Demo_New.cs" />
     <Compile Include="Assets\99. Resource\JMO Assets\Cartoon FX (legacy)\Scripts\CFX_LightFlicker.cs" />
     <Compile Include="Assets\Scripts\PlayerController.cs" />
+    <Compile Include="Assets\Scripts\EnemyManager.cs" />
+    <Compile Include="Assets\Scripts\ResourcesManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\99. Resource\JMO Assets\Cartoon FX (legacy)\Shaders\CFX3 Multiply Color.shader" />

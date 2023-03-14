@@ -367,9 +367,11 @@
 "Assets/Scripts/BackGroundsController.cs"
 "Assets/Scripts/BulletController.cs"
 "Assets/Scripts/ControllerManager.cs"
+"Assets/Scripts/EnemyManager.cs"
 "Assets/Scripts/FollowCamera.cs"
 "Assets/Scripts/MyGizmo.cs"
 "Assets/Scripts/PlayerController.cs"
+"Assets/Scripts/ResourcesManager.cs"
 "Assets/Scripts/VibratingCamera.cs"
 -langversion:9.0
 

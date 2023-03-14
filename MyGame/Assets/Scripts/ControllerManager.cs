@@ -12,7 +12,6 @@ public class ControllerManager
 
     public bool _dirLeft;
     public bool _dirRight;
-
     private ControllerManager()
     {
 

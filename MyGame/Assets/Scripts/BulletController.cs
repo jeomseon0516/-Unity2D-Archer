@@ -10,24 +10,20 @@ public class BulletController : MonoBehaviour
     private SpriteRenderer _sprRen;
     private float _speed;
     private int _hp;
-
     private void Awake()
     {
         _sprRen = GetComponent<SpriteRenderer>();
         _fxPrefab = Resources.Load("Prefabs/FX/Smoke") as GameObject;
     }
-
     private void Start()
     {
         _speed = 10.0f;
         _hp = 3;
     }
-
     void Update()
     {
         Fire();
     }
-
     private void OnTriggerEnter2D(Collider2D other)
     {
         --_hp;
@@ -39,25 +35,21 @@ public class BulletController : MonoBehaviour
 
         CheckDeadToHp();
     }
-
     private void CollisionWall(GameObject obj)
     {
         CreateEffect(obj.transform.position);
         Destroy(obj);
     }
-
     private void CreateEffect(Vector3 pos)
     {
         GameObject obj = Instantiate(_fxPrefab);
         obj.transform.position = pos;
     }
-
     private void CheckDeadToHp()
     {
         if (_hp > 0) return;
         Destroy(this.gameObject);
     }
-
     private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); }
     private void Fire() { transform.position += Direction * _speed * Time.deltaTime; }
     public void SetFlipY(bool flipY) { _sprRen.flipY = flipY; }
