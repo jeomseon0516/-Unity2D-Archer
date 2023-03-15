@@ -41,6 +41,7 @@ public class PlayerController : MonoBehaviour
     private void Update()
     {
         Run();
+
         if (Input.GetKeyDown(KeyCode.LeftControl))
         {
             CreateBullet();

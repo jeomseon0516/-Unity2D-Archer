@@ -16,7 +16,7 @@ public enum OBJECTID
  */
 public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
 {
-    private Dictionary<OBJECTID, 
+    private Dictionary<OBJECTID,
         Dictionary<string, GameObject>> _resourceDic = new Dictionary<OBJECTID, Dictionary<string, GameObject>>();
     protected override void Awake()
     {
@@ -26,14 +26,14 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
         _resourceDic.Add(OBJECTID.FX,     CreateDicGameObjectToString("Smoke",  "Prefabs/FX/Smoke"));
     }
 
-    private Dictionary<string, GameObject> CreateDicGameObjectToString(string key, string path) 
+    private Dictionary<string, GameObject> CreateDicGameObjectToString(string key, string path)
     {
         var dic = new Dictionary<string, GameObject>();
         GameObject obj = Resources.Load(path) as GameObject;
         dic.Add(key, obj);
-        return dic; 
+        return dic;
     }
 
     public GameObject GetObjectToKey(OBJECTID id, string key) { return Instantiate(_resourceDic[id][key]); }
-    private ResourcesManager() {}
+    private ResourcesManager() { }
 }
