@@ -16,7 +16,7 @@ public class VibratingCamera : MonoBehaviour
             yield return null;
 
             Vector3 oldPos = camera.transform.position;
-            print(oldPos);
+
             camera.transform.position = new Vector3(
                 Random.Range(oldPos.x - offset.x, oldPos.x + offset.x),
                 Random.Range(oldPos.y - offset.y, oldPos.y + offset.y),

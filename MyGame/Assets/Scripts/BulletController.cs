@@ -6,14 +6,12 @@ public class BulletController : MonoBehaviour
 {
     public Vector3 Direction { get; set; }
 
-    private GameObject _fxPrefab;
     private SpriteRenderer _sprRen;
     private float _speed;
     private int _hp;
     private void Awake()
     {
-        _sprRen = GetComponent<SpriteRenderer>();
-        _fxPrefab = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "Smoke");
+        _sprRen   = GetComponent<SpriteRenderer>();
     }
     private void Start()
     {
@@ -42,7 +40,7 @@ public class BulletController : MonoBehaviour
     }
     private void CreateEffect(Vector3 pos)
     {
-        GameObject obj = Instantiate(_fxPrefab);
+        GameObject obj = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "Smoke");
         obj.transform.position = pos;
     }
     private void CheckDeadToHp()

@@ -18,22 +18,51 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
 {
     private Dictionary<OBJECTID,
         Dictionary<string, GameObject>> _resourceDic = new Dictionary<OBJECTID, Dictionary<string, GameObject>>();
-    protected override void Awake()
+    private bool _isCreate = false; 
+    /*
+     * 분기 나눠 줘야 함
+     */
+    protected override void Awake() 
     {
-        _resourceDic.Add(OBJECTID.ENEMY,  CreateDicGameObjectToString("Prefab", "Prefabs/Enemy/Enemy"));
-        _resourceDic.Add(OBJECTID.ENEMY,  CreateDicGameObjectToString("Skill",  "Prefabs/Enemy/EnemyBullet"));
-        _resourceDic.Add(OBJECTID.PLAYER, CreateDicGameObjectToString("Bullet", "Prefabs/Bullet"));
-        _resourceDic.Add(OBJECTID.FX,     CreateDicGameObjectToString("Smoke",  "Prefabs/FX/Smoke"));
+        base.Awake();
+        Init();
+    }
+    private void Init()
+    {
+        if (_isCreate) return;
+        _isCreate = true;
+        print("aa");
+        AddObject(OBJECTID.ENEMY,  "Prefab", "Prefabs/Enemy/Enemy");
+        AddObject(OBJECTID.ENEMY,  "Bullet", "Prefabs/Enemy/EnemyBullet");
+        AddObject(OBJECTID.PLAYER, "Bullet", "Prefabs/Bullet");
+        AddObject(OBJECTID.FX,     "Smoke",  "Prefabs/FX/Smoke");
+    }
+
+    private void AddObject(OBJECTID id, string key, string path)
+    {
+        // 해당 키가 이마 등록되어있다면?
+        if (_resourceDic.ContainsKey(id))
+        {
+            _resourceDic[id].Add(key, Resources.Load(path) as GameObject);
+        }
+        else
+        {
+            _resourceDic.Add(id, CreateDicGameObjectToString(key, path));
+        }
     }
 
     private Dictionary<string, GameObject> CreateDicGameObjectToString(string key, string path)
     {
         var dic = new Dictionary<string, GameObject>();
-        GameObject obj = Resources.Load(path) as GameObject;
-        dic.Add(key, obj);
+        dic.Add(key, Resources.Load(path) as GameObject);
         return dic;
     }
 
-    public GameObject GetObjectToKey(OBJECTID id, string key) { return Instantiate(_resourceDic[id][key]); }
-    private ResourcesManager() { }
+    public GameObject GetObjectToKey(OBJECTID id, string key)    
+    {
+        Init();
+        return Instantiate(_resourceDic[id][key]);
+    }
+
+    private ResourcesManager() {}
 }

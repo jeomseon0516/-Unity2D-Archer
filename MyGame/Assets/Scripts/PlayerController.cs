@@ -18,7 +18,6 @@ public class PlayerController : MonoBehaviour
     }
 
     private List<GameObject> _bullets = new List<GameObject>();
-    private GameObject       _bulletPrefab;
     private Animator         _animator;
     private SpriteRenderer   _sprRen;
     private Vector3          _moveMent;
@@ -31,7 +30,6 @@ public class PlayerController : MonoBehaviour
     {
         _animator     = GetComponent<Animator>();
         _sprRen       = GetComponent<SpriteRenderer>();
-        _bulletPrefab = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.PLAYER, "Bullet");
     }
     private void Start() //Init()
     {
@@ -62,7 +60,7 @@ public class PlayerController : MonoBehaviour
     {
         if (_onAttack) return;
 
-        GameObject obj = Instantiate(_bulletPrefab);
+        GameObject obj = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.PLAYER, "Bullet");
         obj.transform.position = transform.position;
 
         BulletController controllor = obj.GetComponent<BulletController>();
