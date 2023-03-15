@@ -31,7 +31,7 @@ public class PlayerController : MonoBehaviour
     {
         _animator     = GetComponent<Animator>();
         _sprRen       = GetComponent<SpriteRenderer>();
-        _bulletPrefab = Resources.Load("Prefabs/Bullet") as GameObject;
+        _bulletPrefab = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.PLAYER, "Bullet");
     }
     private void Start() //Init()
     {

@@ -16,7 +16,7 @@ public class BackGroundsController : MonoBehaviour
     private Camera   _camera;
     private Vector3  _refPos;
     private LOCATION _loc;
-    
+
     private void Awake()
     {
         _sprite = GetComponent<SpriteRenderer>().sprite;

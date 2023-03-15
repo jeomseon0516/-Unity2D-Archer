@@ -13,7 +13,7 @@ public class BulletController : MonoBehaviour
     private void Awake()
     {
         _sprRen = GetComponent<SpriteRenderer>();
-        _fxPrefab = Resources.Load("Prefabs/FX/Smoke") as GameObject;
+        _fxPrefab = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "Smoke");
     }
     private void Start()
     {

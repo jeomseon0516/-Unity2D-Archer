@@ -1,27 +1,39 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using RESOURCESMANAGER = ResourcesManager;
+using RM = ResourcesManager;
 
-public class ResourcesManager : MonoBehaviour
+public enum OBJECTID
 {
-    private static ResourcesManager _instance = null;
-
-    public static ResourcesManager GetInstance()
+    PLAYER,
+    ENEMY,
+    BACKGROUND,
+    FX
+}
+/*
+ * "Prefabs/Enemy/Enemy"
+ * "Prefabs/Bullet"
+ */
+public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
+{
+    private Dictionary<OBJECTID, 
+        Dictionary<string, GameObject>> _resourceDic = new Dictionary<OBJECTID, Dictionary<string, GameObject>>();
+    protected override void Awake()
     {
-        return _instance = _instance == null ? new ResourcesManager() : _instance;
+        _resourceDic.Add(OBJECTID.ENEMY,  CreateDicGameObjectToString("Prefab", "Prefabs/Enemy/Enemy"));
+        _resourceDic.Add(OBJECTID.ENEMY,  CreateDicGameObjectToString("Skill",  "Prefabs/Enemy/EnemyBullet"));
+        _resourceDic.Add(OBJECTID.PLAYER, CreateDicGameObjectToString("Bullet", "Prefabs/Bullet"));
+        _resourceDic.Add(OBJECTID.FX,     CreateDicGameObjectToString("Smoke",  "Prefabs/FX/Smoke"));
     }
 
-    private void Awake()
+    private Dictionary<string, GameObject> CreateDicGameObjectToString(string key, string path) 
     {
-        
-    }
-    void Start()
-    {
-        
+        var dic = new Dictionary<string, GameObject>();
+        GameObject obj = Resources.Load(path) as GameObject;
+        dic.Add(key, obj);
+        return dic; 
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public GameObject GetObjectToKey(OBJECTID id, string key) { return Instantiate(_resourceDic[id][key]); }
+    private ResourcesManager() {}
 }

@@ -1,29 +1,29 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-// using ENEMYMANAGER = EnemyManager.GetInstance();
-public class EnemyManager : MonoBehaviour
+using EM = EnemyManager; // EnemyManager
+public sealed class EnemyManager : SingletonTemplate<EnemyManager>
 {
-    private static EnemyManager _instance = null;
-    public static EnemyManager GetInstance()
-    {
-        return _instance = _instance == null ? new EnemyManager() : _instance;   
-    }
-
-    GameObject _prefab;
-    private void Awake()
+    private GameObject _prefab;
+    public  GameObject _parent;
+    protected override void Awake()
     { 
-        DontDestroyOnLoad(gameObject);
-
-        _prefab = Resources.Load("Prefabs/Enemy/Enemy") as GameObject;
+        _parent = new GameObject("EnemyList");
+        _prefab = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.ENEMY, "Enemy");
     }
 
-    void Start()
+    private IEnumerator Start()
     {
-        
+        while(true)
+        {
+            GameObject obj = Instantiate(_prefab);
+
+        }
     }
     void Update()
     {
         
     }
+
+    private EnemyManager() {}
 }
