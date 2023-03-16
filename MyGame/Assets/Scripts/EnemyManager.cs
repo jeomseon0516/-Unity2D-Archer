@@ -1,29 +1,25 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using EM = EnemyManager; // EnemyManager
+
 public sealed class EnemyManager : SingletonTemplate<EnemyManager>
 {
     private GameObject _prefab;
     public  GameObject _parent;
-    protected override void Awake()
+
+    protected override void Init()
     {
-        base.Awake();
         _parent = new GameObject("EnemyList");
-       // _prefab = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.ENEMY, "Prefab");
+        _prefab = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.ENEMY, "Prefab");
     }
-
-/*    private IEnumerator Start()
+    private IEnumerator Start()
     {
-        while(true)
+        while (true)
         {
+            yield return new WaitForSeconds(3.0f);
             GameObject obj = Instantiate(_prefab);
-
+            obj.transform.position = new Vector3(Camera.main.siz)
         }
-    }*/
-    void Update()
-    {
-        
     }
 
     private EnemyManager() {}

@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using RM = ResourcesManager;
 
 public enum OBJECTID
 {
@@ -18,20 +17,18 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
 {
     private Dictionary<OBJECTID,
         Dictionary<string, GameObject>> _resourceDic = new Dictionary<OBJECTID, Dictionary<string, GameObject>>();
-    private bool _isCreate = false; 
+    private bool _isCreate = false;
+
     /*
      * 분기 나눠 줘야 함
+     * Awake() 함수 사용 금지
      */
-    protected override void Awake() 
-    {
-        base.Awake();
-        Init();
-    }
-    private void Init()
+
+    protected override void Init()
     {
         if (_isCreate) return;
         _isCreate = true;
-        print("aa");
+        print("AAAA");
         AddObject(OBJECTID.ENEMY,  "Prefab", "Prefabs/Enemy/Enemy");
         AddObject(OBJECTID.ENEMY,  "Bullet", "Prefabs/Enemy/EnemyBullet");
         AddObject(OBJECTID.PLAYER, "Bullet", "Prefabs/Bullet");
@@ -61,8 +58,7 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
     public GameObject GetObjectToKey(OBJECTID id, string key)    
     {
         Init();
-        return Instantiate(_resourceDic[id][key]);
+        return _resourceDic[id][key];
     }
-
     private ResourcesManager() {}
 }
