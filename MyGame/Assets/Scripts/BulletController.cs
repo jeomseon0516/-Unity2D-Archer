@@ -1,32 +1,35 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-public class BulletController : MonoBehaviour
+public class BulletController : ObjectBase
 {
-    public Vector3 Direction { get; set; }
-
     private GameObject _fxPrefab;
-    private SpriteRenderer _sprRen;
-    private float _speed;
-    private int _hp;
-    private void Awake()
+    private float _time;
+
+    protected override void Init()
     {
         _fxPrefab = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "Smoke");
-        _sprRen   = GetComponent<SpriteRenderer>();
-    }
-    private void Start()
-    {
         _speed = 10.0f;
+        _time = 10.0f;
         _hp = 3;
     }
-    void Update()
+    private IEnumerator Start()
     {
+        yield return new WaitForSeconds(_time);
+        _hp = 0;
+        CheckDeadToHp();
+    }
+
+    protected override void ObjUpdate()
+    {
+        base.ObjUpdate();
         Fire();
     }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
         --_hp;
-        CollisionWall(other.gameObject);
+        EffectAfterDestroy(other.gameObject);
         ActionCamera(new GameObject("Camera Test"));
 
         if (other.gameObject.transform.tag != "wall")
@@ -34,22 +37,27 @@ public class BulletController : MonoBehaviour
 
         CheckDeadToHp();
     }
-    private void CollisionWall(GameObject obj)
+
+    private void EffectAfterDestroy(GameObject obj)
     {
         CreateEffect(obj.transform.position);
         Destroy(obj);
     }
+
     private void CreateEffect(Vector3 pos)
     {
         GameObject obj = Instantiate(_fxPrefab);
         obj.transform.position = pos;
     }
+
     private void CheckDeadToHp()
     {
         if (_hp > 0) return;
-        Destroy(this.gameObject);
+        EffectAfterDestroy(gameObject);
     }
+
     private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); }
-    private void Fire() { transform.position += Direction * _speed * Time.deltaTime; }
+    private void Fire() { transform.position += _direction * _speed * Time.deltaTime; }
     public void SetFlipY(bool flipY) { _sprRen.flipY = flipY; }
+    public void SetDirection(Vector3 dir) { _direction = dir; }
 }

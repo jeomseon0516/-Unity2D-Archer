@@ -14,6 +14,7 @@ public class FollowCamera : MonoBehaviour
     private GameObject _player;
     private float _offsetY;
     private float _maxSpeed;
+    private float _floor;
     /*
      * 라디안값 = 육십분법 * PI / 180.0f
      * 육십분법 = 라디안 값 * 180 / 디그리 변환 값 
@@ -21,6 +22,7 @@ public class FollowCamera : MonoBehaviour
     private void Start()
     {
         _player = GameObject.Find("Player").gameObject;
+        _floor = transform.position.y + Camera.main.orthographicSize * 0.5f;
         _offsetY = transform.position.y;
         _maxSpeed = 2.0f;
     }
@@ -40,6 +42,12 @@ public class FollowCamera : MonoBehaviour
 
         float x =  Mathf.Cos(direction) * distance * _maxSpeed;
         float y = -Mathf.Sin(direction) * distance * _maxSpeed;
+
+        float rePosY = y + transform.position.y + Camera.main.orthographicSize * 0.5f;
+
+        if (rePosY < _floor)
+            y += _floor - rePosY;
+        
         //Vector3 
         // if (y < _camera.ViewportToWorldPoint())
         transform.position += new Vector3(x, y, 0.0f) * Time.deltaTime;
