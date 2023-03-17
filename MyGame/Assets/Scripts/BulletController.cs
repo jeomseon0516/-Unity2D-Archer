@@ -3,61 +3,44 @@ using System.Collections.Generic;
 using UnityEngine;
 public class BulletController : ObjectBase
 {
-    private GameObject _fxPrefab;
-    private float _time;
+    private GameObject _smoke;
+    private GameObject _hitEffect;
+    private float      _time;
 
     protected override void Init()
     {
-        _fxPrefab = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "Smoke");
-        _speed = 10.0f;
-        _time = 10.0f;
-        _hp = 3;
+        _smoke     = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "Smoke");
+        _hitEffect = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "HitEffect");
+        _speed     = 10.0f;
+        _time      = 10.0f;
+        _hp        = 3;
     }
     private IEnumerator Start()
     {
         yield return new WaitForSeconds(_time);
         _hp = 0;
-        CheckDeadToHp();
     }
-
-    protected override void ObjUpdate()
+    protected override void CollisionAction(Collision2D obj)
     {
-        base.ObjUpdate();
-        Fire();
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
+        if (LayerMask.LayerToName(obj.gameObject.layer) != "Enemy") return;
         --_hp;
-        EffectAfterDestroy(other.gameObject);
+        Vector3 contactPoint = obj.GetContact(0).point;
+
+        CreateEffect(new Vector3(contactPoint.x, transform.position.y), _hitEffect);
         ActionCamera(new GameObject("Camera Test"));
-
-        if (other.gameObject.transform.tag != "wall")
-            Destroy(other.gameObject.transform.gameObject);
-
-        CheckDeadToHp();
     }
-
-    private void EffectAfterDestroy(GameObject obj)
+    private void EffectAfterDestroy(GameObject obj, GameObject effect)
     {
-        CreateEffect(obj.transform.position);
+        CreateEffect(obj.transform.position, effect);
         Destroy(obj);
     }
-
-    private void CreateEffect(Vector3 pos)
+    private void CreateEffect(Vector3 pos, GameObject effect)
     {
-        GameObject obj = Instantiate(_fxPrefab);
+        GameObject obj = Instantiate(effect);
         obj.transform.position = pos;
     }
-
-    private void CheckDeadToHp()
-    {
-        if (_hp > 0) return;
-        EffectAfterDestroy(gameObject);
-    }
-
+    protected override void Die() { EffectAfterDestroy(gameObject, _smoke); }
     private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); }
-    private void Fire() { transform.position += _direction * _speed * Time.deltaTime; }
     public void SetFlipY(bool flipY) { _sprRen.flipY = flipY; }
     public void SetDirection(Vector3 dir) { _direction = dir; }
 }

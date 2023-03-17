@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 /*
  * 해당 클래스는 Awake로 초기화 할 수 없습니다.
- * 
  */
+
 public abstract class Singleton : MonoBehaviour
 {
     protected abstract void Awake();
 }
+
 public abstract class SingletonTemplate<T> : Singleton where T : Singleton
 {
     private static T _instance = null;
@@ -18,7 +19,7 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
     /*
      * 하이어라키에 먼저 들어가있는경우나 하이어라키에 없는 경우를 모두 체크해줘야함
      */
-    public static T GetInstance() 
+    public static T GetInstance()
     {
         if (_instance == null)
         {
@@ -26,7 +27,7 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
 
             lock (_obj)
             {
-               _instance = GetInstanceFindObject();
+                _instance = GetInstanceFindObject();
             }
         }
 
@@ -39,20 +40,18 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
             Destroy(gameObject);
             return;
         }
-
         if (_instance == null)
         {
             _instance = this.GetComponent<T>();
         }
-        
+
         DontDestroyOnLoad(gameObject);
         Init();
     }
-
     private static T GetInstanceFindObject()
     {
         return _instance == null ? new GameObject(typeof(T).ToString(), typeof(T)).GetComponent<T>() : _instance;
     }
     protected abstract void Init();
-    protected SingletonTemplate() {}
+    protected SingletonTemplate() { }
 }

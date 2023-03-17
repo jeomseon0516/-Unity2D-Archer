@@ -24,13 +24,12 @@ public class PlayerController : LivingObject
     {
         base.Init();
         SetState();
+        _hp    = 20;
         _id    = OBJECTID.PLAYER;
         _speed = 5.0f;
     }
-
     protected override void ObjUpdate()
     {
-        base.ObjUpdate();
         if (Input.GetKeyDown(KeyCode.LeftControl))
         {
             CreateBullet();
@@ -41,7 +40,6 @@ public class PlayerController : LivingObject
         if (Input.GetKey(KeyCode.Space))
             OnJump();
     }
-
     private void SetState()
     {       
         _onAttack = false;
@@ -55,24 +53,16 @@ public class PlayerController : LivingObject
         GameObject obj = Instantiate(_bullet);
         obj.transform.position = transform.position;
 
-        BulletController controllor = obj.GetComponent<BulletController>();
-        controllor.SetDirection(_sprRen.flipX ? -transform.right : transform.right);
-        controllor.SetFlipY(_sprRen.flipX);
+        BulletController controller = obj.GetComponent<BulletController>();
+        controller.SetDirection(transform.rotation.y == 180.0f ? -transform.right : transform.right);
 
         _bullets.Add(obj);
     }
     protected override void Run()
     {
-        _direction = new Vector3(Input.GetAxis("Horizontal"),
-                                 Input.GetAxis("Vertical"),
-                                 0.0f);
-
-        ChangeFlipXToHor(_direction.x);
-
+        _direction = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0.0f);
         _animator.SetFloat("Speed", Mathf.Max(Mathf.Abs(_direction.x), Mathf.Abs(_direction.y)));
-        Move(_direction.x, _direction.y);
     }
-
     private void OnJump()
     {
         if (_onJump) return;
@@ -80,12 +70,6 @@ public class PlayerController : LivingObject
         _onJump = true;
         _animator.SetTrigger("Jump");
     }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        print("Coll");
-    }
-
     private void SetJump() { SetState(); }
     private void SetHit() { SetState(); }
 }

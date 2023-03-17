@@ -29,10 +29,11 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
         if (_isCreate) return;
         _isCreate = true;
         print("AAAA");
-        AddObject(OBJECTID.ENEMY,  "Prefab", "Prefabs/Enemy/Enemy");
-        AddObject(OBJECTID.ENEMY,  "Bullet", "Prefabs/Enemy/EnemyBullet");
-        AddObject(OBJECTID.PLAYER, "Bullet", "Prefabs/Bullet");
-        AddObject(OBJECTID.FX,     "Smoke",  "Prefabs/FX/Smoke");
+        AddObject(OBJECTID.ENEMY,  "Prefab",    "Prefabs/Enemy/Enemy");
+        AddObject(OBJECTID.ENEMY,  "Bullet",    "Prefabs/Enemy/EnemyBullet");
+        AddObject(OBJECTID.PLAYER, "Bullet",    "Prefabs/Bullet");
+        AddObject(OBJECTID.FX,     "Smoke",     "Prefabs/FX/Smoke");
+        AddObject(OBJECTID.FX,     "HitEffect", "Prefabs/FX/HitEffect");
     }
 
     private void AddObject(OBJECTID id, string key, string path)

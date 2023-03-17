@@ -4,10 +4,11 @@ using UnityEngine;
 
 public class EnemyController : LivingObject
 {
-
     protected override void Init()
     {
-
+        _hp = 5;
+        _sprRen   = transform.Find("Enemy").GetComponent<SpriteRenderer>();
+        _animator = transform.Find("Enemy").GetComponent<Animator>(); 
     }
     protected override void Run()
     {
@@ -17,13 +18,19 @@ public class EnemyController : LivingObject
     {
 
     }
+    protected override void Die()
+    {
+        base.Die();
+    }
     protected override void ObjUpdate()
     {
         base.ObjUpdate();
     }
-
-    private void OnCollisionEnter2D(Collision2D collision)
+    // TODO : HitAnimation재생
+    protected override void CollisionAction(Collision2D obj)
     {
-        collision.
+        if (LayerMask.LayerToName(obj.gameObject.layer) != "Bullet") return;
+
+        --_hp;
     }
 }
