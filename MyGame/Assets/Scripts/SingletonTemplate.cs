@@ -4,12 +4,10 @@ using UnityEngine;
 /*
  * 해당 클래스는 Awake로 초기화 할 수 없습니다.
  */
-
 public abstract class Singleton : MonoBehaviour
 {
     protected abstract void Awake();
 }
-
 public abstract class SingletonTemplate<T> : Singleton where T : Singleton
 {
     private static T _instance = null;

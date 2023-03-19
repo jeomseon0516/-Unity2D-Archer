@@ -2,6 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum OBJECTID
+{
+    PLAYER,
+    ENEMY,
+    BACKGROUND,
+    FX
+}
 public abstract class ObjectBase : MonoBehaviour
 {
     protected Animator       _animator;
@@ -17,9 +24,13 @@ public abstract class ObjectBase : MonoBehaviour
         _animator = GetComponent<Animator>();
         _sprRen   = GetComponent<SpriteRenderer>();
         _shadow   = transform.Find("Shadow");
+        _hp = 10;
+        _speed = 2;
+        _direction = new Vector3(1.0f, 0.0f, 0.0f);
+
         Init();
     }
-    protected virtual void Init() { _hp = 10; }
+    protected virtual void Init() {}
     protected virtual void Run() {}
     protected virtual void CollisionAction(Collision2D obj) {}
     protected virtual void ObjUpdate() {}
@@ -40,11 +51,12 @@ public abstract class ObjectBase : MonoBehaviour
         SettingZNode();
         ChangeFlipXToHor(_direction.x);
     }
-    protected void Move(float moveX, float moveY)
+    private void Move(float moveX, float moveY)
     {
+        if (moveX == 0.0f && moveY == 0.0f) return;
         transform.position += new Vector3(moveX * _speed, moveY * (_speed * 0.5f), 0.0f) * Time.deltaTime;
     }
-    protected void ChangeFlipXToHor(float hor)
+    private void ChangeFlipXToHor(float hor)
     {
         Quaternion rotation = transform.rotation;
 

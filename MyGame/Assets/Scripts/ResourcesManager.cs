@@ -2,17 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum OBJECTID
-{
-    PLAYER,
-    ENEMY,
-    BACKGROUND,
-    FX
-}
-/*
- * "Prefabs/Enemy/Enemy"
- * "Prefabs/Bullet"
- */
 public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
 {
     private Dictionary<OBJECTID,
@@ -20,7 +9,6 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
     private bool _isCreate = false;
 
     /*
-     * 분기 나눠 줘야 함
      * Awake() 함수 사용 금지
      */
 
@@ -35,7 +23,6 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
         AddObject(OBJECTID.FX,     "Smoke",     "Prefabs/FX/Smoke");
         AddObject(OBJECTID.FX,     "HitEffect", "Prefabs/FX/HitEffect");
     }
-
     private void AddObject(OBJECTID id, string key, string path)
     {
         // 해당 키가 이마 등록되어있다면?
@@ -48,14 +35,12 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
             _resourceDic.Add(id, CreateDicGameObjectToString(key, path));
         }
     }
-
     private Dictionary<string, GameObject> CreateDicGameObjectToString(string key, string path)
     {
         var dic = new Dictionary<string, GameObject>();
         dic.Add(key, Resources.Load(path) as GameObject);
         return dic;
     }
-
     public GameObject GetObjectToKey(OBJECTID id, string key)    
     {
         Init();

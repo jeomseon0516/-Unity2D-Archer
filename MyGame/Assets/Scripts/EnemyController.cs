@@ -12,7 +12,7 @@ public class EnemyController : LivingObject
     }
     protected override void Run()
     {
-
+        base.Run();
     }
     protected override void CreateBullet()
     {
