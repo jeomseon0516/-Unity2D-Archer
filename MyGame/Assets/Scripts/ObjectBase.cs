@@ -18,7 +18,6 @@ public abstract class ObjectBase : MonoBehaviour
     protected float          _speed;
     protected int            _hp;
     protected Transform      _shadow;
-
     protected virtual void Awake()
     {
         _animator = GetComponent<Animator>();
@@ -45,11 +44,11 @@ public abstract class ObjectBase : MonoBehaviour
     {
         if (CheckDeadToHp()) return;
 
-        Run();
-        ObjUpdate();
         Move(_direction.x, _direction.y);
         SettingZNode();
         ChangeFlipXToHor(_direction.x);
+        Run();
+        ObjUpdate();
     }
     private void Move(float moveX, float moveY)
     {

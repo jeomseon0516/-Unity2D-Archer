@@ -6,16 +6,19 @@ using UnityEngine;
  * 상태를 객체화 한다. IDLE 상태에선 Run이 될 수도 있고 Hit
  * 
  */
-public interface IState
+public abstract class State<T>
 {
-    protected void OnEnter();
-    protected void OnUpdate();
-    protected void OnExit();
-}
+    protected State<T> _state;
 
-public class IdleState : IState
-{
-    void IState.OnEnter() {}
-    void IState.OnUpdate() {}
-    void IState.OnExit() {}
+    public delegate void StateFunc(T t);
+    public StateFunc _stateFunc;
+
+    public virtual void Enter(T t)  { _stateFunc = Update; }
+    public virtual void Update(T t) {}
+    public virtual void Exit(T t)   {}
+    public State() 
+    { 
+        _stateFunc = Enter;
+        _state = this;
+    }
 }
