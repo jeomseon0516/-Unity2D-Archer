@@ -2,35 +2,48 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public class PlayerController : LivingObject
 {
+    public enum PLR_STATE
+    {
+        RUN,
+        JUMP,
+        DOWN,
+        ATTACK,
+        HIT,
+        ACROBATIC,
+        DIE
+    }
     // Run과 Idle은 결론적으로 같은 동작을 수행하므로 따로 처리하지 않는다.
     public sealed class RunState : State<PlayerController>
     {
+        public override void Enter(PlayerController t)
+        {
+            base.Enter(t);
+        }
         public override void Update(PlayerController t)
         {
-            if (Input.GetKey(KeyCode.LeftShift))
+            if (Input.GetKey(KeyCode.LeftControl))
             {
-                t.OnHit();
-                _state = new HitState();
+                t.OnAttack();
+                t.SetState(PLR_STATE.ATTACK);
             }
-            if (Input.GetKey(KeyCode.Space))
+            else if (Input.GetKeyDown(KeyCode.Space))
             {
                 t.OnJump();
+                t.SetState(PLR_STATE.JUMP);
             }
         }
-        public override void Exit(PlayerController t)
-        {
 
-        }
-
-        public RunState() : base() {}
+        public RunState() {}
     }
 
     public sealed class HitState : State<PlayerController>
     {
         public override void Update(PlayerController t)
         {
+
         }
         public override void Exit(PlayerController t)
         {
@@ -39,37 +52,60 @@ public class PlayerController : LivingObject
 
         public HitState() : base() {}
     }
-    /*
-     * 큐로 플레이어 패턴 구현
-     * 점프 히트 될 수 있다
-     * 점프할땐 공격 못하게
-     * 
-     */
+
+    public sealed class JumpState : State<PlayerController>
+    {
+        public override void Enter(PlayerController t)
+        {
+            
+        }
+        public override void Update(PlayerController t)
+        {
+
+        }
+        public override void Exit(PlayerController t)
+        {
+            t._animator.SetTrigger("Down");
+            base.Exit(t);
+        }
+
+        public JumpState() : base() {}
+    }
+    public sealed class DownState : State<PlayerController>
+    {
+        public override void Enter(PlayerController t) { }
+        public override void Update(PlayerController t) { }
+        public override void Exit(PlayerController t) { }
+
+        public DownState() : base() {}
+    }
+    public sealed class AttackState : State<PlayerController>
+    {
+        public override void Enter(PlayerController t) 
+        {
+            t.CreateBullet();
+            base.Enter(t);
+        }
+        public override void Update(PlayerController t) 
+        {
+
+        }
+        public override void Exit(PlayerController t) {}
+
+        public AttackState() {}
+    }
 
     private List<GameObject> _bullets = new List<GameObject>();
-    private State<PlayerController> _playerState;
-    private bool _onJump;
-
+    private StateMachine<PlayerController> _playerState;
     protected override void Init()
     {
         base.Init();
         _hp    = 20;
         _id    = OBJECTID.PLAYER;
         _speed = 5.0f;
-        _playerState = new RunState();
+        _playerState = new StateMachine<PlayerController>();
+        _playerState.SetState(new RunState());
     }
-    protected override void ObjUpdate()
-    {
-        _playerState.Update(this);
-        if (Input.GetKey(KeyCode.LeftControl))
-            OnAttack();
-        if (Input.GetKey(KeyCode.LeftShift))
-            OnHit();
-        if (Input.GetKey(KeyCode.Space))
-            OnJump();
-    }
-
-
     protected override void CreateBullet()
     {
         GameObject obj = Instantiate(_bullet);
@@ -82,9 +118,6 @@ public class PlayerController : LivingObject
     }
     private void OnJump()
     {
-        if (_onJump) return;
-
-        _onJump    = true;
         _animator.SetTrigger("Jump");
     }
     protected override void Run() 
@@ -92,13 +125,26 @@ public class PlayerController : LivingObject
         _direction = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0.0f);
         base.Run();
     }
-    protected override void OnAttack() 
+    public void SetState(PLR_STATE state)
     {
-        if (_onAttack) return;
-
-        CreateBullet();
-        _onAttack  = true;
-        _animator.SetTrigger("Attack");
+        switch (state)
+        {
+            case PLR_STATE.RUN:
+                _playerState.SetState(new RunState());
+                break;
+            case PLR_STATE.JUMP:
+                _playerState.SetState(new JumpState());
+                break;
+            case PLR_STATE.DOWN:
+                _playerState.SetState(new DownState());
+                break;
+            case PLR_STATE.ATTACK:
+                _playerState.SetState(new AttackState());
+                break;
+            case PLR_STATE.HIT:
+                _playerState.SetState(new HitState());
+                break;
+        }
     }
-    protected void SetJump() { _onJump = false; }
+    protected override void ObjUpdate() { _playerState.Update(this); }
 }

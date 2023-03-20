@@ -24,7 +24,7 @@ public class FollowCamera : MonoBehaviour
         _player = GameObject.Find("Player").gameObject;
         _floor = transform.position.y + Camera.main.orthographicSize * 0.5f;
         _offsetY = transform.position.y;
-        _maxSpeed = 2.0f;
+        _maxSpeed = 2.0f; // 델타타임 보정하면 속도가 느리므로
     }
 
     private void Update()
@@ -40,16 +40,14 @@ public class FollowCamera : MonoBehaviour
         float angle     = GetAngleToPosition(_player.transform.position, pos);
         float direction = GetDirectionToAngle(angle);
 
-        float x =  Mathf.Cos(direction) * distance * _maxSpeed;
-        float y = -Mathf.Sin(direction) * distance * _maxSpeed;
+        float x =  Mathf.Cos(direction) * distance * 75.0f * 0.01f * _maxSpeed; // 매 프레임당 카메라 앵커의 거리와 플레이어의 75퍼센트 비율만큼만 이동
+        float y = -Mathf.Sin(direction) * distance * 75.0f * 0.01f * _maxSpeed;
 
         float rePosY = y + transform.position.y + Camera.main.orthographicSize * 0.5f;
 
         if (rePosY < _floor)
             y += _floor - rePosY;
         
-        //Vector3 
-        // if (y < _camera.ViewportToWorldPoint())
         transform.position += new Vector3(x, y, 0.0f) * Time.deltaTime;
     }
 

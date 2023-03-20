@@ -11,12 +11,10 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
     /*
      * Awake() 함수 사용 금지
      */
-
     protected override void Init()
     {
         if (_isCreate) return;
         _isCreate = true;
-        print("AAAA");
         AddObject(OBJECTID.ENEMY,  "Prefab",    "Prefabs/Enemy/Enemy");
         AddObject(OBJECTID.ENEMY,  "Bullet",    "Prefabs/Enemy/EnemyBullet");
         AddObject(OBJECTID.PLAYER, "Bullet",    "Prefabs/Bullet");
