@@ -7,8 +7,6 @@ public class EnemyController : LivingObject
     protected override void Init()
     {
         _hp = 5;
-        _sprRen   = transform.Find("Enemy").GetComponent<SpriteRenderer>();
-        _animator = transform.Find("Enemy").GetComponent<Animator>(); 
     }
     protected override void Run()
     {
