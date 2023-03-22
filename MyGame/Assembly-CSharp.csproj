@@ -83,6 +83,7 @@
     <Compile Include="Assets\MainGame\Scripts\State.cs" />
     <Compile Include="Assets\MainMenu\Scripts\ButtonController.cs" />
     <Compile Include="Assets\MainGame\Scripts\Player\PlayerController.cs" />
+    <Compile Include="Assets\MainGame\Scripts\Constants.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\99. Resource\JMO Assets\Cartoon FX (legacy)\Shaders\CFX3 Multiply Color.shader" />

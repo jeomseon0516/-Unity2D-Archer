@@ -364,6 +364,7 @@
 "Assets/MainGame/Scripts/BackGround/BackGroundsController.cs"
 "Assets/MainGame/Scripts/Camera/FollowCamera.cs"
 "Assets/MainGame/Scripts/Camera/VibratingCamera.cs"
+"Assets/MainGame/Scripts/Constants.cs"
 "Assets/MainGame/Scripts/Enemy/EnemyController.cs"
 "Assets/MainGame/Scripts/FX/CFX_AutoDestructShuriken.cs"
 "Assets/MainGame/Scripts/FX/CFX_LightIntensityFade.cs"

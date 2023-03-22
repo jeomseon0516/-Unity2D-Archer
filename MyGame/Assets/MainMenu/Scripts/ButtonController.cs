@@ -4,7 +4,6 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
-
 public class ButtonController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
     private Text text;

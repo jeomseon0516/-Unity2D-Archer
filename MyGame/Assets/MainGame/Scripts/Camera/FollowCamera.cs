@@ -1,14 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using C = Constants;
-
-static class Constants
-{
-    public const float PI    = 3.1415926f;
-    public const float M_DEG = 0.3183098f;
-    public const float GRAVITY = 0.1f;
-}
 
 public class FollowCamera : MonoBehaviour
 {
@@ -58,6 +50,6 @@ public class FollowCamera : MonoBehaviour
         return Mathf.Sqrt(x * x + y * y);
     }
 
-    private float GetAngleToPosition(Vector3 p1, Vector3 p2) { return -Mathf.Atan2(p1.y - p2.y, p1.x - p2.x) * 180.0f * C.M_DEG; }
-    private float GetDirectionToAngle(float angle) { return angle * C.PI / 180.0f; }
+    private float GetAngleToPosition(Vector3 p1, Vector3 p2) { return -Mathf.Atan2(p1.y - p2.y, p1.x - p2.x) * 180.0f * Constants.M_DEG; }
+    private float GetDirectionToAngle(float angle) { return angle * Constants.PI / 180.0f; }
 }

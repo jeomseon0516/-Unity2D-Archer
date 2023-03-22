@@ -65,8 +65,8 @@ namespace OBJECT
         {
             Quaternion rotation = _physics.rotation;
 
-            if (hor < 0) rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, 180.0f, rotation.eulerAngles.z);
-            else if (hor > 0) rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, 0.0f, rotation.eulerAngles.z);
+            if      (hor < 0) rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, 180.0f, rotation.eulerAngles.z);
+            else if (hor > 0) rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, 0.0f,   rotation.eulerAngles.z);
 
             _physics.rotation = rotation;
         }
