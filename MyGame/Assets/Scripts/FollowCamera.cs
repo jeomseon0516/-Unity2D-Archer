@@ -7,7 +7,7 @@ static class Constants
 {
     public const float PI    = 3.1415926f;
     public const float M_DEG = 0.3183098f;
-    public const float GRAVITY = 0.2f;
+    public const float GRAVITY = 0.1f;
 }
 
 public class FollowCamera : MonoBehaviour
@@ -27,12 +27,10 @@ public class FollowCamera : MonoBehaviour
         _offsetY = transform.position.y;
         _maxSpeed = 2.0f; // 델타타임 보정하면 속도가 느리므로
     }
-
     private void Update()
     {
         FollowPlayer();
     }
-
     private void FollowPlayer()
     {
         Vector3 pos = new Vector3(transform.position.x, transform.position.y - _offsetY, 10.0f);

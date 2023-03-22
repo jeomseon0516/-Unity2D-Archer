@@ -28,7 +28,7 @@ public sealed class EnemyManager : SingletonTemplate<EnemyManager>
 
             GameObject obj = Instantiate(_prefab);
             obj.transform.position = randVec;
-            obj.transform.parent   = _parent.transform;
+            obj.transform.parent = _parent.transform;
         }
     }
 

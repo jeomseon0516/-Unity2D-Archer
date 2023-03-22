@@ -25,10 +25,9 @@ public class EnemyController : LivingObject
         base.ObjUpdate();
     }
     // TODO : HitAnimation재생
-    protected override void CollisionAction(Collision2D obj)
+    protected internal override void CollisionAction(Collision2D obj)
     {
         if (LayerMask.LayerToName(obj.gameObject.layer) != "Bullet") return;
-
         --_hp;
     }
 }

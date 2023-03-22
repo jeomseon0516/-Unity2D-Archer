@@ -9,6 +9,7 @@ public partial class PlayerController : LivingObject
 {
     private List<GameObject> _bullets = new List<GameObject>();
     private StateMachine<PlayerController> _playerState;
+    private float _beforeLocalY; // 이전 프레임의 로컬 Y 
     protected override void Init()
     {
         base.Init();
@@ -23,12 +24,11 @@ public partial class PlayerController : LivingObject
         GameObject obj = Instantiate(_bullet);
         obj.transform.position = transform.position;
 
-        BulletController controller = obj.GetComponent<BulletController>();
+        BulletController controller = obj.transform.Find("Bullet").GetComponent<BulletController>();
         controller.SetDirection(transform.rotation.y == 180.0f ? -transform.right : transform.right);
 
         _bullets.Add(obj);
     }
-
     protected override void Run() 
     { 
         _direction = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0.0f);
@@ -55,7 +55,40 @@ public partial class PlayerController : LivingObject
                 break;
         }
     }
-    protected override void ObjUpdate() { _playerState.Update(this); }
+    protected IEnumerator Jumping()
+    { 
+        float jump        = 7.0f;
+        float height      = transform.localPosition.y;
+        Vector3 shadowPos = _shadow.localPosition;
+
+        while (transform.localPosition.y >= 0)
+        {
+            yield return null;
+
+            transform.localPosition += new Vector3(0.0f, jump, 0.0f) * Time.deltaTime;
+            float distance = transform.localPosition.y - height;
+
+            _shadow.localPosition = new Vector3(shadowPos.x, shadowPos.y - distance * 1.3f, 0.0f);
+            jump -= Constants.GRAVITY;
+        }
+
+        transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
+        _shadow.localPosition = new Vector3(shadowPos.x, shadowPos.y, 0.0f);
+    }
+    protected float CheckFallingOrJumping()
+    {
+        float height   = _beforeLocalY;
+        float movement = transform.localPosition.y - height;
+
+        _animator.SetFloat("JumpSpeed", transform.localPosition.y - height);
+        _beforeLocalY = transform.localPosition.y;
+
+        return movement;
+    }
+    protected override void ObjUpdate() 
+    { 
+        _playerState.Update(this);
+    }
 }
 
 public partial class PlayerController : LivingObject
@@ -73,10 +106,7 @@ public partial class PlayerController : LivingObject
     // Run과 Idle은 결론적으로 같은 동작을 수행하므로 따로 처리하지 않는다.
     public sealed class RunState : State<PlayerController>
     {
-        public override void Enter(PlayerController t)
-        {
-            base.Enter(t);
-        }
+        public override void Enter(PlayerController t) { base.Enter(t); }
         public override void Update(PlayerController t)
         {
             if (Input.GetKey(KeyCode.LeftControl))
@@ -86,15 +116,14 @@ public partial class PlayerController : LivingObject
             }
             else if (Input.GetKeyDown(KeyCode.Space))
             {
-                t._animator.SetTrigger("Jump");
                 t.SetState(PLR_STATE.JUMP);
             }
         }
-
-        public RunState() { }
+        public RunState() {}
     }
     public sealed class HitState : State<PlayerController>
     {
+        public override void Enter(PlayerController t) { base.Enter(t); }
         public override void Update(PlayerController t)
         {
 
@@ -103,50 +132,40 @@ public partial class PlayerController : LivingObject
         {
 
         }
-
-        public HitState() : base() { }
+        public HitState() {}
     }
     public sealed class JumpState : State<PlayerController>
     {
-        private float _jump;
-        private float _height;
-        private Vector3 _shadowPos;
-        private Collider2D _col;
-        private Vector2 _colPos;
         public override void Enter(PlayerController t)
-        {
-            _jump = 10.0f;
-            _height = t.transform.position.y;
-            _shadowPos = t._shadow.position;
-            _col = t.GetComponent<CapsuleCollider2D>();
+        { 
+            t.StartCoroutine(t.Jumping());
             base.Enter(t);
         }
         public override void Update(PlayerController t)
         {
-            t.transform.position += new Vector3(0.0f, _jump, 0.0f) * Time.deltaTime;
-            float colDis = Mathf.Abs(_col.offset.y - _colPos.y);
-            print(colDis);
-            float distance = t.transform.position.y - _height;
-            t._shadow.position = new Vector3(_shadowPos.x, _shadowPos.y - (distance * 0.5f), 0.0f);
-            _col.offset = new Vector2(_col.offset.x, _colPos.y - colDis);
+            float movement = t.CheckFallingOrJumping();
 
-            _jump -= Constants.GRAVITY;
+            if (movement < 0.0f)
+                t.SetState(PLR_STATE.DOWN);
         }
-        public override void Exit(PlayerController t)
-        {
-            t._animator.SetTrigger("Down");
-            base.Exit(t);
-        }
-
-        public JumpState() : base() { }
+        public JumpState() {}
     }
     public sealed class DownState : State<PlayerController>
     {
-        public override void Enter(PlayerController t) { }
-        public override void Update(PlayerController t) { }
-        public override void Exit(PlayerController t) { }
+        float _localY;
+        public override void Enter(PlayerController t) 
+        { 
+            base.Enter(t);
+            _localY = t.transform.localPosition.y;
+        }
+        public override void Update(PlayerController t) 
+        {
+            float movement = t.CheckFallingOrJumping();
 
-        public DownState() : base() { }
+            if (movement == 0)
+                t.SetState(PLR_STATE.RUN);
+        }
+        public DownState() {}
     }
     public sealed class AttackState : State<PlayerController>
     {
@@ -159,8 +178,6 @@ public partial class PlayerController : LivingObject
         {
 
         }
-        public override void Exit(PlayerController t) { }
-
-        public AttackState() { }
+        public AttackState() {}
     }
 }

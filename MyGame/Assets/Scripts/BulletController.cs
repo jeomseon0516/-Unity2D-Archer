@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using OBJECT;
 public class BulletController : ObjectBase
 {
     private GameObject _smoke;
@@ -20,7 +21,7 @@ public class BulletController : ObjectBase
         yield return new WaitForSeconds(_time);
         _hp = 0;
     }
-    protected override void CollisionAction(Collision2D obj)
+    protected internal override void CollisionAction(Collision2D obj)
     {
         if (LayerMask.LayerToName(obj.gameObject.layer) != "Enemy") return;
         --_hp;
@@ -32,7 +33,7 @@ public class BulletController : ObjectBase
     private void EffectAfterDestroy(GameObject obj, GameObject effect)
     {
         CreateEffect(obj.transform.position, effect);
-        Destroy(obj);
+        Destroy(obj.transform.parent.gameObject);
     }
     private void CreateEffect(Vector3 pos, GameObject effect)
     {
