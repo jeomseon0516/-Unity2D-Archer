@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 5f140bb248bbb8546b8d5f643790b379
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - BM DoHyeon
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: ad8124e388a064642bb812ccd37c2df2, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
