@@ -69,15 +69,11 @@ public partial class PlayerController : LivingObject
             yield return null;
 
             transform.localPosition += new Vector3(0.0f, jump, 0.0f) * Time.deltaTime;
-            float distance = transform.localPosition.y - height;
-
-            _shadow.localPosition = new Vector3(shadowPos.x, shadowPos.y - distance * 1.3f, 0.0f);
             jump -= Constants.GRAVITY;
         }
 
         _col.isTrigger = false;
         transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
-        _shadow.localPosition = new Vector3(shadowPos.x, shadowPos.y, 0.0f);
     }
     protected float CheckFallingOrJumping()
     {

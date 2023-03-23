@@ -25,13 +25,9 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
     {
         // 해당 키가 이마 등록되어있다면?
         if (_resourceDic.ContainsKey(id))
-        {
             _resourceDic[id].Add(key, Resources.Load(path) as GameObject);
-        }
         else
-        {
             _resourceDic.Add(id, CreateDicGameObjectToString(key, path));
-        }
     }
     private Dictionary<string, GameObject> CreateDicGameObjectToString(string key, string path)
     {

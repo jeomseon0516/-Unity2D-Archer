@@ -16,8 +16,6 @@ public sealed class EnemyManager : SingletonTemplate<EnemyManager>
         Camera camera = Camera.main;
         while (true)
         {
-            yield return new WaitForSeconds(3.0f);
-
             int xDir = Random.Range(0, 2) == 0 ? -1 : 1;
             int yDir = Random.Range(0, 2) == 0 ? -1 : 1;
 
@@ -29,6 +27,8 @@ public sealed class EnemyManager : SingletonTemplate<EnemyManager>
             GameObject obj = Instantiate(_prefab);
             obj.transform.position = randVec;
             obj.transform.parent = _parent.transform;
+
+            yield return new WaitForSeconds(3.0f);
         }
     }
 

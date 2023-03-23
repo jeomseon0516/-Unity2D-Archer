@@ -16,17 +16,22 @@ namespace OBJECT
     {
         protected Animator _animator;
         protected SpriteRenderer _sprRen;
+        protected SpriteRenderer _shadowSprRen;
         protected OBJECTID _id;
         protected Vector3 _direction;
+        protected Vector3 _lookAt;
         protected float _speed;
         protected int _hp;
         protected Transform _shadow;
+        protected Vector3 _shadowPos;
         protected Transform _physics;
         protected virtual void Awake()
         {
             _animator = GetComponent<Animator>();
             _sprRen   = GetComponent<SpriteRenderer>();
-            _shadow = transform.Find("Shadow");
+            _shadow = transform.parent.Find("Shadow");
+            _shadowSprRen = _shadow.GetComponent<SpriteRenderer>();
+            _shadowPos = _shadow.localPosition;
             _physics = transform.parent;
             _hp = 10;
             _speed = 2;
@@ -50,11 +55,13 @@ namespace OBJECT
         {
             if (CheckDeadToHp()) return;
 
-            Move(_direction.x, _direction.y);
-            SettingZNode();
-            ChangeFlipXToHor(_direction.x);
+            _lookAt = _direction;
             Run();
             ObjUpdate();
+            Move(_direction.x, _direction.y);
+            CheckHeight();
+            ChangeFlipXToHor(_lookAt.x);
+            SettingZNode();
         }
         private void Move(float moveX, float moveY)
         {
@@ -70,6 +77,11 @@ namespace OBJECT
 
             _physics.rotation = rotation;
         }
-        private void SettingZNode() { _sprRen.sortingOrder = (int)((_shadow.position.y) * 10) * -1; }
+        private void CheckHeight() { _shadow.localPosition = new Vector3(_shadowPos.x, _shadowPos.y - transform.localPosition.y * 0.5f, 0.0f); }
+        private void SettingZNode() 
+        { 
+            _sprRen.sortingOrder = (int)((_shadow.position.y) * 10) * -1;
+            _shadowSprRen.sortingOrder = _sprRen.sortingOrder - 1;
+        }
     }
 }

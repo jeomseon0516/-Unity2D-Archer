@@ -27,12 +27,11 @@ public class FollowCamera : MonoBehaviour
     {
         Vector3 pos = new Vector3(transform.position.x, transform.position.y - _offsetY, 10.0f);
 
-        float distance  = GetDistance(_player.transform.position, pos);
-        float angle     = GetAngleToPosition(_player.transform.position, pos);
-        float direction = GetDirectionToAngle(angle);
+        float distance  = Constants.GetDistance(_player.transform.position, pos);
+        float radian    = Constants.GetPositionToRadian(_player.transform.position, pos);
 
-        float x =  Mathf.Cos(direction) * distance * 75.0f * 0.01f * _maxSpeed; // 매 프레임당 카메라 앵커의 거리와 플레이어의 75퍼센트 비율만큼만 이동
-        float y = -Mathf.Sin(direction) * distance * 75.0f * 0.01f * _maxSpeed;
+        float x = Mathf.Cos(radian) * distance * 75.0f * 0.01f * _maxSpeed; // 매 프레임당 카메라 앵커의 거리와 플레이어의 75퍼센트 비율만큼만 이동
+        float y = Mathf.Sin(radian) * distance * 75.0f * 0.01f * _maxSpeed;
 
         float rePosY = y + transform.position.y + Camera.main.orthographicSize * 0.5f;
 
@@ -41,15 +40,4 @@ public class FollowCamera : MonoBehaviour
         
         transform.position += new Vector3(x, y, 0.0f) * Time.deltaTime;
     }
-
-    private float GetDistance(Vector3 p1, Vector3 p2)
-    {
-        float x = p1.x - p2.x;
-        float y = p1.y - p2.y;
-
-        return Mathf.Sqrt(x * x + y * y);
-    }
-
-    private float GetAngleToPosition(Vector3 p1, Vector3 p2) { return -Mathf.Atan2(p1.y - p2.y, p1.x - p2.x) * 180.0f * Constants.M_DEG; }
-    private float GetDirectionToAngle(float angle) { return angle * Constants.PI / 180.0f; }
 }

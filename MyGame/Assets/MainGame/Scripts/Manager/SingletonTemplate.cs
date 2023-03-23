@@ -24,9 +24,7 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
             _instance = FindObjectOfType<T>();
 
             lock (_obj)
-            {
                 _instance = GetInstanceFindObject();
-            }
         }
 
         return _instance;
@@ -39,9 +37,7 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
             return;
         }
         if (_instance == null)
-        {
             _instance = this.GetComponent<T>();
-        }
 
         DontDestroyOnLoad(gameObject);
         Init();
