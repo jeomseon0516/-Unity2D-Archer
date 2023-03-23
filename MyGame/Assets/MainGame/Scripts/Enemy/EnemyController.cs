@@ -16,7 +16,7 @@ public partial class EnemyController : LivingObject
         _state = new StateMachine<EnemyController>();
         _state.SetState(new IdleState());
 
-        _searchDis = 10.0f;
+        _searchDis = 8.0f;
         _attackDis = 1.0f;
     }
     protected override void Run()
@@ -61,17 +61,47 @@ public partial class EnemyController : LivingObject
 
     public class IdleState : State<EnemyController>
     {
-        Vector3 randPoint;
-        public override void Enter(EnemyController t) {} 
+        Vector3 _randPoint;
+        bool _isMove;
+        float _coolTime;
+        public override void Enter(EnemyController t) 
+        {
+            _coolTime = Random.Range(0.0f, 3.0f);
+            _isMove = false;
+            base.Enter(t);
+        } 
         public override void Update(EnemyController t) 
         {
             float distance = Constants.GetDistance(t._target.transform.position, t.transform.position);
 
             if (distance <= t._searchDis)
+            {
                 t._state.SetState(new TargetingState());
+                return;
+            }
+
+            if (_coolTime > 0.0f)
+            {
+                _coolTime -= Time.deltaTime;
+                return;
+            }
+
+            if (!_isMove)
+            {
+                _isMove = true;
+                _randPoint = t.RandomMovePosition();
+            }
             else
             {
-                float 
+                t._direction = (_randPoint - t.transform.position).normalized;
+                float movePointDistance = Constants.GetDistance(_randPoint, t.transform.position);
+
+                if (movePointDistance <= 1.0f)
+                {
+                    t._direction = Vector3.zero;
+                    _coolTime = Random.Range(0.0f, 3.0f);
+                    _isMove = false;
+                }
             }
         }
         public override void Exit(EnemyController t) {}
