@@ -29,10 +29,10 @@ namespace OBJECT
         {
             _animator = GetComponent<Animator>();
             _sprRen   = GetComponent<SpriteRenderer>();
-            _shadow = transform.parent.Find("Shadow");
+            _physics = transform.parent;
+            _shadow = _physics.Find("Shadow");
             _shadowSprRen = _shadow.GetComponent<SpriteRenderer>();
             _shadowPos = _shadow.localPosition;
-            _physics = transform.parent;
             _hp = 10;
             _speed = 2;
             _direction = new Vector3(1.0f, 0.0f, 0.0f);
@@ -42,9 +42,15 @@ namespace OBJECT
         }
         protected virtual void Init() {}
         protected virtual void Run() {}
-        protected internal virtual void CollisionAction(Collision2D obj) { print("a"); }
+        protected internal virtual void CollisionAction(Collision2D obj) {}
         protected virtual void ObjUpdate() {}
-        protected virtual void Die() { Destroy(transform.parent.gameObject); }
+        protected virtual void Die() 
+        {
+            Destroy(_physics.GetComponent<Collider2D>());
+            if (_animator == null) { DestroyObj(); }
+            else { _animator.SetTrigger("Die"); }
+        }
+        protected void DestroyObj() { Destroy(_physics.gameObject); }
         private bool CheckDeadToHp()
         {
             if (_hp > 0) return false;

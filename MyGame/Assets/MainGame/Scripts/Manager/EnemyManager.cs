@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using OBJECT;
 
 public sealed class EnemyManager : SingletonTemplate<EnemyManager>
 {
@@ -14,6 +15,7 @@ public sealed class EnemyManager : SingletonTemplate<EnemyManager>
     private IEnumerator Start()
     {
         Camera camera = Camera.main;
+
         while (true)
         {
             int xDir = Random.Range(0, 2) == 0 ? -1 : 1;

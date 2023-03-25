@@ -17,23 +17,17 @@ public class BackGroundsController : MonoBehaviour
     private Vector3  _refPos;
     private LOCATION _loc;
 
-    private void Awake()
-    {
-        _sprite = GetComponent<SpriteRenderer>().sprite;
-    }
-
+    private void Awake() { _sprite = GetComponent<SpriteRenderer>().sprite; }
     private void Start()
     {
         _camera = Camera.main;
         _refPos = _camera.transform.position;
     }
-
     private void Update()
     {
         BackGroundUpdate();
         BackGroundCalc();
     }
-
     private void BackGroundUpdate()
     {
         _loc = GetDirToCameraPos(_camera.transform.position, transform.position);
@@ -51,10 +45,9 @@ public class BackGroundsController : MonoBehaviour
                 transform.position.z);
         }
     }
-
     private void BackGroundCalc()
     {
-        float x = _camera.transform.position.x - _refPos.x;
+        float x =  _camera.transform.position.x - _refPos.x;
         float y = (_camera.transform.position.y - _refPos.y) * 0.5f;
 
         Vector3 cameraSpeed = new Vector3(x, y, 0.0f);
@@ -62,6 +55,5 @@ public class BackGroundsController : MonoBehaviour
         transform.position -= cameraSpeed * _time;
         _refPos = _camera.transform.position;
     }
-
     private LOCATION GetDirToCameraPos(Vector3 p1, Vector3 p2) { return p1.x >= p2.x ? LOCATION.LEFT : LOCATION.RIGHT; }
 }

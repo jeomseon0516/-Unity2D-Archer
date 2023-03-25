@@ -32,8 +32,5 @@ public class ButtonController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
             return;
         SceneManager.LoadScene(text.name);
     }
-    public void OnPointerDown(PointerEventData eventData)
-    {
-        text.color = Color.white;
-    }
+    public void OnPointerDown(PointerEventData eventData) { text.color = Color.white; }
 }

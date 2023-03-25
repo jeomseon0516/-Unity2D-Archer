@@ -4,10 +4,7 @@ using UnityEngine;
 /*
  * 해당 클래스는 Awake로 초기화 할 수 없습니다.
  */
-public abstract class Singleton : MonoBehaviour
-{
-    protected abstract void Awake();
-}
+public abstract class Singleton : MonoBehaviour { protected abstract void Awake();  }
 public abstract class SingletonTemplate<T> : Singleton where T : Singleton
 {
     private static T _instance = null;
@@ -42,10 +39,7 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
         DontDestroyOnLoad(gameObject);
         Init();
     }
-    private static T GetInstanceFindObject()
-    {
-        return _instance == null ? new GameObject(typeof(T).ToString(), typeof(T)).GetComponent<T>() : _instance;
-    }
+    private static T GetInstanceFindObject() { return _instance == null ? new GameObject(typeof(T).ToString(), typeof(T)).GetComponent<T>() : _instance; }
     protected abstract void Init();
-    protected SingletonTemplate() { }
+    protected SingletonTemplate() {}
 }
