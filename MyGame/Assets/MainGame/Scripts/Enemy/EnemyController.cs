@@ -7,25 +7,46 @@ namespace OBJECT
     public partial class EnemyController : LivingObject
     {
         private StateMachine<EnemyController> _state;
-        protected GameObject _target;
+        private Collider2D _attackBoxCol;
+        private GameObject _attackBox;
+        private GameObject _target;
         private float _searchDis;
         private float _attackDis;
         private bool _isHunting;
 
         protected override void Init()
         {
-            _target = GameObject.Find("Player").gameObject;
-            _hp = 5;
+            _target    = GameObject.Find("Player");
+            _attackBox = transform.Find("AttackBox").gameObject;
+
+            _attackBox.gameObject.AddComponent<AttackBox>();
+            _attackBoxCol = _attackBox.GetComponent<Collider2D>();
+       
             _state = new StateMachine<EnemyController>();
             _state.SetState(new IdleState());
 
             _isHunting = false;
             _searchDis = 8.0f;
-            _attackDis = 1.0f;
+            _attackDis = 1.5f;
+            _hp        = 5;
         }
-        protected override void Run()
+        protected internal override void TriggerAction(Collider2D col) // target
         {
-            base.Run();
+            Transform colTransform = col.transform; // 콜라이더
+            Transform targetPhysics = colTransform.parent.gameObject.transform; // 들어온 객체의 실제 z값
+            ObjectBase obj = colTransform.GetComponent<ObjectBase>();
+
+            float targetPosY = targetPhysics.position.y - obj.GetOffSetY();
+            float myPosY     = _physics.transform.position.y - _offsetY;
+
+            float myOffsetY     = _heightOffset;
+            float targetOffsetY = obj.GetHeightOffSet();
+
+            if (myPosY + myOffsetY > targetPosY - targetOffsetY && myPosY + myOffsetY < targetPosY + targetOffsetY ||
+                myPosY - myOffsetY < targetPosY + targetOffsetY && myPosY - myOffsetY > targetPosY - targetOffsetY)
+            {
+                obj.TakeDamage(1);
+            }
         }
         protected override void CreateBullet()
         {
@@ -75,6 +96,12 @@ namespace OBJECT
         {
             yield return new WaitForSeconds(10.0f);
             _isHunting = false;
+        }
+        public void OnAttackBox(float isOn) 
+        {
+            bool on = isOn > 0.0f ? true : false;
+
+            _attackBox.SetActive(on);
         }
         protected override void ObjUpdate() { _state.Update(this); }
     }
@@ -134,7 +161,6 @@ namespace OBJECT
                     }
                 }
             }
-            public override void Exit(EnemyController t) { }
             public IdleState() {}
         }
         /* -----------------------------------------------------------Targeting-------------------------------------------------- */
@@ -142,24 +168,30 @@ namespace OBJECT
         {
             public override void Update(EnemyController t)
             {
-                float distance = Constants.GetDistance(t._target.transform.position, t.transform.position);
+                Vector3 myPosition = new Vector3(t.transform.position.x, t.transform.position.y - t._offsetY, 0.0f);
+                Transform targetTransform = t._target.transform;
+                Vector3 targetPosition = targetTransform.position;
+                ObjectBase targetObj = targetTransform.Find("Player").GetComponent<ObjectBase>();
 
-                if (distance > t._searchDis && !t._isHunting) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
+                int xDir = myPosition.x - targetPosition.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
+
+                Vector3 movePoint = new Vector3(targetPosition.x + 1.5f * xDir, targetPosition.y - targetObj.GetOffSetY(), 0.0f);
+
+                if (Constants.GetDistance(targetPosition, myPosition) > t._searchDis && !t._isHunting) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
                 {
                     t._state.SetState(new IdleState());
                     return;
                 }
-                if (distance <= t._attackDis)
+                if (Mathf.Abs(movePoint.x - myPosition.x) <= t._attackDis &&
+                    Mathf.Abs(movePoint.y - myPosition.y) <= t._attackDis * 0.15f)
                 {
                     t._state.SetState(new AttackState());
                     return;
                 }
-
-                Vector3 dir = (t._target.transform.position - t.transform.position).normalized; //플레이어를 항상 쫒아온다.
-                t._lookAt = dir;
-                t._direction = dir;
+ 
+                t._direction = (movePoint - myPosition).normalized;
+                t._lookAt = (targetPosition - t.transform.position).normalized;
             }
-            public override void Exit(EnemyController t) {}
             public TargetingState() {}
         }
         /* -----------------------------------------------------------Attack-------------------------------------------------- */
@@ -170,10 +202,10 @@ namespace OBJECT
                 base.Enter(t);
                 t._animator.SetTrigger("Attack");
                 t._direction = Vector3.zero;
+                t._lookAt = (t._target.transform.position - t.transform.position).normalized;
             }
-            public override void Update(EnemyController t) {}
-            public override void Exit(EnemyController t) {}
-            public AttackState() { }
+            public override void Exit(EnemyController t) { t.OnAttackBox(0); }
+            public AttackState() {}
         }
         /* -----------------------------------------------------------Hit-------------------------------------------------- */
         public class HitState : State<EnemyController>

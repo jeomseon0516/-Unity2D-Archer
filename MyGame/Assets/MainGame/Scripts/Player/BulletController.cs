@@ -28,7 +28,7 @@ public class BulletController : ObjectBase
         Vector3 contactPoint = obj.GetContact(0).point;
 
         CreateEffect(new Vector3(contactPoint.x, transform.position.y), _hitEffect);
-        ActionCamera(new GameObject("Camera Test"));
+        ActionCamera(Camera.main.gameObject);
     }
     private void EffectAfterDestroy(GameObject obj, GameObject effect)
     {
@@ -41,7 +41,7 @@ public class BulletController : ObjectBase
         obj.transform.position = pos;
     }
     protected override void Die() { EffectAfterDestroy(gameObject, _smoke); }
-    private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); }
+    private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); } // 카메라 매니저를 만들어주는게 좋지않을까?
     public void SetFlipY(bool flipY) { _sprRen.flipY = flipY; }
     public void SetDirection(Vector3 dir) { _direction = dir; }
 }

@@ -1,10 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using SINGLETON;
 /*
- * 해당 클래스는 Awake로 초기화 할 수 없습니다.
+ * TODO : 해당 클래스는 Awake로 초기화 할 수 없습니다.
  */
-public abstract class Singleton : MonoBehaviour { protected abstract void Awake();  }
+namespace SINGLETON
+{
+    public abstract class Singleton : MonoBehaviour { protected abstract void Awake(); }
+}
 public abstract class SingletonTemplate<T> : Singleton where T : Singleton
 {
     private static T _instance = null;
@@ -34,7 +38,7 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
             return;
         }
         if (_instance == null)
-            _instance = this.GetComponent<T>();
+            _instance = GetComponent<T>();
 
         DontDestroyOnLoad(gameObject);
         Init();

@@ -23,6 +23,6 @@ public class VibratingCamera : MonoBehaviour
                 -10.0f);
         }
 
-        Destroy(this.gameObject);
+        Destroy(this);
     }
 }

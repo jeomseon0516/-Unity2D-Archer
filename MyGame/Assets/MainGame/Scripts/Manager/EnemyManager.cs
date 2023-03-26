@@ -21,16 +21,15 @@ public sealed class EnemyManager : SingletonTemplate<EnemyManager>
             int xDir = Random.Range(0, 2) == 0 ? -1 : 1;
             int yDir = Random.Range(0, 2) == 0 ? -1 : 1;
 
-            Vector3 offset = new Vector3(Random.Range(0, 5), Random.Range(0.0f, 1.5f), 0.0f);
-            Vector3 randVec = new Vector3(
-                    camera.transform.position.x + ((camera.orthographicSize * camera.aspect) + offset.x) * xDir,
+            Vector3 offset  = new Vector3(Random.Range(0, 5), Random.Range(0.0f, 1.5f), 0.0f);
+            Vector3 randVec = new Vector3(camera.transform.position.x + ((camera.orthographicSize * camera.aspect) + offset.x) * xDir,
                     0.0f + offset.y * yDir, 0.0f);
 
             GameObject obj = Instantiate(_prefab);
             obj.transform.position = randVec;
             obj.transform.parent = _parent.transform;
 
-            yield return new WaitForSeconds(3.0f);
+            yield return new WaitForSeconds(6.0f);
         }
     }
 

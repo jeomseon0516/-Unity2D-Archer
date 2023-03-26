@@ -10,7 +10,7 @@ public class BackGroundsController : MonoBehaviour
         RIGHT = -1
     }
 
-    public float     _time; // 스피드
+    [SerializeField] private float _time; // 스피드
 
     private Sprite   _sprite;
     private Camera   _camera;

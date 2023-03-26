@@ -3,18 +3,21 @@ using System.Collections.Generic;
 using UnityEngine;
 using OBJECT;
 
-public sealed class ObjectPhysics : MonoBehaviour
+namespace OBJECT
 {
-    private ObjectBase _child;
-    private void Awake() 
+    public sealed class ObjectPhysics : MonoBehaviour
     {
-        int index = name.IndexOf("(Clone)");
-        
-        if (index > 0)
-            name = name.Substring(0, index);
+        private ObjectBase _child;
+        private void Awake()
+        {
+            int index = name.IndexOf("(Clone)");
 
-        _child = transform.Find(name).GetComponent<ObjectBase>(); 
+            if (index > 0)
+                name = name.Substring(0, index);
+
+            _child = transform.Find(name).GetComponent<ObjectBase>();
+        }
+        private void OnCollisionEnter2D(Collision2D collision) { _child.CollisionAction(collision); }
     }
-    private void OnCollisionEnter2D(Collision2D collision) { _child.CollisionAction(collision); }
 }
 
