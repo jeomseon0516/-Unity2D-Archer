@@ -27,7 +27,7 @@ namespace OBJECT
             _state = new StateMachine<EnemyController>();
             _state.SetState(new IdleState());
 
-            _skillMaxDistance = 10.0f;
+            _skillMaxDistance = 8.0f;
             _useSkill         = true;
             _isHunting        = false;
             _searchDis        = 8.0f;
@@ -37,21 +37,20 @@ namespace OBJECT
         protected override void CreateBullet()
         {
             ObjectBase targetPhysics = _target.transform.Find(_target.name).GetComponent<ObjectBase>();
-            Transform tPhysicsTransform = targetPhysics.transform;
+            Transform tPhysicsTransform = _target.transform;
             
             if (Constants.GetDistance(tPhysicsTransform.position, transform.position) <= _skillMaxDistance)
             {
                 GameObject skill = Instantiate(_skill);
-                skill.transform.position = new Vector3(tPhysicsTransform.position.x,
-                                                       tPhysicsTransform.position.y + targetPhysics.GetOffSetY(),
-                                                       0.0f);
+                skill.transform.position = new Vector3(tPhysicsTransform.position.x + 0.15f,
+                                                       tPhysicsTransform.position.y + targetPhysics.GetOffSetY() + targetPhysics.GetHeightOffSet(),
+                                                       0.0f); ;
             }
         }
         // TODO : HitAnimation재생
         protected internal override void CollisionAction(Collision2D obj)
         {
             if (LayerMask.LayerToName(obj.gameObject.layer) != "Bullet") return;
-
             StartCoroutine(TargetingObject()); // 플레이어에게 공격받으면 10초동안은 거리에 상관없이 무조건 플레이어를 쫒아다닌다.
         }
         private void SetState(ENEMY_STATE state)
@@ -133,9 +132,7 @@ namespace OBJECT
             }
             public override void Update(EnemyController t)
             {
-                float distance = Constants.GetDistance(t._target.transform.position, t.transform.position);
-
-                if (distance <= t._searchDis || t._isHunting) // 타겟이 범위 안에 들어오면 타겟팅 패턴으로 전환
+                if (Constants.GetDistance(t._target.transform.position, t.transform.position) <= t._searchDis || t._isHunting) // 타겟이 범위 안에 들어오면 타겟팅 패턴으로 전환
                 {
                     t._state.SetState(new TargetingState());
                     return;
@@ -153,9 +150,8 @@ namespace OBJECT
                 else // 랜덤한 위치로 이동중일때
                 {
                     t._direction = (_randPoint - t.transform.position).normalized;
-                    float movePointDistance = Constants.GetDistance(_randPoint, t.transform.position);
 
-                    if (movePointDistance <= 1.0f) // 목표 위치로 이동이 끝났다면
+                    if (Constants.GetDistance(_randPoint, t.transform.position) <= 1.0f) // 목표 위치로 이동이 끝났다면
                     {
                         t._direction = Vector3.zero;
                         _coolTime = Random.Range(0.0f, 3.0f);
@@ -171,7 +167,7 @@ namespace OBJECT
             float _yTemp;
             public override void Enter(EnemyController t)
             {
-                _yTemp = Random.Range(0.0f, 1.5f);
+                _yTemp = Random.Range(0.0f, 1.5f) * Random.Range(0, 2) == 0 ? 1 : -1;
                 base.Enter(t);
             }
             public override void Update(EnemyController t)
@@ -188,35 +184,34 @@ namespace OBJECT
 
                 ObjectBase targetObj = targetTransform.Find("Player").GetComponent<ObjectBase>();
                 int xDir = myPosition.x - targetPosition.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
+                Vector3 movePoint = Vector3.zero;
+
+                movePoint = HuntingAttackGetMovePoint(t, xDir, targetObj, targetPosition, myPosition);
 
                 if (t._useSkill)
-                    Skill(t, xDir, targetPosition, myPosition);
-                else
-                    HuntingAttack(t, xDir, targetObj, targetPosition, myPosition);
-
+                    movePoint = SkillAndGetMovePoint(t, xDir, targetPosition, myPosition);
+                
+                t._direction = (movePoint - myPosition).normalized;
                 t._lookAt = (targetPosition - t.transform.position).normalized;
             }
-            private void Skill(EnemyController t, int xDir, Vector3 targetPosition, Vector3 myPosition)
+            private Vector3 SkillAndGetMovePoint(EnemyController t, int xDir, Vector3 targetPosition, Vector3 myPosition)
             {
                 Vector3 movePoint = new Vector3(targetPosition.x + 6.0f * xDir, _yTemp, 0.0f);
 
                 if (Constants.GetDistance(movePoint, myPosition) <= 1.0f)
                     t._state.SetState(new SkillState());
 
-                t._direction = (movePoint - myPosition).normalized;
+                return movePoint;
             }
-            private void HuntingAttack(EnemyController t, int xDir, ObjectBase targetObj, Vector3 targetPosition, Vector3 myPosition)
+            private Vector3 HuntingAttackGetMovePoint(EnemyController t, int xDir, ObjectBase targetObj, Vector3 targetPosition, Vector3 myPosition)
             {
                 Vector3 movePoint = new Vector3(targetPosition.x + 1.5f * xDir, targetPosition.y - targetObj.GetOffSetY(), 0.0f);
 
                 if (Mathf.Abs(movePoint.x - myPosition.x) <= t._attackDis &&
                     Mathf.Abs(movePoint.y - myPosition.y) <= t._attackDis * 0.15f)
-                {
                     t._state.SetState(new AttackState());
-                    return;
-                }
 
-                t._direction = (movePoint - myPosition).normalized;
+                return movePoint;
             }
             public TargetingState() {}
         }
@@ -254,8 +249,6 @@ namespace OBJECT
                 t._animator.SetTrigger("Hit");
                 t._direction = Vector3.zero;
             }
-            public override void Update(EnemyController t) {}
-            public override void Exit(EnemyController t) {}
             public HitState() { }
         }
         /* -----------------------------------------------------------Die-------------------------------------------------- */
@@ -266,8 +259,6 @@ namespace OBJECT
                 base.Enter(t);
                 t._direction = Vector3.zero;
             }
-            public override void Update(EnemyController t) { }
-            public override void Exit(EnemyController t) { }
             public DieState() {}
         }
     }

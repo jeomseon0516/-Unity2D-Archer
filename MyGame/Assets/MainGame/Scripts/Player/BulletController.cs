@@ -45,7 +45,6 @@ public class BulletController : ObjectBase
     }
     protected override void Die() { EffectAfterDestroy(gameObject, _smoke); }
     private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); } // 카메라 매니저를 만들어주는게 좋지않을까?
-    public void SetFlipY(bool flipY) { _sprRen.flipY = flipY; }
     public void SetDirection(Vector3 dir) { _direction = dir; }
     public void SetAtk(int atk) { _atk = atk; }
 }

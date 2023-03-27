@@ -17,7 +17,7 @@ namespace OBJECT
         protected override void Init()
         {
             base.Init();
-            _hp = 2000;
+            _maxHp = _hp = 2000;
             _id = OBJECTID.PLAYER;
             _speed = 5.0f;
             _atk = 2;

@@ -92,13 +92,12 @@ namespace OBJECT
             float targetPosY = targetPhysics.position.y - obj.GetOffSetY();
             float myPosY     = _physics.transform.position.y - _offsetY;
 
-            float myOffsetY = _heightOffset;
             float targetOffsetY = obj.GetHeightOffSet();
 
-            if (myPosY + myOffsetY > targetPosY - targetOffsetY && myPosY + myOffsetY < targetPosY + targetOffsetY ||
-                myPosY - myOffsetY < targetPosY + targetOffsetY && myPosY - myOffsetY > targetPosY - targetOffsetY)
+            if (myPosY + _heightOffset > targetPosY - targetOffsetY && myPosY + _heightOffset < targetPosY + targetOffsetY ||
+                myPosY - _heightOffset < targetPosY + targetOffsetY && myPosY - _heightOffset > targetPosY - targetOffsetY)
             {
-                obj.TakeDamage(1);
+                obj.TakeDamage(_atk);
             }
         }
         private bool CheckDeadToHp()
