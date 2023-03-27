@@ -13,6 +13,7 @@ public class BulletController : ObjectBase
         _smoke     = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "Smoke");
         _hitEffect = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "HitEffect");
         _speed     = 10.0f;
+        _atk       = 2;
         _time      = 10.0f;
         _hp        = 3;
     }
@@ -24,7 +25,9 @@ public class BulletController : ObjectBase
     protected internal override void CollisionAction(Collision2D obj)
     {
         if (LayerMask.LayerToName(obj.gameObject.layer) != "Enemy") return;
+
         --_hp;
+        obj.transform.Find("Enemy").GetComponent<ObjectBase>().TakeDamage(_atk);
         Vector3 contactPoint = obj.GetContact(0).point;
 
         CreateEffect(new Vector3(contactPoint.x, transform.position.y), _hitEffect);
@@ -44,4 +47,5 @@ public class BulletController : ObjectBase
     private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); } // 카메라 매니저를 만들어주는게 좋지않을까?
     public void SetFlipY(bool flipY) { _sprRen.flipY = flipY; }
     public void SetDirection(Vector3 dir) { _direction = dir; }
+    public void SetAtk(int atk) { _atk = atk; }
 }

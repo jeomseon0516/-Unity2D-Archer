@@ -28,6 +28,7 @@ namespace OBJECT
         protected float          _speed;
         protected int            _hp;
         protected int            _beforeHp;
+        protected int            _atk;
 
         // default 값 세팅
         protected virtual void Awake()
@@ -38,39 +39,33 @@ namespace OBJECT
             _physics = transform.parent;
             _physics.gameObject.AddComponent<ObjectPhysics>();
 
-            _shadow = _physics.Find("Shadow");
+            _shadow       = _physics.Find("Shadow");
             _shadowSprRen = _shadow.GetComponent<SpriteRenderer>();
 
             _shadowPos = _shadow.localPosition;
-            _lookAt = new Vector3(0.0f, 0.0f, 0.0f);
+            _lookAt    = new Vector3(0.0f, 0.0f, 0.0f);
 
             _offsetY = transform.position.y - _shadow.transform.position.y;
             _heightOffset = _shadow.gameObject.GetComponent<RectTransform>().rect.height * _shadow.transform.localScale.y;
 
             _hp    = 10;
+            _atk   = 2;
             _speed = 2;
 
             Init();
         }
         private void OnTriggerEnter2D(Collider2D col) { TriggerAction(col); }
         protected internal virtual void TriggerAction(Collider2D col) {}
-        protected virtual void Init() {}
-        protected virtual void Run() {}
         protected internal virtual void CollisionAction(Collision2D obj) {}
         protected virtual void GetDamageAction(int damage) {}
         protected virtual void ObjUpdate() {}
+        protected virtual void Init() {}
+        protected virtual void Run() {}
         protected virtual void Die() 
         {
             Destroy(_physics.GetComponent<Collider2D>());
             if   (_animator == null) { DestroyObj(); }
             else { _animator.SetTrigger("Die"); }
-        }
-        private bool CheckDeadToHp()
-        {
-            if (_hp > 0) return false;
-
-            Die();
-            return true;
         }
         private void Update()
         {
@@ -81,12 +76,36 @@ namespace OBJECT
 
             _beforeHp = _hp;
             _lookAt = _direction;
+
             Run();
             ObjUpdate();
             Move(_direction.x, _direction.y);
             CheckHeight();
             ChangeFlipXToHor(_lookAt.x);
             SettingZNode();
+        }
+        protected void TriggerCollision(Transform colTransform)
+        {
+            Transform targetPhysics = colTransform.parent.gameObject.transform; // 들어온 객체의 실제 z값
+            ObjectBase obj   = colTransform.GetComponent<ObjectBase>();
+
+            float targetPosY = targetPhysics.position.y - obj.GetOffSetY();
+            float myPosY     = _physics.transform.position.y - _offsetY;
+
+            float myOffsetY = _heightOffset;
+            float targetOffsetY = obj.GetHeightOffSet();
+
+            if (myPosY + myOffsetY > targetPosY - targetOffsetY && myPosY + myOffsetY < targetPosY + targetOffsetY ||
+                myPosY - myOffsetY < targetPosY + targetOffsetY && myPosY - myOffsetY > targetPosY - targetOffsetY)
+            {
+                obj.TakeDamage(1);
+            }
+        }
+        private bool CheckDeadToHp()
+        {
+            if (_hp > 0) return false;
+            Die();
+            return true;
         }
         private void Move(float moveX, float moveY)
         {
@@ -110,7 +129,6 @@ namespace OBJECT
         protected void DestroyObj() { Destroy(_physics.gameObject); }
         public void TakeDamage(int damage) { _hp -= damage; }
         private void CheckHeight() { _shadow.localPosition = new Vector3(_shadowPos.x, _shadowPos.y - transform.localPosition.y * 0.5f, 0.0f); }
-
         public float GetHeightOffSet() { return _heightOffset; }
         public float GetOffSetY()      { return _offsetY; }
     }

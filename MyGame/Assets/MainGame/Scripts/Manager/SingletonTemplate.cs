@@ -9,6 +9,7 @@ namespace SINGLETON
 {
     public abstract class Singleton : MonoBehaviour { protected abstract void Awake(); }
 }
+
 public abstract class SingletonTemplate<T> : Singleton where T : Singleton
 {
     private static T _instance = null;
@@ -45,5 +46,5 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
     }
     private static T GetInstanceFindObject() { return _instance == null ? new GameObject(typeof(T).ToString(), typeof(T)).GetComponent<T>() : _instance; }
     protected abstract void Init();
-    protected SingletonTemplate() {}
+    protected SingletonTemplate() { }
 }

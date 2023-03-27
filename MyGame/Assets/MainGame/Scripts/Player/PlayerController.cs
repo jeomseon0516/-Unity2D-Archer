@@ -20,6 +20,7 @@ namespace OBJECT
             _hp = 2000;
             _id = OBJECTID.PLAYER;
             _speed = 5.0f;
+            _atk = 2;
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
             _col = GetComponent<Collider2D>();
@@ -63,7 +64,7 @@ namespace OBJECT
         }
         private IEnumerator Jumping()
         {
-            float jump = 4.0f;
+            float jump = 7.0f;
             _col.isTrigger = true;
 
             while (transform.localPosition.y >= 0)
@@ -116,9 +117,12 @@ namespace OBJECT
                     t._playerState.SetState(new AttackState());
                 }
                 else if (Input.GetKeyDown(KeyCode.Space))
+                {
+                    if (t.transform.localPosition.y > 0) return;
                     t._playerState.SetState(new JumpState());
+                }
             }
-            public RunState() { }
+            public RunState() {}
         }
         public sealed class HitState : State<PlayerController>
         {
@@ -127,7 +131,7 @@ namespace OBJECT
                 t._animator.SetTrigger("Hit");
                 base.Enter(t); 
             }
-            public HitState() { }
+            public HitState() {}
         }
         public sealed class JumpState : State<PlayerController>
         {
@@ -141,7 +145,7 @@ namespace OBJECT
                 if (t._jumpValue < 0.0f)
                     t._playerState.SetState(new DownState());
             }
-            public JumpState() { }
+            public JumpState() {}
         }
         public sealed class DownState : State<PlayerController>
         {
@@ -156,7 +160,7 @@ namespace OBJECT
                 if (t._jumpValue == 0)
                     t._playerState.SetState(new RunState());
             }
-            public DownState() { }
+            public DownState() {}
         }
         public sealed class AttackState : State<PlayerController>
         {
