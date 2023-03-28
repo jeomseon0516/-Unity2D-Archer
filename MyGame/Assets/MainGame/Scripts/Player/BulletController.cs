@@ -29,7 +29,6 @@ public class BulletController : ObjectBase
     {
         if (LayerMask.LayerToName(col.gameObject.layer) != "Enemy") return;
 
-        print(col.name);
         if (TriggerCollision(col.transform, col.transform.Find(col.name).GetComponent<ObjectBase>()))
         {
             --_hp;

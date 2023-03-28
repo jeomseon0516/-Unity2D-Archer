@@ -35,14 +35,15 @@ namespace OBJECT
         }
         protected override void CreateBullet()
         {
-            ObjectBase targetPhysics = _target.transform.Find(_target.name).GetComponent<ObjectBase>();
+            ObjectBase targetPhysics    = _target.transform.Find(_target.name).GetComponent<ObjectBase>();
             Transform tPhysicsTransform = _target.transform;
             
             if (Constants.GetDistance(tPhysicsTransform.position, transform.position) <= _skillMaxDistance)
             {
-                GameObject skill = Instantiate(_skill);
-                skill.transform.position = new Vector2(tPhysicsTransform.position.x + 0.15f,
-                                                       tPhysicsTransform.position.y + targetPhysics.GetOffSetY() + targetPhysics.GetHeightOffSet());
+                Transform skillTransform = Instantiate(_skill).transform;
+                ObjectBase skill = skillTransform.Find(_skill.name).GetComponent<ObjectBase>();
+                skillTransform.position = new Vector2(tPhysicsTransform.position.x + 0.15f,
+                                                       tPhysicsTransform.position.y + skill.GetOffSetY() - targetPhysics.GetOffSetY());
             }
         }
         // TODO : HitAnimation재생
@@ -130,7 +131,7 @@ namespace OBJECT
             }
             public override void Update(EnemyController t)
             {
-                if (Constants.GetDistance(t._target.transform.position, t.transform.position) <= t._searchDis || t._isHunting) // 타겟이 범위 안에 들어오면 타겟팅 패턴으로 전환
+                if (t._isHunting || Constants.GetDistance(t._target.transform.position, t.transform.position) <= t._searchDis) // 타겟이 범위 안에 들어오면 타겟팅 패턴으로 전환
                 {
                     t._state.SetState(new TargetingState());
                     return;
@@ -174,7 +175,7 @@ namespace OBJECT
                 Transform targetTransform = t._target.transform;
                 Vector3 targetPosition = targetTransform.position;
 
-                if (Constants.GetDistance(targetPosition, myPosition) > t._searchDis && !t._isHunting) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
+                if (!t._isHunting && Constants.GetDistance(targetPosition, myPosition) > t._searchDis) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
                 {
                     t._state.SetState(new IdleState());
                     return;
@@ -194,7 +195,7 @@ namespace OBJECT
             }
             private Vector2 SkillAndGetMovePoint(EnemyController t, int xDir, Vector2 targetPosition, Vector2 myPosition)
             {
-                Vector2 movePoint = new Vector2(targetPosition.x + 6.0f * xDir, _yTemp);
+                Vector2 movePoint = new Vector2(targetPosition.x + Random.Range(4.0f, 6.0f) * xDir, _yTemp);
 
                 if (Constants.GetDistance(movePoint, myPosition) <= 1.0f)
                     t._state.SetState(new SkillState());

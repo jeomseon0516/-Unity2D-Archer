@@ -110,6 +110,10 @@ namespace OBJECT
         {
             public override void Update(PlayerController t)
             {
+                float speed = Mathf.Max(Mathf.Abs(t._direction.x), Mathf.Abs(t._direction.y));
+
+                t._animator.speed = speed > 0.0f ? speed : 1;
+
                 if (Input.GetKey(KeyCode.LeftControl))
                 {
                     t._animator.SetTrigger("Attack");
@@ -121,6 +125,7 @@ namespace OBJECT
                     t._playerState.SetState(new JumpState());
                 }
             }
+            public override void Exit(PlayerController t) { t._animator.speed = 1; }
             public RunState() {}
         }
         public sealed class HitState : State<PlayerController>
@@ -157,11 +162,13 @@ namespace OBJECT
         }
         public sealed class AttackState : State<PlayerController>
         {
+            Vector2 _direction;
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
-                t.CreateBullet();
+                _direction = t._direction;
             }
+            public override void Update(PlayerController t) { t._lookAt = _direction; }
             public AttackState() {}
         }
     }

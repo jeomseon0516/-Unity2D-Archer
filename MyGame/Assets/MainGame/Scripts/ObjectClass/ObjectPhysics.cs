@@ -10,11 +10,7 @@ namespace OBJECT
         private ObjectBase _child;
         private void Awake()
         {
-            int index = name.IndexOf("(Clone)");
-
-            if (index > 0)
-                name = name.Substring(0, index);
-
+            name = Default.GetRemoveSelectString(name, "(Clone)");
             _child = transform.Find(name).GetComponent<ObjectBase>();
         }
         private void OnCollisionEnter2D(Collision2D collision) { _child.CollisionAction(collision); }
