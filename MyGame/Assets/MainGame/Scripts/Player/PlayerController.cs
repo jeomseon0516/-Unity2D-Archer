@@ -27,7 +27,7 @@ namespace OBJECT
         }
         protected override void Run()
         {
-            _direction = new Vector3(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), 0.0f);
+            _direction = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
             base.Run();
         }
         protected override void CreateBullet()
@@ -64,7 +64,7 @@ namespace OBJECT
         }
         private IEnumerator Jumping()
         {
-            float jump = 7.0f;
+            float jump = 5.0f;
             _col.isTrigger = true;
 
             while (transform.localPosition.y >= 0)
@@ -75,12 +75,11 @@ namespace OBJECT
             }
 
             _col.isTrigger = false;
-            transform.localPosition = new Vector3(0.0f, 0.0f, 0.0f);
+            transform.localPosition = new Vector2(0.0f, 0.0f);
         }
         private float CheckFallingOrJumping()
         {
-            float height = _beforeLocalY;
-            float movement = transform.localPosition.y - height;
+            float movement = transform.localPosition.y - _beforeLocalY;
 
             _animator.SetFloat("JumpSpeed", movement);
             _beforeLocalY = transform.localPosition.y;
@@ -149,12 +148,6 @@ namespace OBJECT
         }
         public sealed class DownState : State<PlayerController>
         {
-            float _localY;
-            public override void Enter(PlayerController t)
-            {
-                base.Enter(t);
-                _localY = t.transform.localPosition.y;
-            }
             public override void Update(PlayerController t)
             {
                 if (t._jumpValue == 0)

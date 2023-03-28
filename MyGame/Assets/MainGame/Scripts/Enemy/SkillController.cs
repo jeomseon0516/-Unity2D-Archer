@@ -24,6 +24,6 @@ namespace OBJECT
             bool on = isOn > 0.0f ? true : false;
             _col.enabled = on;
         }
-        protected internal override void TriggerAction(Collider2D col) { TriggerCollision(col.transform); }
+        protected internal override void TriggerAction(Collider2D col) { TriggerCollision(col.transform.parent.gameObject.transform, col.transform.GetComponent<ObjectBase>()); }
     }
 }

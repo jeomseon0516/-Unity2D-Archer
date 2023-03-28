@@ -25,7 +25,7 @@ public class FollowCamera : MonoBehaviour
     }
     private void FollowPlayer()
     {
-        Vector3 pos = new Vector3(transform.position.x, transform.position.y - _offsetY, 10.0f);
+        Vector2 pos = new Vector2(transform.position.x, transform.position.y - _offsetY);
 
         float distance  = Constants.GetDistance(_player.transform.position, pos);
         float radian    = Constants.GetPositionToRadian(_player.transform.position, pos);

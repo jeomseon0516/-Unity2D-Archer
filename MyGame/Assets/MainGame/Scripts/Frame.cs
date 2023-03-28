@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class Frame : MonoBehaviour
 {
-    void Start()
+    void Awake()
     {
+        Application.targetFrameRate = 144;
     }
 }

@@ -9,7 +9,6 @@ namespace OBJECT
     {
         private ObjectBase _objBase;
         private void OnTriggerEnter2D(Collider2D col) { _objBase.TriggerAction(col); }
-
         public void SetObjectBase(ObjectBase obj) { _objBase = obj; }
     }
 }

@@ -7,7 +7,7 @@ public class VibratingCamera : MonoBehaviour
     IEnumerator Start()
     {
         Camera camera = Camera.main;
-        Vector3 offset = new Vector3(0.05f, 0.05f, 0.0f);
+        Vector3 offset = new Vector2(0.05f, 0.05f);
         float shokeTime = 0.15f;
 
         while (shokeTime > 0.0f)

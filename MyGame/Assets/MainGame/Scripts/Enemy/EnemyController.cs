@@ -15,10 +15,9 @@ namespace OBJECT
         private float _attackDis;
         private bool _useSkill;
         private bool _isHunting;
-
         protected override void Init()
         {
-            _skill = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.ENEMY, "Bullet");
+            _skill  = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.ENEMY, "Bullet");
             _target = GameObject.Find("Player");
 
             _attackBox = transform.Find("AttackBox").gameObject;
@@ -42,9 +41,8 @@ namespace OBJECT
             if (Constants.GetDistance(tPhysicsTransform.position, transform.position) <= _skillMaxDistance)
             {
                 GameObject skill = Instantiate(_skill);
-                skill.transform.position = new Vector3(tPhysicsTransform.position.x + 0.15f,
-                                                       tPhysicsTransform.position.y + targetPhysics.GetOffSetY() + targetPhysics.GetHeightOffSet(),
-                                                       0.0f); ;
+                skill.transform.position = new Vector2(tPhysicsTransform.position.x + 0.15f,
+                                                       tPhysicsTransform.position.y + targetPhysics.GetOffSetY() + targetPhysics.GetHeightOffSet());
             }
         }
         // TODO : HitAnimation재생
@@ -74,14 +72,14 @@ namespace OBJECT
                     break;
             }
         }
-        private Vector3 RandomMovePosition()
+        private Vector2 RandomMovePosition()
         {
             int xDir = Random.Range(0, 2) == 0 ? -1 : 1;
             int yDir = Random.Range(0, 2) == 0 ? -1 : 1;
 
-            Vector3 offset = new Vector3(Random.Range(0, 5), Random.Range(0.0f, 1.5f), 0.0f);
+            Vector3 offset = new Vector2(Random.Range(0, 5), Random.Range(0.0f, 1.5f));
 
-            return new Vector3(transform.position.x + offset.x * xDir, 0.0f + offset.y * yDir, 0.0f);
+            return new Vector2(transform.position.x + offset.x * xDir, 0.0f + offset.y * yDir);
         }
         // 플레이어에게 피격 후 추적 중일때 추적 쿨타임
         private IEnumerator TargetingObject()
@@ -103,7 +101,7 @@ namespace OBJECT
         }
         protected override void ObjUpdate() { _state.Update(this); }
         protected override void GetDamageAction(int damage) { _state.SetState(new HitState()); }
-        protected internal override void TriggerAction(Collider2D col) { TriggerCollision(col.transform); }
+        protected internal override void TriggerAction(Collider2D col) { TriggerCollision(col.transform.parent.gameObject.transform, col.transform.GetComponent<ObjectBase>()); }
     }
 
     // TODO : 에너미 상태 패턴 구현 
@@ -153,7 +151,7 @@ namespace OBJECT
 
                     if (Constants.GetDistance(_randPoint, t.transform.position) <= 1.0f) // 목표 위치로 이동이 끝났다면
                     {
-                        t._direction = Vector3.zero;
+                        t._direction = Vector2.zero;
                         _coolTime = Random.Range(0.0f, 3.0f);
                         _isMove = false;
                     }
@@ -172,7 +170,7 @@ namespace OBJECT
             }
             public override void Update(EnemyController t)
             {
-                Vector3 myPosition = new Vector3(t.transform.position.x, t.transform.position.y - t._offsetY, 0.0f);
+                Vector2 myPosition = new Vector2(t.transform.position.x, t.transform.position.y - t._offsetY);
                 Transform targetTransform = t._target.transform;
                 Vector3 targetPosition = targetTransform.position;
 
@@ -184,7 +182,7 @@ namespace OBJECT
 
                 ObjectBase targetObj = targetTransform.Find("Player").GetComponent<ObjectBase>();
                 int xDir = myPosition.x - targetPosition.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
-                Vector3 movePoint = Vector3.zero;
+                Vector2 movePoint = Vector2.zero;
 
                 movePoint = HuntingAttackGetMovePoint(t, xDir, targetObj, targetPosition, myPosition);
 
@@ -194,18 +192,18 @@ namespace OBJECT
                 t._direction = (movePoint - myPosition).normalized;
                 t._lookAt = (targetPosition - t.transform.position).normalized;
             }
-            private Vector3 SkillAndGetMovePoint(EnemyController t, int xDir, Vector3 targetPosition, Vector3 myPosition)
+            private Vector2 SkillAndGetMovePoint(EnemyController t, int xDir, Vector2 targetPosition, Vector2 myPosition)
             {
-                Vector3 movePoint = new Vector3(targetPosition.x + 6.0f * xDir, _yTemp, 0.0f);
+                Vector2 movePoint = new Vector2(targetPosition.x + 6.0f * xDir, _yTemp);
 
                 if (Constants.GetDistance(movePoint, myPosition) <= 1.0f)
                     t._state.SetState(new SkillState());
 
                 return movePoint;
             }
-            private Vector3 HuntingAttackGetMovePoint(EnemyController t, int xDir, ObjectBase targetObj, Vector3 targetPosition, Vector3 myPosition)
+            private Vector2 HuntingAttackGetMovePoint(EnemyController t, int xDir, ObjectBase targetObj, Vector2 targetPosition, Vector2 myPosition)
             {
-                Vector3 movePoint = new Vector3(targetPosition.x + 1.5f * xDir, targetPosition.y - targetObj.GetOffSetY(), 0.0f);
+                Vector2 movePoint = new Vector2(targetPosition.x + 1.5f * xDir, targetPosition.y - targetObj.GetOffSetY());
 
                 if (Mathf.Abs(movePoint.x - myPosition.x) <= t._attackDis &&
                     Mathf.Abs(movePoint.y - myPosition.y) <= t._attackDis * 0.15f)
@@ -222,7 +220,7 @@ namespace OBJECT
             {
                 base.Enter(t);
                 t._animator.SetTrigger("Attack");
-                t._direction = Vector3.zero;
+                t._direction = Vector2.zero;
                 t._lookAt = (t._target.transform.position - t.transform.position).normalized;
             }
             public override void Exit(EnemyController t) { t.OnAttackBox(0); }
@@ -234,7 +232,7 @@ namespace OBJECT
             {
                 base.Enter(t);
                 t._animator.SetTrigger("Skill");
-                t._direction = Vector3.zero;
+                t._direction = Vector2.zero;
                 t._lookAt = (t._target.transform.position - t.transform.position).normalized;
             }
             public override void Exit(EnemyController t) { t.StartCoroutine(t.SkillCollTime()); }
@@ -247,18 +245,13 @@ namespace OBJECT
             {
                 base.Enter(t);
                 t._animator.SetTrigger("Hit");
-                t._direction = Vector3.zero;
+                t._direction = Vector2.zero;
             }
             public HitState() { }
         }
         /* -----------------------------------------------------------Die-------------------------------------------------- */
         public class DieState : State<EnemyController>
         {
-            public override void Enter(EnemyController t)
-            {
-                base.Enter(t);
-                t._direction = Vector3.zero;
-            }
             public DieState() {}
         }
     }
