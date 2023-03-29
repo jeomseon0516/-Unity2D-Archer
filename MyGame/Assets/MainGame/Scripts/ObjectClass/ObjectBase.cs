@@ -67,23 +67,16 @@ namespace OBJECT
         protected virtual void ObjUpdate() {}
         protected virtual void Init() {}
         protected virtual void Run() {}
-        protected virtual void Die() 
-        {
-            Destroy(_physics.GetComponent<Collider2D>());
-            _direction = Vector2.zero;
-            if   (_animator == null) { DestroyObj(); }
-            else { _animator.SetTrigger("Die"); }
-        }
+        protected virtual void Die() { DestroyObj(); }
         private void FixedUpdate()
         {
-            if (_hp < _beforeHp)
+            if (_hp < _beforeHp && !_isDie)
                 GetDamageAction(_beforeHp - _hp);
-                _beforeHp = _hp;
 
-            if (CheckDeadToHp())
-                return;
+            _beforeHp = _hp;
+            _lookAt   = _direction;
 
-            _lookAt = _direction;
+            CheckDeadToHp();
             Run();
             ObjFixedUpdate();
             Move(_direction.x, _direction.y);
@@ -106,13 +99,11 @@ namespace OBJECT
             }
             return false;
         }
-        private bool CheckDeadToHp()
+        private void CheckDeadToHp()
         {
-            if (_isDie)  return true;
-            if (_hp > 0) return false;
-            _isDie = true;
+            if (_hp > 0) return;
             Die();
-            return true;
+            _isDie = true;
         }
         private void Move(float moveX, float moveY)
         {
@@ -134,9 +125,9 @@ namespace OBJECT
             _shadowSprRen.sortingOrder = _sprRen.sortingOrder - 1;
         }
         private void Update() { ObjUpdate(); }
+        private void CheckHeight() { _shadow.localPosition = new Vector2(_shadowPos.x, _shadowPos.y - transform.localPosition.y * 0.5f); }
         protected void DestroyObj() { Destroy(_physics.gameObject); }
         public void TakeDamage(int damage) { _hp -= damage; }
-        private void CheckHeight() { _shadow.localPosition = new Vector2(_shadowPos.x, _shadowPos.y - transform.localPosition.y * 0.5f); }
         public float GetHeightOffSet() { return _heightOffset; }
         public float GetOffSetY() { return _offsetY; }
         public int GetHp() { return _hp; }

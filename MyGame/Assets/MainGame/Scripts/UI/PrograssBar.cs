@@ -15,14 +15,12 @@ public class PrograssBar : MonoBehaviour
     {
         _slider = transform.GetComponent<Slider>();
     }
-
     private void Start()
     {
         _player = GameObject.Find("Player").transform.Find("Player").GetComponent<PlayerController>();
         _slider.maxValue = _player.GetMaxHp();
         _slider.value    = _player.GetHp();
     }
-
     void Update()
     {
         _slider.value = _player.GetHp();

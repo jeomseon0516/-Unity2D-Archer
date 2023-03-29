@@ -18,7 +18,7 @@ public class BackGroundsController : MonoBehaviour
     private float    _xSize;
     private LOCATION _loc;
 
-    // TODO : 백그라운드 다시 짤것...................
+    // TODO : 완료
   
     private void Awake()
     {

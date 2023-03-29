@@ -42,7 +42,7 @@ namespace OBJECT
             {
                 Transform skillTransform = Instantiate(_skill).transform;
                 ObjectBase skill = skillTransform.Find(_skill.name).GetComponent<ObjectBase>();
-                skillTransform.GetComponent<Rigidbody2D>().position = new Vector2(
+                skillTransform.position = new Vector2(
                     tPhysicsTransform.position.x + 0.15f,
                     tPhysicsTransform.position.y + skill.GetOffSetY() - targetPhysics.GetOffSetY());
             }
@@ -100,6 +100,13 @@ namespace OBJECT
         {
             bool on = isOn > 0.0f ? true : false;
             _attackBox.SetActive(on);
+        }
+        protected override void Die() 
+        {
+            if (_isDie) return;
+
+            _state.SetState(new DieState());
+            Destroy(_physics.GetComponent<Collider2D>()); 
         }
         protected override void ObjFixedUpdate() { _state.Update(this); }
         protected override void GetDamageAction(int damage) { _state.SetState(new HitState()); }
@@ -254,6 +261,11 @@ namespace OBJECT
         /* -----------------------------------------------------------Die-------------------------------------------------- */
         public class DieState : State<EnemyController>
         {
+            public override void Enter(EnemyController t)
+            {
+                t._animator.SetTrigger("Die");
+                t._direction = Vector2.zero;
+            }
             public DieState() {}
         }
     }

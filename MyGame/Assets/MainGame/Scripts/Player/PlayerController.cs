@@ -19,14 +19,14 @@ namespace OBJECT
         protected override void Init()
         {
             base.Init();
-            _maxHp = _hp = 1;
+            _maxHp = _hp = 20;
             _id = OBJECTID.PLAYER;
             _speed = 5.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
             _col = GetComponent<Collider2D>();
-            _spawnPoint = _rigidbody.position;
+            _spawnPoint = _physics.position;
         }
         protected override void Run()
         {
@@ -35,18 +35,18 @@ namespace OBJECT
         }
         protected override void CreateBullet()
         {
-            GameObject obj = Instantiate(_bullet);
-            obj.GetComponent<Rigidbody2D>().position = _rigidbody.position;
+            Transform objTransform = Instantiate(_bullet).transform;
+            objTransform.position = _rigidbody.position;
 
-            BulletController controller = obj.transform.Find("Bullet").GetComponent<BulletController>();
+            BulletController controller = objTransform.transform.Find("Bullet").GetComponent<BulletController>();
             controller.SetDirection(transform.rotation.y == 180.0f ? -transform.right : transform.right);
 
-            _bullets.Add(obj);
+            _bullets.Add(objTransform.gameObject);
         }
         protected override void Die() 
         { 
+            if (_isDie) return;
             _playerState.SetState(new DieState());
-            _playerState.Update(this);
         }
         /* 해당 함수는 하이어라키에서 애니메이션 이벤트로 호출되는 함수 입니다. 스크립트 내에서 상태 전환이 필요한 경우 new 키워드를 사용해 초기화 합니다. */
         private void SetState(PLR_STATE state)
@@ -100,6 +100,7 @@ namespace OBJECT
         private IEnumerator Respawn() 
         {
             yield return new WaitForSeconds(5.0f);
+            _playerState.SetState(new RunState());
             _animator.SetTrigger("Respawn");
             _rigidbody.position = _spawnPoint;
             _isDie = false;
@@ -192,11 +193,12 @@ namespace OBJECT
         {
             public override void Enter(PlayerController t)
             {
-                print("asdf");
                 base.Enter(t);
                 t._animator.SetTrigger("Die");
+                t._direction = Vector2.zero;
                 t.StartCoroutine(t.Respawn());
             }
+            public override void Update(PlayerController t) { t._direction = Vector2.zero; }
             public DieState() {}
         }
     }

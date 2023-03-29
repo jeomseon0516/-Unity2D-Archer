@@ -14,9 +14,6 @@ public class CreateBackGrounds : MonoBehaviour
         {
             _backGrounds[i].SetSpeed(SetBackGroundSpeed(_backGrounds[i], i));
 
-             if (Default.GetIntParseString(_backGrounds[i].name) == _backGrounds.Count) 
-            continue;
-
             var clone = Instantiate(_backGrounds[i], transform);
             clone.SetSpeed(SetBackGroundSpeed(_backGrounds[i], i));
         }
@@ -58,6 +55,12 @@ public class CreateBackGrounds : MonoBehaviour
                 break;
             case 7:
                 speed = -0.95f;
+                break;
+            case 8:
+                speed = -0.9925f;
+                break;
+            case 9:
+                speed = -0.9975f;
                 break;
             default:
                 speed = -1;
