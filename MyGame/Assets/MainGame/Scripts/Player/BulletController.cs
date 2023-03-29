@@ -36,17 +36,12 @@ public class BulletController : ObjectBase
             ActionCamera(Camera.main.gameObject);
         }
     }
-
     private void EffectAfterDestroy(GameObject obj, GameObject effect)
     {
         CreateEffect(obj.transform.position, effect);
         base.Die();
     }
-    private void CreateEffect(Vector2 pos, GameObject effect)
-    {
-        GameObject obj = Instantiate(effect);
-        obj.transform.position = pos;
-    }
+    private void CreateEffect(Vector2 pos, GameObject effect) { Instantiate(effect).transform.position = pos; }
     protected override void Die() { EffectAfterDestroy(gameObject, _smoke); }
     private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); } // 카메라 매니저를 만들어주는게 좋지않을까?
     public void SetDirection(Vector2 dir) { _direction = dir; }

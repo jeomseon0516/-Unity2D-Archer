@@ -38,12 +38,13 @@ namespace OBJECT
             ObjectBase targetPhysics    = _target.transform.Find(_target.name).GetComponent<ObjectBase>();
             Transform tPhysicsTransform = _target.transform;
             
-            if (Constants.GetDistance(tPhysicsTransform.position, transform.position) <= _skillMaxDistance)
+            if (Default.GetDistance(tPhysicsTransform.position, transform.position) <= _skillMaxDistance)
             {
                 Transform skillTransform = Instantiate(_skill).transform;
                 ObjectBase skill = skillTransform.Find(_skill.name).GetComponent<ObjectBase>();
-                skillTransform.position = new Vector2(tPhysicsTransform.position.x + 0.15f,
-                                                       tPhysicsTransform.position.y + skill.GetOffSetY() - targetPhysics.GetOffSetY());
+                skillTransform.GetComponent<Rigidbody2D>().position = new Vector2(
+                    tPhysicsTransform.position.x + 0.15f,
+                    tPhysicsTransform.position.y + skill.GetOffSetY() - targetPhysics.GetOffSetY());
             }
         }
         // TODO : HitAnimation재생
@@ -80,7 +81,7 @@ namespace OBJECT
 
             Vector3 offset = new Vector2(Random.Range(0, 5), Random.Range(0.0f, 1.5f));
 
-            return new Vector2(transform.position.x + offset.x * xDir, 0.0f + offset.y * yDir);
+            return new Vector2(_rigidbody.position.x + offset.x * xDir, 0.0f + offset.y * yDir);
         }
         // 플레이어에게 피격 후 추적 중일때 추적 쿨타임
         private IEnumerator TargetingObject()
@@ -100,7 +101,7 @@ namespace OBJECT
             bool on = isOn > 0.0f ? true : false;
             _attackBox.SetActive(on);
         }
-        protected override void ObjUpdate() { _state.Update(this); }
+        protected override void ObjFixedUpdate() { _state.Update(this); }
         protected override void GetDamageAction(int damage) { _state.SetState(new HitState()); }
         protected internal override void TriggerAction(Collider2D col) { TriggerCollision(col.transform.parent.gameObject.transform, col.transform.GetComponent<ObjectBase>()); }
     }
@@ -131,7 +132,7 @@ namespace OBJECT
             }
             public override void Update(EnemyController t)
             {
-                if (t._isHunting || Constants.GetDistance(t._target.transform.position, t.transform.position) <= t._searchDis) // 타겟이 범위 안에 들어오면 타겟팅 패턴으로 전환
+                if (t._isHunting || Default.GetDistance(t._target.transform.position, t.transform.position) <= t._searchDis) // 타겟이 범위 안에 들어오면 타겟팅 패턴으로 전환
                 {
                     t._state.SetState(new TargetingState());
                     return;
@@ -150,7 +151,7 @@ namespace OBJECT
                 {
                     t._direction = (_randPoint - t.transform.position).normalized;
 
-                    if (Constants.GetDistance(_randPoint, t.transform.position) <= 1.0f) // 목표 위치로 이동이 끝났다면
+                    if (Default.GetDistance(_randPoint, t.transform.position) <= 1.0f) // 목표 위치로 이동이 끝났다면
                     {
                         t._direction = Vector2.zero;
                         _coolTime = Random.Range(0.0f, 3.0f);
@@ -175,7 +176,7 @@ namespace OBJECT
                 Transform targetTransform = t._target.transform;
                 Vector3 targetPosition = targetTransform.position;
 
-                if (!t._isHunting && Constants.GetDistance(targetPosition, myPosition) > t._searchDis) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
+                if (!t._isHunting && Default.GetDistance(targetPosition, myPosition) > t._searchDis) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
                 {
                     t._state.SetState(new IdleState());
                     return;
@@ -197,7 +198,7 @@ namespace OBJECT
             {
                 Vector2 movePoint = new Vector2(targetPosition.x + Random.Range(4.0f, 6.0f) * xDir, _yTemp);
 
-                if (Constants.GetDistance(movePoint, myPosition) <= 1.0f)
+                if (Default.GetDistance(movePoint, myPosition) <= 1.0f)
                     t._state.SetState(new SkillState());
 
                 return movePoint;
