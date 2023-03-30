@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 9148323377750494851}
-  - component: {fileID: 451781704910342264}
   - component: {fileID: 7043480940845636833}
   m_Layer: 8
   m_Name: Enemy
@@ -35,22 +34,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!70 &451781704910342264
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5946353459426102417}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IsTrigger: 0
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0.00037432718, y: -0.26}
-  m_Size: {x: 0.43525183, y: 0.10899871}
-  m_Direction: 1
 --- !u!50 &7043480940845636833
 Rigidbody2D:
   serializedVersion: 4
@@ -173,6 +156,7 @@ GameObject:
   - component: {fileID: 8569944122384582153}
   - component: {fileID: 8569944122384582154}
   - component: {fileID: 8569944122384582155}
+  - component: {fileID: 4465382652941248067}
   m_Layer: 8
   m_Name: Enemy
   m_TagString: Untagged
@@ -280,6 +264,22 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
+--- !u!70 &4465382652941248067
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8569944122384582165}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.00037432718, y: -0.26}
+  m_Size: {x: 0.43525183, y: 0.10899871}
+  m_Direction: 1
 --- !u!1 &8911088306374612888
 GameObject:
   m_ObjectHideFlags: 0

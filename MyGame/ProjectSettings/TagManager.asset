@@ -13,12 +13,12 @@ TagManager:
   - Wall
   - Water
   - UI
-  - Player
+  - ObjectWall
   - Bullet
   - Enemy
-  - Fall
+  - Player
   - EnemyBullet
-  - 
+  - FallEnemy
   - 
   - 
   - 

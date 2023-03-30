@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6129693682070161261}
-  - component: {fileID: 1002035101522104482}
   - component: {fileID: 7636745497376887372}
   m_Layer: 10
   m_Name: EnemyBullet
@@ -35,22 +34,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!70 &1002035101522104482
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6129693682070161248}
-  m_Enabled: 0
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: -0.05417207, y: -0.4409687}
-  m_Size: {x: 0.37269074, y: 0.08597661}
-  m_Direction: 1
 --- !u!50 &7636745497376887372
 Rigidbody2D:
   serializedVersion: 4
@@ -84,7 +67,8 @@ GameObject:
   - component: {fileID: 7753687093004698040}
   - component: {fileID: 8857469070667218071}
   - component: {fileID: 6383640255578027768}
-  m_Layer: 0
+  - component: {fileID: 2644524093812639420}
+  m_Layer: 10
   m_Name: EnemyBullet
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -190,6 +174,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edd74186e4ea9d24cbfe14022de0fb5b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!70 &2644524093812639420
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7734719410477397815}
+  m_Enabled: 0
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: -0.05417207, y: -0.4409687}
+  m_Size: {x: 0.37269074, y: 0.08597661}
+  m_Direction: 1
 --- !u!1 &8780380717613099150
 GameObject:
   m_ObjectHideFlags: 0

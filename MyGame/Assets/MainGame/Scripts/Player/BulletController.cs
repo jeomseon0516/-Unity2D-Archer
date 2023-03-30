@@ -6,13 +6,9 @@ public class BulletController : ObjectBase
 {
     private GameObject _smoke;
     private GameObject _hitEffect;
-    private GameObject _attackBox;
     private float      _time;
     protected override void Init()
     {
-        _attackBox = transform.parent.gameObject;
-        _attackBox.gameObject.AddComponent<AttackBox>().SetObjectBase(this);
-
         _smoke     = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "Smoke");
         _hitEffect = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "HitEffect");
         _speed     = 10.0f;
@@ -25,11 +21,9 @@ public class BulletController : ObjectBase
         yield return new WaitForSeconds(_time);
         _hp = 0;
     }
-    protected internal override void TriggerAction(Collider2D col) 
+    protected internal override void TriggerAction(Collider2D col)
     {
-        if (LayerMask.LayerToName(col.gameObject.layer) != "Enemy") return;
-
-        if (TriggerCollision(col.transform, col.transform.Find(col.name).GetComponent<ObjectBase>()))
+        if (TriggerCollision(col.transform.parent, col.transform.GetComponent<ObjectBase>()))
         {
             --_hp;
             CreateEffect(new Vector2(col.transform.position.x, transform.position.y), _hitEffect);

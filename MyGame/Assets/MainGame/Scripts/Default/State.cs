@@ -25,8 +25,6 @@ public abstract class State<T> : IState<T> where T : ObjectBase
     public StateFunc GetStateFunc() { return _stateFunc; }
     public State() { _stateFunc = Enter; }
 }
-
-//?????
 public class StateMachine<T> where T : ObjectBase
 {
     protected State<T> _state;

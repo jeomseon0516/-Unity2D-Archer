@@ -19,6 +19,7 @@ namespace OBJECT
         protected override void Init()
         {
             base.Init();
+            RegisterObserver(GameObject.Find("Canvas").transform.Find("HpBar").GetComponent<PrograssBar>());
             _maxHp = _hp = 20;
             _id = OBJECTID.PLAYER;
             _speed = 5.0f;
@@ -108,7 +109,11 @@ namespace OBJECT
         }
         protected override void ObjFixedUpdate() { _playerState.Update(this); }
         protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
-        protected override void ObjUpdate() { _jumpValue = CheckFallingOrJumping(); }
+        protected override void ObjUpdate() 
+        { 
+            _jumpValue = CheckFallingOrJumping();
+            NotifyObservers();
+        }
     }
     public partial class PlayerController : LivingObject
     {

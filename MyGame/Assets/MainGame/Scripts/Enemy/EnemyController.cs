@@ -106,11 +106,12 @@ namespace OBJECT
             if (_isDie) return;
 
             _state.SetState(new DieState());
-            Destroy(_physics.GetComponent<Collider2D>()); 
+            Destroy(GetComponent<Collider2D>()); 
         }
+        private void OnTriggerEnter2D(Collider2D collision) {}
         protected override void ObjFixedUpdate() { _state.Update(this); }
         protected override void GetDamageAction(int damage) { _state.SetState(new HitState()); }
-        protected internal override void TriggerAction(Collider2D col) { TriggerCollision(col.transform.parent.gameObject.transform, col.transform.GetComponent<ObjectBase>()); }
+        protected internal override void TriggerAction(Collider2D col) { TriggerCollision(col.transform.parent, col.transform.GetComponent<ObjectBase>()); }
     }
 
     // TODO : 에너미 상태 패턴 구현 

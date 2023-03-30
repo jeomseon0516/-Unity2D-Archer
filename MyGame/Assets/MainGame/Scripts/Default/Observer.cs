@@ -12,6 +12,6 @@ namespace OBSERVER
     }
     public interface IObserver
     {
-        public void UpdateData(int hp);
+        public void UpdateData(int hp, int maxHp);
     }
 }

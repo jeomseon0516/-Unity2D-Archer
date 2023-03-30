@@ -3,26 +3,28 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using OBJECT;
+using OBSERVER;
 
 /*
  * 옵저버 패턴으로 바꿔주자
  */
-public class PrograssBar : MonoBehaviour
+public partial class PrograssBar : MonoBehaviour, IObserver
 {
     Slider _slider;
-    PlayerController _player;
-    private void Awake()
+
+    private void Awake() { _slider = transform.GetComponent<Slider>(); }
+}
+
+public partial class PrograssBar : MonoBehaviour, IObserver
+{
+    public void UpdateData(int hp, int maxHp)
     {
-        _slider = transform.GetComponent<Slider>();
+        _slider.maxValue = maxHp;
+        _slider.value = hp;
     }
-    private void Start()
+    public void UpdateData(LivingObject obj)
     {
-        _player = GameObject.Find("Player").transform.Find("Player").GetComponent<PlayerController>();
-        _slider.maxValue = _player.GetMaxHp();
-        _slider.value    = _player.GetHp();
+        _slider.maxValue = obj.GetMaxHp();
+        _slider.value = obj.GetHp();
     }
-    void Update()
-    {
-        _slider.value = _player.GetHp();
-    }        
 }

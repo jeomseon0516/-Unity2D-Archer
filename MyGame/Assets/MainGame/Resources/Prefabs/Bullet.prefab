@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 3497014222220591909}
   - component: {fileID: 8651428462536870372}
   - component: {fileID: 4242511140540396094}
+  - component: {fileID: 7712615955420795703}
   m_Layer: 7
   m_Name: Bullet
   m_TagString: Untagged
@@ -31,7 +32,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6719723415871315329}
-  m_RootOrder: 1
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: -90}
 --- !u!114 &8651428462536870372
 MonoBehaviour:
@@ -97,6 +98,22 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!70 &7712615955420795703
+CapsuleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6299779369487158245}
+  m_Enabled: 1
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_UsedByComposite: 0
+  m_Offset: {x: 0.002002053, y: -0.56464183}
+  m_Size: {x: 0.78020334, y: 0.21724716}
+  m_Direction: 1
 --- !u!1 &6719723415871315332
 GameObject:
   m_ObjectHideFlags: 0
@@ -107,7 +124,6 @@ GameObject:
   m_Component:
   - component: {fileID: 6719723415871315329}
   - component: {fileID: 6719723415871315330}
-  - component: {fileID: 6719723415871315331}
   m_Layer: 7
   m_Name: Bullet
   m_TagString: Untagged
@@ -127,8 +143,8 @@ Transform:
   m_LocalScale: {x: 1.5, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 3073184400108819112}
   - {fileID: 3497014222220591909}
+  - {fileID: 3073184400108819112}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -153,22 +169,6 @@ Rigidbody2D:
   m_SleepingMode: 1
   m_CollisionDetection: 0
   m_Constraints: 4
---- !u!70 &6719723415871315331
-CapsuleCollider2D:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6719723415871315332}
-  m_Enabled: 1
-  m_Density: 1
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_UsedByEffector: 0
-  m_UsedByComposite: 0
-  m_Offset: {x: 0.002002053, y: -0.56464183}
-  m_Size: {x: 0.78020334, y: 0.21724716}
-  m_Direction: 1
 --- !u!1 &9006066285054268469
 GameObject:
   m_ObjectHideFlags: 0
@@ -199,7 +199,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 6719723415871315329}
-  m_RootOrder: 0
+  m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}

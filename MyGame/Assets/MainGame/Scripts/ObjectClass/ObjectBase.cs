@@ -59,6 +59,7 @@ namespace OBJECT
 
             Init();
         }
+        private void Update() { ObjUpdate(); }
         private void OnTriggerEnter2D(Collider2D col) { TriggerAction(col); }
         protected internal virtual void TriggerAction(Collider2D col) {}
         protected internal virtual void CollisionAction(Collision2D obj) {}
@@ -124,7 +125,6 @@ namespace OBJECT
             _sprRen.sortingOrder = (int)((_shadow.position.y) * 10) * -1;
             _shadowSprRen.sortingOrder = _sprRen.sortingOrder - 1;
         }
-        private void Update() { ObjUpdate(); }
         private void CheckHeight() { _shadow.localPosition = new Vector2(_shadowPos.x, _shadowPos.y - transform.localPosition.y * 0.5f); }
         protected void DestroyObj() { Destroy(_physics.gameObject); }
         public void TakeDamage(int damage) { _hp -= damage; }

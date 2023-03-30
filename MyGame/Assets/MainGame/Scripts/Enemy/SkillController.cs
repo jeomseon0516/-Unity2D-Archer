@@ -6,14 +6,10 @@ namespace OBJECT
 {
     public class SkillController : ObjectBase
     {
-        private GameObject _attackBox;
         private Collider2D _col;
         protected override void Init()
         {
-            _attackBox = transform.parent.gameObject;
-            _attackBox.gameObject.AddComponent<AttackBox>().SetObjectBase(this);
-
-            _col = _attackBox.GetComponent<Collider2D>();
+            _col = GetComponent<Collider2D>();
 
             _speed = 0.0f;
             _atk = 5;
@@ -22,8 +18,9 @@ namespace OBJECT
         public void OnAttackBox(float isOn)
         {
             bool on = isOn > 0.0f ? true : false;
+            _rigidbody.sleepMode = RigidbodySleepMode2D.NeverSleep;
             _col.enabled = on;
         }
-        protected internal override void TriggerAction(Collider2D col) { TriggerCollision(col.transform.parent.gameObject.transform, col.transform.GetComponent<ObjectBase>()); }
+        protected internal override void TriggerAction(Collider2D col) { print("asdf"); TriggerCollision(col.transform.parent, col.transform.GetComponent<ObjectBase>()); }
     }
 }
