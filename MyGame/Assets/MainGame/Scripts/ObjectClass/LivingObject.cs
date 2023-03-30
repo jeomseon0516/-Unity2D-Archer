@@ -12,6 +12,15 @@ namespace OBJECT
         protected virtual void CreateBullet() { }
         protected override void Init() { _bullet = ResourcesManager.GetInstance().GetObjectToKey(_id, "Bullet"); }
         protected override void Run() { _animator.SetFloat("Speed", Mathf.Max(Mathf.Abs(_direction.x), Mathf.Abs(_direction.y))); }
+        protected Vector2 RandomMovePosition()
+        {
+            int xDir = Random.Range(0, 2) == 0 ? -1 : 1;
+            int yDir = Random.Range(0, 2) == 0 ? -1 : 1;
+
+            Vector3 offset = new Vector2(Random.Range(0, 5), Random.Range(0.0f, 1.5f));
+
+            return new Vector2(_rigidbody.position.x + offset.x * xDir, 0.0f + offset.y * yDir);
+        }
         public int GetMaxHp() { return _maxHp; }
 
     }

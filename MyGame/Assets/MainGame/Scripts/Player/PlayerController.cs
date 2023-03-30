@@ -11,7 +11,6 @@ namespace OBJECT
     {
         private List<GameObject> _bullets = new List<GameObject>();
         private StateMachine<PlayerController> _playerState;
-        private Collider2D _col;     // 벽 충돌 체크 할 콜라이더
         private float _beforeLocalY; // 이전 프레임의 로컬 Y 
         private float _jumpValue;
         private Vector3 _spawnPoint;
@@ -26,11 +25,14 @@ namespace OBJECT
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
-            _col = GetComponent<Collider2D>();
             _spawnPoint = _physics.position;
+
+            StartCoroutine(CheckFallingOrJumping());
         }
         protected override void Run()
         {
+            if (_isDie) return;
+
             _direction = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
             base.Run();
         }
@@ -39,8 +41,19 @@ namespace OBJECT
             Transform objTransform = Instantiate(_bullet).transform;
             objTransform.position = _rigidbody.position;
 
-            BulletController controller = objTransform.transform.Find("Bullet").GetComponent<BulletController>();
-            controller.SetDirection(transform.rotation.y == 180.0f ? -transform.right : transform.right);
+            float radian = Default.GetPositionToRadian(_lookAt, Vector2.zero);
+            BulletController controller = objTransform.Find("Body").Find("Image").GetComponent<BulletController>();
+
+            controller.SetDirection(_lookAt != Vector2.zero ? new Vector2(Mathf.Cos(radian), Mathf.Sin(radian)).normalized : 
+                                                              transform.eulerAngles.y == 180.0f ? Vector2.left : Vector2.right);
+
+            Quaternion rotation = controller.transform.rotation;
+            float angle = Quaternion.FromToRotation(Vector3.zero, Vector3.down - new Vector3(_lookAt.x, _lookAt.y)).eulerAngles.z; // Default.ConvertFromRadianToAngle(radian);
+
+            rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, rotation.eulerAngles.x, angle < 0.0f ? angle + 360  : angle);
+            controller.transform.rotation = rotation;
+
+            print(rotation.eulerAngles.z);
 
             _bullets.Add(objTransform.gameObject);
         }
@@ -77,26 +90,28 @@ namespace OBJECT
         private IEnumerator Jumping()
         {
             float jump = 7.0f;
-            _col.isTrigger = true;
+            _bodyCollider.isTrigger = true;
 
-            while (transform.localPosition.y >= 0)
+            while (_body.localPosition.y >= 0)
             {
-                yield return null;
-                transform.localPosition += new Vector3(0.0f, jump, 0.0f) * Time.deltaTime;
+                yield return new WaitForFixedUpdate();
+                _body.localPosition += new Vector3(0.0f, jump, 0.0f) * Time.deltaTime;
                 jump -= Constants.GRAVITY * Time.deltaTime;
             }
 
-            _col.isTrigger = false;
-            transform.localPosition = new Vector2(0.0f, 0.0f);
+            _bodyCollider.isTrigger = false;
+            _body.localPosition = new Vector2(0.0f, 0.0f);
         }
-        private float CheckFallingOrJumping()
+        private IEnumerator CheckFallingOrJumping()
         {
-            float movement = transform.localPosition.y - _beforeLocalY;
+            while (true)
+            {
+                yield return new WaitForFixedUpdate();
+                _jumpValue = _body.localPosition.y - _beforeLocalY;
 
-            _animator.SetFloat("JumpSpeed", movement);
-            _beforeLocalY = transform.localPosition.y;
-
-            return movement;
+                _animator.SetFloat("JumpSpeed", _jumpValue);
+                _beforeLocalY = _body.localPosition.y;
+            }
         }
         private IEnumerator Respawn() 
         {
@@ -109,11 +124,7 @@ namespace OBJECT
         }
         protected override void ObjFixedUpdate() { _playerState.Update(this); }
         protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
-        protected override void ObjUpdate() 
-        { 
-            _jumpValue = CheckFallingOrJumping();
-            NotifyObservers();
-        }
+        protected override void ObjUpdate() { NotifyObservers(); }
     }
     public partial class PlayerController : LivingObject
     {
@@ -163,7 +174,7 @@ namespace OBJECT
         {
             public override void Enter(PlayerController t)
             {
-                if (t.transform.localPosition.y <= 0.0f)
+                if (t._body.localPosition.y <= 0.0f)
                     t.StartCoroutine(t.Jumping());
                 base.Enter(t);
             }

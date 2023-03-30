@@ -19,8 +19,12 @@ namespace OBJECT
         protected SpriteRenderer _sprRen;
         protected SpriteRenderer _shadowSprRen;
         protected Rigidbody2D    _rigidbody;
-        protected Transform      _shadow;
+        protected Collider2D     _bodyCollider;
         protected Transform      _physics;
+        protected Transform      _body;
+        protected Transform      _shadow;
+        protected Vector2        _originalColSize;
+        protected Vector2        _originalShadowScale;
         protected Vector2        _direction;
         protected Vector2        _lookAt;
         protected Vector2        _shadowPos;
@@ -38,19 +42,24 @@ namespace OBJECT
             _animator = GetComponent<Animator>();
             _sprRen   = GetComponent<SpriteRenderer>();
 
-            _physics = transform.parent;
-            _physics.gameObject.AddComponent<ObjectPhysics>();
+            _body = transform.parent;
+            _body.gameObject.AddComponent<ObjectPhysics>();
+            _bodyCollider = _body.GetComponent<Collider2D>();
+            _originalColSize = ((CapsuleCollider2D)_bodyCollider).size;
 
-            _rigidbody = _physics.GetComponent<Rigidbody2D>();
+            _physics = _body.parent; // 가장 상위 트랜스폼
+
+            _rigidbody = _physics.GetComponent<Rigidbody2D>(); // 
 
             _shadow       = _physics.Find("Shadow");
             _shadowSprRen = _shadow.GetComponent<SpriteRenderer>();
+            _originalShadowScale = _shadowSprRen.transform.localScale;
 
             _shadowPos = _shadow.localPosition;
             _lookAt    = new Vector2(0.0f, 0.0f);
 
             _offsetY = transform.position.y - _shadow.transform.position.y;
-            _heightOffset = _shadow.gameObject.GetComponent<RectTransform>().rect.height * _shadow.transform.localScale.y;
+            _heightOffset = _shadow.GetComponent<RectTransform>().rect.height * _shadow.transform.localScale.y;
 
             _isDie = false;
             _hp    = 10;
@@ -77,27 +86,26 @@ namespace OBJECT
             _beforeHp = _hp;
             _lookAt   = _direction;
 
+            UpdateShadowAndCollider();
             CheckDeadToHp();
-            Run();
             ObjFixedUpdate();
+            Run();
             Move(_direction.x, _direction.y);
             CheckHeight();
             ChangeFlipXToHor(_lookAt.x);
             SettingZNode();
         }
-        protected bool TriggerCollision(Transform targetPhysics, ObjectBase obj)
+        protected internal bool TriggerCollision(Transform targetPhysics, ObjectBase obj)
         {
             float targetPosY = targetPhysics.position.y - obj.GetOffSetY();
-            float myPosY     = _rigidbody.position.y - _offsetY;
+            float myPosY     = _rigidbody.position.y    - _offsetY;
 
             float targetOffsetY = obj.GetHeightOffSet();
 
             if (myPosY + _heightOffset > targetPosY - targetOffsetY && myPosY + _heightOffset < targetPosY + targetOffsetY ||
                 myPosY - _heightOffset < targetPosY + targetOffsetY && myPosY - _heightOffset > targetPosY - targetOffsetY)
-            {
-                obj.TakeDamage(_atk);
                 return true;
-            }
+
             return false;
         }
         private void CheckDeadToHp()
@@ -125,11 +133,19 @@ namespace OBJECT
             _sprRen.sortingOrder = (int)((_shadow.position.y) * 10) * -1;
             _shadowSprRen.sortingOrder = _sprRen.sortingOrder - 1;
         }
-        private void CheckHeight() { _shadow.localPosition = new Vector2(_shadowPos.x, _shadowPos.y - transform.localPosition.y * 0.5f); }
+        private void UpdateShadowAndCollider()
+        {
+            float average = (_sprRen.bounds.max.x - _sprRen.bounds.min.x) / (_sprRen.localBounds.size.x * _sprRen.transform.lossyScale.x);
+            ((CapsuleCollider2D)_bodyCollider).size = new Vector2(_originalColSize.x * average, _originalColSize.y);
+            _shadowSprRen.transform.localScale = new Vector2(_originalShadowScale.x * average, _originalShadowScale.y);
+        }
+        private void CheckHeight() { _shadow.localPosition = new Vector2(_shadowPos.x, _shadowPos.y - _body.localPosition.y * 0.5f); }
         protected void DestroyObj() { Destroy(_physics.gameObject); }
         public void TakeDamage(int damage) { _hp -= damage; }
+        public Transform GetPhysics() { return _physics; }
         public float GetHeightOffSet() { return _heightOffset; }
         public float GetOffSetY() { return _offsetY; }
         public int GetHp() { return _hp; }
+        public int GetAtk() { return _atk; }
     }
 }

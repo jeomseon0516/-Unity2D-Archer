@@ -4,55 +4,37 @@ using UnityEngine;
 
 namespace OBJECT
 {
-    public partial class EnemyController : LivingObject
+    public partial class EnemyController : EnemyBase
     {
         private StateMachine<EnemyController> _state;
         private GameObject _skill;
-        private GameObject _attackBox;
-        private GameObject _target;
         private float _skillMaxDistance;
-        private float _searchDis;
-        private float _attackDis;
         private bool _useSkill;
-        private bool _isHunting;
         protected override void Init()
         {
+            base.Init();
             _skill  = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.ENEMY, "Bullet");
-            _target = GameObject.Find("Player");
-
-            _attackBox = transform.Find("AttackBox").gameObject;
-            _attackBox.gameObject.AddComponent<AttackBox>().SetObjectBase(this);
 
             _state = new StateMachine<EnemyController>();
             _state.SetState(new IdleState());
 
             _skillMaxDistance = 8.0f;
             _useSkill         = true;
-            _isHunting        = false;
-            _searchDis        = 8.0f;
-            _attackDis        = 1.5f;
-            _hp               = 5;
         }
         protected override void CreateBullet()
         {
-            ObjectBase targetPhysics    = _target.transform.Find(_target.name).GetComponent<ObjectBase>();
             Transform tPhysicsTransform = _target.transform;
             
             if (Default.GetDistance(tPhysicsTransform.position, transform.position) <= _skillMaxDistance)
             {
                 Transform skillTransform = Instantiate(_skill).transform;
-                ObjectBase skill = skillTransform.Find(_skill.name).GetComponent<ObjectBase>();
+                ObjectBase skill = skillTransform.Find("Body").Find("Image").GetComponent<ObjectBase>();
                 skillTransform.position = new Vector2(
                     tPhysicsTransform.position.x + 0.15f,
-                    tPhysicsTransform.position.y + skill.GetOffSetY() - targetPhysics.GetOffSetY());
+                    tPhysicsTransform.position.y + skill.GetOffSetY() - _target.GetOffSetY());
             }
         }
         // TODO : HitAnimation재생
-        protected internal override void CollisionAction(Collision2D obj)
-        {
-            if (LayerMask.LayerToName(obj.gameObject.layer) != "Bullet") return;
-            StartCoroutine(TargetingObject()); // 플레이어에게 공격받으면 10초동안은 거리에 상관없이 무조건 플레이어를 쫒아다닌다.
-        }
         private void SetState(ENEMY_STATE state)
         {
             switch (state)
@@ -74,48 +56,26 @@ namespace OBJECT
                     break;
             }
         }
-        private Vector2 RandomMovePosition()
-        {
-            int xDir = Random.Range(0, 2) == 0 ? -1 : 1;
-            int yDir = Random.Range(0, 2) == 0 ? -1 : 1;
-
-            Vector3 offset = new Vector2(Random.Range(0, 5), Random.Range(0.0f, 1.5f));
-
-            return new Vector2(_rigidbody.position.x + offset.x * xDir, 0.0f + offset.y * yDir);
-        }
         // 플레이어에게 피격 후 추적 중일때 추적 쿨타임
-        private IEnumerator TargetingObject()
-        {
-            _isHunting = true;
-            yield return new WaitForSeconds(10.0f);
-            _isHunting = false;
-        }
         private IEnumerator SkillCollTime()
         {
             _useSkill = false;
             yield return new WaitForSeconds(5.0f);
             _useSkill = true;
         }
-        public void OnAttackBox(float isOn) 
-        {
-            bool on = isOn > 0.0f ? true : false;
-            _attackBox.SetActive(on);
-        }
         protected override void Die() 
         {
             if (_isDie) return;
 
             _state.SetState(new DieState());
-            Destroy(GetComponent<Collider2D>()); 
+            Destroy(_bodyCollider); 
         }
-        private void OnTriggerEnter2D(Collider2D collision) {}
         protected override void ObjFixedUpdate() { _state.Update(this); }
         protected override void GetDamageAction(int damage) { _state.SetState(new HitState()); }
-        protected internal override void TriggerAction(Collider2D col) { TriggerCollision(col.transform.parent, col.transform.GetComponent<ObjectBase>()); }
     }
 
     // TODO : 에너미 상태 패턴 구현 
-    public partial class EnemyController : LivingObject
+    public partial class EnemyController : EnemyBase
     {
         public enum ENEMY_STATE
         {
@@ -157,9 +117,9 @@ namespace OBJECT
                 }
                 else // 랜덤한 위치로 이동중일때
                 {
-                    t._direction = (_randPoint - t.transform.position).normalized;
+                    t._direction = (_randPoint - t._physics.position).normalized;
 
-                    if (Default.GetDistance(_randPoint, t.transform.position) <= 1.0f) // 목표 위치로 이동이 끝났다면
+                    if (Default.GetDistance(_randPoint, t._physics.position) <= 1.0f) // 목표 위치로 이동이 끝났다면
                     {
                         t._direction = Vector2.zero;
                         _coolTime = Random.Range(0.0f, 3.0f);
@@ -180,9 +140,9 @@ namespace OBJECT
             }
             public override void Update(EnemyController t)
             {
-                Vector2 myPosition = new Vector2(t.transform.position.x, t.transform.position.y - t._offsetY);
+                Vector2 myPosition = new Vector2(t._physics.position.x, t._physics.position.y - t._offsetY);
                 Transform targetTransform = t._target.transform;
-                Vector3 targetPosition = targetTransform.position;
+                Vector2 targetPosition = targetTransform.position;
 
                 if (!t._isHunting && Default.GetDistance(targetPosition, myPosition) > t._searchDis) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
                 {
@@ -190,7 +150,7 @@ namespace OBJECT
                     return;
                 }
 
-                ObjectBase targetObj = targetTransform.Find("Player").GetComponent<ObjectBase>();
+                ObjectBase targetObj = targetTransform.GetComponent<ObjectBase>();
                 int xDir = myPosition.x - targetPosition.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
                 Vector2 movePoint = Vector2.zero;
 
@@ -200,7 +160,7 @@ namespace OBJECT
                     movePoint = SkillAndGetMovePoint(t, xDir, targetPosition, myPosition);
                 
                 t._direction = (movePoint - myPosition).normalized;
-                t._lookAt = (targetPosition - t.transform.position).normalized;
+                t._lookAt = (targetPosition - myPosition).normalized;
             }
             private Vector2 SkillAndGetMovePoint(EnemyController t, int xDir, Vector2 targetPosition, Vector2 myPosition)
             {
@@ -231,9 +191,9 @@ namespace OBJECT
                 base.Enter(t);
                 t._animator.SetTrigger("Attack");
                 t._direction = Vector2.zero;
-                t._lookAt = (t._target.transform.position - t.transform.position).normalized;
+                t._lookAt = (t._target.transform.position - t._physics.position).normalized;
             }
-            public override void Exit(EnemyController t) { t.OnAttackBox(0); }
+            public override void Exit(EnemyController t) { t.OnAttackBox(0); } // 공격 박스 off
             public AttackState() {}
         }
         public class SkillState : State<EnemyController>
@@ -243,7 +203,7 @@ namespace OBJECT
                 base.Enter(t);
                 t._animator.SetTrigger("Skill");
                 t._direction = Vector2.zero;
-                t._lookAt = (t._target.transform.position - t.transform.position).normalized;
+                t._lookAt = (t._target.transform.position - t._physics.position).normalized;
             }
             public override void Exit(EnemyController t) { t.StartCoroutine(t.SkillCollTime()); }
             public SkillState() {}

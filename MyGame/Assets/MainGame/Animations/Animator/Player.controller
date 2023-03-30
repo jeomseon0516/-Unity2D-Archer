@@ -170,25 +170,25 @@ AnimatorStateMachine:
     m_Position: {x: -470, y: 230, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -3354842855829328381}
-    m_Position: {x: 150, y: -30, z: 0}
+    m_Position: {x: 250, y: -50, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -8499293813513504620}
     m_Position: {x: 280, y: 370, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 8054790226574636292}
-    m_Position: {x: -1150, y: -50, z: 0}
+    m_Position: {x: -1310, y: -990, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -4081755628772792461}
-    m_Position: {x: 60, y: 800, z: 0}
+    m_Position: {x: 310, y: -920, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 1906298732486034433}
-    m_Position: {x: 10, y: -490, z: 0}
+    m_Position: {x: -1260, y: -70, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -8601545464460583923}
-    m_Position: {x: -460, y: 810, z: 0}
+    m_Position: {x: -370, y: -290, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 5878695707034159085}
-    m_Position: {x: -1280, y: -460, z: 0}
+    m_Position: {x: -460, y: 1020, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -8077964823127206088}
     m_Position: {x: 280, y: 440, z: 0}
@@ -472,43 +472,43 @@ AnimatorController:
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   - m_Name: Speed
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   - m_Name: Hit
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   - m_Name: Attack
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   - m_Name: JumpSpeed
     m_Type: 1
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   - m_Name: Die
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   - m_Name: Respawn
     m_Type: 9
     m_DefaultFloat: 0
     m_DefaultInt: 0
     m_DefaultBool: 0
-    m_Controller: {fileID: 0}
+    m_Controller: {fileID: 9100000}
   m_AnimatorLayers:
   - serializedVersion: 5
     m_Name: Player_Motion

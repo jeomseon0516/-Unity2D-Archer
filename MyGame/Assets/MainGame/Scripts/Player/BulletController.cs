@@ -23,9 +23,12 @@ public class BulletController : ObjectBase
     }
     protected internal override void TriggerAction(Collider2D col)
     {
-        if (TriggerCollision(col.transform.parent, col.transform.GetComponent<ObjectBase>()))
+        ObjectBase obj = col.transform.Find("Image").GetComponent<ObjectBase>();
+
+        if (TriggerCollision(col.transform.parent, obj))
         {
             --_hp;
+            obj.TakeDamage(_atk);
             CreateEffect(new Vector2(col.transform.position.x, transform.position.y), _hitEffect);
             ActionCamera(Camera.main.gameObject);
         }
