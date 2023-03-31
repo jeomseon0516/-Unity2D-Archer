@@ -17,7 +17,7 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
         _isCreate = true;
         AddObject(OBJECTID.ENEMY,  "Prefab",    "Prefabs/Enemy/Enemy");
         AddObject(OBJECTID.ENEMY,  "Bullet",    "Prefabs/Enemy/EnemyBullet");
-        AddObject(OBJECTID.PLAYER, "Bullet",    "Prefabs/Bullet");
+        AddObject(OBJECTID.PLAYER, "Bullet",    "Prefabs/Player/Bullet");
         AddObject(OBJECTID.FX,     "Smoke",     "Prefabs/FX/Smoke");
         AddObject(OBJECTID.FX,     "HitEffect", "Prefabs/FX/HitEffect");
     }

@@ -23,9 +23,10 @@ public class BulletController : ObjectBase
     }
     protected internal override void TriggerAction(Collider2D col)
     {
-        ObjectBase obj = col.transform.Find("Image").GetComponent<ObjectBase>();
+        if (LayerMask.LayerToName(col.gameObject.layer) == "Wall") return;
 
-        if (TriggerCollision(col.transform.parent, obj))
+        ObjectBase obj = col.transform.parent.Find("Image").GetComponent<ObjectBase>();
+        if (TriggerCollision(obj.GetPhysics(), obj))
         {
             --_hp;
             obj.TakeDamage(_atk);
@@ -37,6 +38,12 @@ public class BulletController : ObjectBase
     {
         CreateEffect(obj.transform.position, effect);
         base.Die();
+    }
+    protected override void ObjFixedUpdate() 
+    {
+        _lookAt = Vector3.zero;
+        _shadow.transform.eulerAngles = transform.eulerAngles;
+        _heightOffset = (_bodyCollider.bounds.max.y - _bodyCollider.bounds.min.y) * 2;
     }
     private void CreateEffect(Vector2 pos, GameObject effect) { Instantiate(effect).transform.position = pos; }
     protected override void Die() { EffectAfterDestroy(gameObject, _smoke); }

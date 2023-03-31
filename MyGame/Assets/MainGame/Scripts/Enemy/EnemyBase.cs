@@ -37,9 +37,10 @@ namespace OBJECT
         }
         protected internal override void TriggerAction(Collider2D col) 
         {
-            if (!TriggerCollision(col.transform.parent, col.transform.Find("Image").GetComponent<ObjectBase>())) return;
+            ObjectBase obj = col.transform.parent.Find("Image").GetComponent<ObjectBase>();
 
-            StartCoroutine(TargetingObject()); // 플레이어에게 공격받으면 10초동안은 거리에 상관없이 무조건 플레이어를 쫒아다닌다.
+            if (TriggerCollision(obj.GetPhysics(), obj))
+                StartCoroutine(TargetingObject()); // 플레이어에게 공격받으면 10초동안은 거리에 상관없이 무조건 플레이어를 쫒아다닌다.
         }
     }
 }

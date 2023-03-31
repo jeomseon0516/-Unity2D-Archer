@@ -23,7 +23,7 @@ namespace OBJECT
         }
         protected override void CreateBullet()
         {
-            Transform tPhysicsTransform = _target.transform;
+            Transform tPhysicsTransform = _target.GetPhysics();
             
             if (Default.GetDistance(tPhysicsTransform.position, transform.position) <= _skillMaxDistance)
             {

@@ -19,9 +19,9 @@ namespace OBJECT
         }
         protected internal override void TriggerAction(Collider2D col) 
         {
-            ObjectBase obj = col.transform.Find("Image").GetComponent<ObjectBase>();
+            ObjectBase obj = col.transform.parent.Find("Image").GetComponent<ObjectBase>();
 
-            if (TriggerCollision(col.transform.parent, obj))
+            if (TriggerCollision(obj.GetPhysics(), obj))
                 obj.TakeDamage(_atk);
         }
     }

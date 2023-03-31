@@ -11,14 +11,13 @@ namespace OBJECT
     {
         private List<GameObject> _bullets = new List<GameObject>();
         private StateMachine<PlayerController> _playerState;
+        private Vector3 _spawnPoint;
         private float _beforeLocalY; // 이전 프레임의 로컬 Y 
         private float _jumpValue;
-        private Vector3 _spawnPoint;
    
         protected override void Init()
         {
             base.Init();
-            RegisterObserver(GameObject.Find("Canvas").transform.Find("HpBar").GetComponent<PrograssBar>());
             _maxHp = _hp = 20;
             _id = OBJECTID.PLAYER;
             _speed = 5.0f;
@@ -27,6 +26,7 @@ namespace OBJECT
             _playerState.SetState(new RunState());
             _spawnPoint = _physics.position;
 
+            RegisterObserver(GameObject.Find("Canvas").transform.Find("HpBar").GetComponent<PrograssBar>());
             StartCoroutine(CheckFallingOrJumping());
         }
         protected override void Run()
@@ -42,18 +42,16 @@ namespace OBJECT
             objTransform.position = _rigidbody.position;
 
             float radian = Default.GetPositionToRadian(_lookAt, Vector2.zero);
-            BulletController controller = objTransform.Find("Body").Find("Image").GetComponent<BulletController>();
 
-            controller.SetDirection(_lookAt != Vector2.zero ? new Vector2(Mathf.Cos(radian), Mathf.Sin(radian)).normalized : 
+            BulletController controller = objTransform.Find("Body").Find("Image").GetComponent<BulletController>();
+            controller.SetDirection(_lookAt != Vector2.zero ? new Vector2(Mathf.Cos(radian), Mathf.Sin(radian)).normalized :
                                                               transform.eulerAngles.y == 180.0f ? Vector2.left : Vector2.right);
 
             Quaternion rotation = controller.transform.rotation;
-            float angle = Quaternion.FromToRotation(Vector3.zero, Vector3.down - new Vector3(_lookAt.x, _lookAt.y)).eulerAngles.z; // Default.ConvertFromRadianToAngle(radian);
+            float angle = Default.ConvertFromRadianToAngle(radian);
 
-            rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, rotation.eulerAngles.x, angle < 0.0f ? angle + 360  : angle);
+            rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, rotation.eulerAngles.x, angle);
             controller.transform.rotation = rotation;
-
-            print(rotation.eulerAngles.z);
 
             _bullets.Add(objTransform.gameObject);
         }
@@ -124,7 +122,10 @@ namespace OBJECT
         }
         protected override void ObjFixedUpdate() { _playerState.Update(this); }
         protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
-        protected override void ObjUpdate() { NotifyObservers(); }
+        protected override void ObjUpdate() 
+        { 
+            NotifyObservers(); 
+        }
     }
     public partial class PlayerController : LivingObject
     {
@@ -152,7 +153,8 @@ namespace OBJECT
                     t._playerState.SetState(new JumpState());
                     return;
                 }
-                if (Input.GetKey(KeyCode.LeftControl))
+                if (Input.GetKey(KeyCode.UpArrow)   || Input.GetKey(KeyCode.DownArrow) || 
+                    Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow))
                 {
                     t._animator.SetTrigger("Attack");
                     t._playerState.SetState(new AttackState());
@@ -200,9 +202,15 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
+                t._speed = 3.5f;
                 _direction = t._direction;
             }
-            public override void Update(PlayerController t) { t._lookAt = _direction; }
+            public override void Update(PlayerController t) 
+            { 
+                t._lookAt = new Vector2(Input.GetAxisRaw("FireHorizontal"), Input.GetAxisRaw("FireVertical"));
+            }
+            public override void Exit(PlayerController t) { t._speed = 5.0f; }
+
             public AttackState() {}
         }
         public sealed class DieState : State<PlayerController>

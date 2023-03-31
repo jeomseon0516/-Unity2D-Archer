@@ -20,6 +20,7 @@ namespace OBJECT
         protected SpriteRenderer _shadowSprRen;
         protected Rigidbody2D    _rigidbody;
         protected Collider2D     _bodyCollider;
+        protected Transform      _colTransform;
         protected Transform      _physics;
         protected Transform      _body;
         protected Transform      _shadow;
@@ -43,17 +44,19 @@ namespace OBJECT
             _sprRen   = GetComponent<SpriteRenderer>();
 
             _body = transform.parent;
-            _body.gameObject.AddComponent<ObjectPhysics>();
-            _bodyCollider = _body.GetComponent<Collider2D>();
-            _originalColSize = ((CapsuleCollider2D)_bodyCollider).size;
+
+            _colTransform = _body.Find("Collider");
+            _originalColSize = _body.localScale;
+
+            _bodyCollider = _colTransform.GetComponent<Collider2D>();
+            _bodyCollider.gameObject.AddComponent<ObjectPhysics>();
 
             _physics = _body.parent; // 가장 상위 트랜스폼
-
             _rigidbody = _physics.GetComponent<Rigidbody2D>(); // 
 
             _shadow       = _physics.Find("Shadow");
             _shadowSprRen = _shadow.GetComponent<SpriteRenderer>();
-            _originalShadowScale = _shadowSprRen.transform.localScale;
+            _originalShadowScale = _shadow.localScale;
 
             _shadowPos = _shadow.localPosition;
             _lookAt    = new Vector2(0.0f, 0.0f);
@@ -95,15 +98,14 @@ namespace OBJECT
             ChangeFlipXToHor(_lookAt.x);
             SettingZNode();
         }
+        // TODO : 점프때문에 GetPhysics사용해야함
         protected internal bool TriggerCollision(Transform targetPhysics, ObjectBase obj)
         {
             float targetPosY = targetPhysics.position.y - obj.GetOffSetY();
-            float myPosY     = _rigidbody.position.y    - _offsetY;
+            float myPosY     = _physics.position.y - _offsetY;
 
-            float targetOffsetY = obj.GetHeightOffSet();
-
-            if (myPosY + _heightOffset > targetPosY - targetOffsetY && myPosY + _heightOffset < targetPosY + targetOffsetY ||
-                myPosY - _heightOffset < targetPosY + targetOffsetY && myPosY - _heightOffset > targetPosY - targetOffsetY)
+            if (targetPosY + obj.GetHeightOffset() > myPosY - _heightOffset && 
+                targetPosY - obj.GetHeightOffset() < myPosY + _heightOffset)
                 return true;
 
             return false;
@@ -136,14 +138,16 @@ namespace OBJECT
         private void UpdateShadowAndCollider()
         {
             float average = (_sprRen.bounds.max.x - _sprRen.bounds.min.x) / (_sprRen.localBounds.size.x * _sprRen.transform.lossyScale.x);
-            ((CapsuleCollider2D)_bodyCollider).size = new Vector2(_originalColSize.x * average, _originalColSize.y);
-            _shadowSprRen.transform.localScale = new Vector2(_originalShadowScale.x * average, _originalShadowScale.y);
+
+            _colTransform.localScale = new Vector2(_originalColSize.x * average, _originalColSize.y);
+            _colTransform.localEulerAngles = transform.localEulerAngles;
+            _shadow.localScale = new Vector2(_originalShadowScale.x * average, _originalShadowScale.y);
         }
         private void CheckHeight() { _shadow.localPosition = new Vector2(_shadowPos.x, _shadowPos.y - _body.localPosition.y * 0.5f); }
         protected void DestroyObj() { Destroy(_physics.gameObject); }
         public void TakeDamage(int damage) { _hp -= damage; }
         public Transform GetPhysics() { return _physics; }
-        public float GetHeightOffSet() { return _heightOffset; }
+        public float GetHeightOffset() { return _heightOffset; }
         public float GetOffSetY() { return _offsetY; }
         public int GetHp() { return _hp; }
         public int GetAtk() { return _atk; }
