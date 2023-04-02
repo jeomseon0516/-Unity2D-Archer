@@ -6,16 +6,15 @@ using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 public class ButtonController : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IDragHandler
 {
-    private Text text;
-    private Color oldColor;
+    private Text  _text;
+    private Color _oldColor;
 
     private void Start()
     {
-        text = GetComponent<Text>();
-        text.text = "Game Start";
-        text.rectTransform.sizeDelta = text.rectTransform.sizeDelta + new Vector2(10, 10);
-        
-        oldColor = text.color;
+        TryGetComponent(out _text);
+        _text.text = "Game Start";
+        _text.rectTransform.sizeDelta = _text.rectTransform.sizeDelta + new Vector2(10, 10);
+        _oldColor = _text.color;
     }
     public void PushButton()
     {
@@ -23,14 +22,14 @@ public class ButtonController : MonoBehaviour, IPointerDownHandler, IPointerUpHa
     }
     public void OnDrag(PointerEventData eventData)
     {
-        text.color = text.rectTransform.rect.Contains(text.transform.InverseTransformPoint(eventData.position)) ?
-                     Color.white : oldColor;
+        _text.color = _text.rectTransform.rect.Contains(_text.transform.InverseTransformPoint(eventData.position)) ?
+                      Color.white : _oldColor;
     }
     public void OnPointerUp(PointerEventData eventData)
     {
-        if (!text.rectTransform.rect.Contains(text.transform.InverseTransformPoint(eventData.position))) 
+        if (!_text.rectTransform.rect.Contains(_text.transform.InverseTransformPoint(eventData.position))) 
             return;
-        SceneManager.LoadScene(text.name);
+        SceneManager.LoadScene(_text.name);
     }
-    public void OnPointerDown(PointerEventData eventData) { text.color = Color.white; }
+    public void OnPointerDown(PointerEventData eventData) { _text.color = Color.white; }
 }

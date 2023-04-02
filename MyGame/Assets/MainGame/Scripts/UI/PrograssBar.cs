@@ -11,7 +11,6 @@ using OBSERVER;
 public partial class PrograssBar : MonoBehaviour, IObserver
 {
     Slider _slider;
-
     private void Awake() { _slider = transform.GetComponent<Slider>(); }
 }
 
@@ -22,7 +21,7 @@ public partial class PrograssBar : MonoBehaviour, IObserver
         _slider.maxValue = maxHp;
         _slider.value = hp;
     }
-    public void UpdateData(LivingObject obj)
+    public void UpdateData(ObjectBase obj)
     {
         _slider.maxValue = obj.GetMaxHp();
         _slider.value = obj.GetHp();

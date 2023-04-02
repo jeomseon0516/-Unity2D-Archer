@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using OBJECT;
 
 namespace OBSERVER
 {
@@ -12,6 +13,6 @@ namespace OBSERVER
     }
     public interface IObserver
     {
-        public void UpdateData(int hp, int maxHp);
+        public void UpdateData(ObjectBase obj);
     }
 }

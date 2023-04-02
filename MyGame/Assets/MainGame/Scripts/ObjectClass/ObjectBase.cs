@@ -6,6 +6,7 @@ public enum OBJECTID
 {
     PLAYER,
     ENEMY,
+    PENGUIN,
     BACKGROUND,
     FX
 }
@@ -14,72 +15,75 @@ namespace OBJECT
 {
     public abstract class ObjectBase : MonoBehaviour
     {
-        protected OBJECTID       _id;
-        protected Animator       _animator;
+        protected OBJECTID _id;
+        protected Animator _animator;
         protected SpriteRenderer _sprRen;
         protected SpriteRenderer _shadowSprRen;
-        protected Rigidbody2D    _rigidbody;
-        protected Collider2D     _bodyCollider;
-        protected Transform      _colTransform;
-        protected Transform      _physics;
-        protected Transform      _body;
-        protected Transform      _shadow;
-        protected Vector2        _originalColSize;
-        protected Vector2        _originalShadowScale;
-        protected Vector2        _direction;
-        protected Vector2        _lookAt;
-        protected Vector2        _shadowPos;
-        protected float          _heightOffset;
-        protected float          _offsetY;
-        protected float          _speed;
-        protected int            _hp;
-        protected int            _beforeHp;
-        protected int            _atk;
-        protected bool           _isDie;
+        protected Rigidbody2D _rigidbody;
+        protected Collider2D _bodyCollider;
+        protected Transform _colTransform;
+        protected Transform _physics;
+        protected Transform _body;
+        protected Transform _shadow;
+        protected Vector2 _originalColSize;
+        protected Vector2 _originalShadowScale;
+        protected Vector2 _direction;
+        protected Vector2 _lookAt;
+        protected Vector2 _shadowPos;
+        protected float _heightOffset;
+        protected float _offsetY;
+        protected float _speed;
+        protected int _beforeHp;
+        protected int _maxHp;
+        protected int _hp;
+        protected int _atk;
+        protected bool _isDie;
 
         // default 값 세팅
         protected virtual void Awake()
         {
-            _animator = GetComponent<Animator>();
-            _sprRen   = GetComponent<SpriteRenderer>();
+            CheckInComponent(TryGetComponent(out _animator));
+            CheckInComponent(TryGetComponent(out _sprRen));
 
             _body = transform.parent;
 
-            _colTransform = _body.Find("Collider");
+            _colTransform    = _body.Find("Collider");
             _originalColSize = _body.localScale;
 
-            _bodyCollider = _colTransform.GetComponent<Collider2D>();
+            CheckInComponent(_colTransform.TryGetComponent(out _bodyCollider));
             _bodyCollider.gameObject.AddComponent<ObjectPhysics>();
 
             _physics = _body.parent; // 가장 상위 트랜스폼
-            _rigidbody = _physics.GetComponent<Rigidbody2D>(); // 
+            CheckInComponent(_physics.TryGetComponent(out _rigidbody));
 
-            _shadow       = _physics.Find("Shadow");
-            _shadowSprRen = _shadow.GetComponent<SpriteRenderer>();
+            _shadow = _physics.Find("Shadow");
+            CheckInComponent(_shadow.TryGetComponent(out _shadowSprRen));
             _originalShadowScale = _shadow.localScale;
 
             _shadowPos = _shadow.localPosition;
-            _lookAt    = new Vector2(0.0f, 0.0f);
+            _lookAt = new Vector2(0.0f, 0.0f);
 
-            _offsetY = transform.position.y - _shadow.transform.position.y;
-            _heightOffset = _shadow.GetComponent<RectTransform>().rect.height * _shadow.transform.localScale.y;
+            _offsetY = _physics.position.y - _shadow.position.y;
+
+            CheckInComponent(_shadow.TryGetComponent(out RectTransform rectT));
+            _heightOffset = _shadowSprRen.size.y;
 
             _isDie = false;
-            _hp    = 10;
-            _atk   = 2;
+            _hp = 10;
+            _atk = 2;
             _speed = 2;
 
             Init();
         }
         private void Update() { ObjUpdate(); }
         private void OnTriggerEnter2D(Collider2D col) { TriggerAction(col); }
-        protected internal virtual void TriggerAction(Collider2D col) {}
-        protected internal virtual void CollisionAction(Collision2D obj) {}
-        protected virtual void GetDamageAction(int damage) {}
-        protected virtual void ObjFixedUpdate() {}
-        protected virtual void ObjUpdate() {}
-        protected virtual void Init() {}
-        protected virtual void Run() {}
+        protected internal virtual void TriggerAction(Collider2D col) { }
+        protected internal virtual void CollisionAction(Collision2D obj) { }
+        protected virtual void GetDamageAction(int damage) { }
+        protected virtual void ObjFixedUpdate() { }
+        protected virtual void ObjUpdate() { }
+        protected virtual void Init() { }
+        protected virtual void Run() { }
         protected virtual void Die() { DestroyObj(); }
         private void FixedUpdate()
         {
@@ -87,9 +91,8 @@ namespace OBJECT
                 GetDamageAction(_beforeHp - _hp);
 
             _beforeHp = _hp;
-            _lookAt   = _direction;
+            _lookAt = _direction;
 
-            UpdateShadowAndCollider();
             CheckDeadToHp();
             ObjFixedUpdate();
             Run();
@@ -102,17 +105,24 @@ namespace OBJECT
         protected internal bool TriggerCollision(Transform targetPhysics, ObjectBase obj)
         {
             float targetPosY = targetPhysics.position.y - obj.GetOffSetY();
-            float myPosY     = _physics.position.y - _offsetY;
+            float myPosY = _physics.position.y - _offsetY;
 
-            if (targetPosY + obj.GetHeightOffset() > myPosY - _heightOffset && 
+            if (targetPosY + obj.GetHeightOffset() > myPosY - _heightOffset &&
                 targetPosY - obj.GetHeightOffset() < myPosY + _heightOffset)
-                return true;
+            {
+                // 해당 타겟이 같은 y 좌표에 있는지 체크한다.
+                float jumpTargetPosY = obj.GetBody().localPosition.y;
+                float jumpMyPosY = _body.localPosition.y;
 
+                if (jumpTargetPosY + obj.GetHeightOffset() > jumpMyPosY - _heightOffset &&
+                    jumpTargetPosY - obj.GetHeightOffset() < jumpMyPosY + _heightOffset) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
+                    return true;
+            }
             return false;
         }
         private void CheckDeadToHp()
         {
-            if (_hp > 0) return;
+            if (_hp > 0 || _isDie) return;
             Die();
             _isDie = true;
         }
@@ -127,15 +137,17 @@ namespace OBJECT
 
             if      (hor < 0.0f) rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, 180.0f, rotation.eulerAngles.z);
             else if (hor > 0.0f) rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, 0.0f,   rotation.eulerAngles.z);
-                                                                                                     
+
             _physics.rotation = rotation;
         }
-        private void SettingZNode() 
-        { 
+        private void SettingZNode()
+        {
+            if (_isDie) return;
+
             _sprRen.sortingOrder = (int)((_shadow.position.y) * 10) * -1;
             _shadowSprRen.sortingOrder = _sprRen.sortingOrder - 1;
         }
-        private void UpdateShadowAndCollider()
+        protected void UpdateShadowAndCollider()
         {
             float average = (_sprRen.bounds.max.x - _sprRen.bounds.min.x) / (_sprRen.localBounds.size.x * _sprRen.transform.lossyScale.x);
 
@@ -145,10 +157,13 @@ namespace OBJECT
         }
         private void CheckHeight() { _shadow.localPosition = new Vector2(_shadowPos.x, _shadowPos.y - _body.localPosition.y * 0.5f); }
         protected void DestroyObj() { Destroy(_physics.gameObject); }
+        protected void CheckInComponent(bool inCom) { if (!inCom) print("해당 컴포넌트는 존재 하지 않습니다." + this.transform.root.name); }
         public void TakeDamage(int damage) { _hp -= damage; }
         public Transform GetPhysics() { return _physics; }
+        public Transform GetBody() { return _body; }
         public float GetHeightOffset() { return _heightOffset; }
         public float GetOffSetY() { return _offsetY; }
+        public int GetMaxHp() { return _maxHp; }
         public int GetHp() { return _hp; }
         public int GetAtk() { return _atk; }
     }

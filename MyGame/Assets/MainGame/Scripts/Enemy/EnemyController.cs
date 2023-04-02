@@ -13,22 +13,22 @@ namespace OBJECT
         protected override void Init()
         {
             base.Init();
-            _skill  = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.ENEMY, "Bullet");
+            _skill = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.ENEMY, "Bullet");
 
             _state = new StateMachine<EnemyController>();
             _state.SetState(new IdleState());
 
             _skillMaxDistance = 8.0f;
-            _useSkill         = true;
+            _useSkill = true;
         }
         protected override void CreateBullet()
         {
             Transform tPhysicsTransform = _target.GetPhysics();
-            
+
             if (Default.GetDistance(tPhysicsTransform.position, transform.position) <= _skillMaxDistance)
             {
                 Transform skillTransform = Instantiate(_skill).transform;
-                ObjectBase skill = skillTransform.Find("Body").Find("Image").GetComponent<ObjectBase>();
+                CheckInComponent(skillTransform.Find("Body").Find("Image").TryGetComponent(out ObjectBase skill));
                 skillTransform.position = new Vector2(
                     tPhysicsTransform.position.x + 0.15f,
                     tPhysicsTransform.position.y + skill.GetOffSetY() - _target.GetOffSetY());
@@ -57,21 +57,14 @@ namespace OBJECT
             }
         }
         // 플레이어에게 피격 후 추적 중일때 추적 쿨타임
-        private IEnumerator SkillCollTime()
+        protected override void Die()
         {
-            _useSkill = false;
-            yield return new WaitForSeconds(5.0f);
-            _useSkill = true;
-        }
-        protected override void Die() 
-        {
-            if (_isDie) return;
-
             _state.SetState(new DieState());
-            Destroy(_bodyCollider); 
+            Destroy(_bodyCollider);
         }
         protected override void ObjFixedUpdate() { _state.Update(this); }
         protected override void GetDamageAction(int damage) { _state.SetState(new HitState()); }
+        private void SetUseSkill(bool useSkill) { _useSkill = useSkill; }
     }
 
     // TODO : 에너미 상태 패턴 구현 
@@ -90,8 +83,8 @@ namespace OBJECT
         public class IdleState : State<EnemyController>
         {
             Vector3 _randPoint;
-            bool _isMove;
-            float _coolTime;
+            float   _coolTime;
+            bool    _isMove;
             public override void Enter(EnemyController t)
             {
                 _coolTime = Random.Range(0.0f, 3.0f);
@@ -150,7 +143,8 @@ namespace OBJECT
                     return;
                 }
 
-                ObjectBase targetObj = targetTransform.GetComponent<ObjectBase>();
+                t.CheckInComponent(targetTransform.TryGetComponent(out ObjectBase targetObj));
+
                 int xDir = myPosition.x - targetPosition.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
                 Vector2 movePoint = Vector2.zero;
 
@@ -160,7 +154,7 @@ namespace OBJECT
                     movePoint = SkillAndGetMovePoint(t, xDir, targetPosition, myPosition);
                 
                 t._direction = (movePoint - myPosition).normalized;
-                t._lookAt = (targetPosition - myPosition).normalized;
+                t._lookAt    = (targetPosition - myPosition).normalized;
             }
             private Vector2 SkillAndGetMovePoint(EnemyController t, int xDir, Vector2 targetPosition, Vector2 myPosition)
             {
@@ -205,7 +199,7 @@ namespace OBJECT
                 t._direction = Vector2.zero;
                 t._lookAt = (t._target.transform.position - t._physics.position).normalized;
             }
-            public override void Exit(EnemyController t) { t.StartCoroutine(t.SkillCollTime()); }
+            public override void Exit(EnemyController t) { t.StartCoroutine(t.CoolTime(t.SetUseSkill, 5.0f)); }
             public SkillState() {}
         }
         /* -----------------------------------------------------------Hit-------------------------------------------------- */

@@ -369,6 +369,7 @@
 "Assets/MainGame/Scripts/Default/Default.cs"
 "Assets/MainGame/Scripts/Default/Observer.cs"
 "Assets/MainGame/Scripts/Default/State.cs"
+"Assets/MainGame/Scripts/Default/YieldCache.cs"
 "Assets/MainGame/Scripts/Enemy/EnemyBase.cs"
 "Assets/MainGame/Scripts/Enemy/EnemyController.cs"
 "Assets/MainGame/Scripts/Enemy/Penguin/PenguinController.cs"

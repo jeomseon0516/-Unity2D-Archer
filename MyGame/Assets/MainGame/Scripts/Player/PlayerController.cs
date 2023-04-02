@@ -11,22 +11,22 @@ namespace OBJECT
     {
         private List<GameObject> _bullets = new List<GameObject>();
         private StateMachine<PlayerController> _playerState;
-        private Vector3 _spawnPoint;
-        private float _beforeLocalY; // 이전 프레임의 로컬 Y 
-        private float _jumpValue;
-   
+        private Vector2 _spawnPoint;
+        private float _attackSpeed;
         protected override void Init()
         {
             base.Init();
-            _maxHp = _hp = 20;
+            _maxHp = _hp = 10000;
             _id = OBJECTID.PLAYER;
+            _attackSpeed = 10;
             _speed = 5.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
             _spawnPoint = _physics.position;
 
-            RegisterObserver(GameObject.Find("Canvas").transform.Find("HpBar").GetComponent<PrograssBar>());
+            CheckInComponent(GameObject.Find("Canvas").transform.Find("HpBar").TryGetComponent(out PrograssBar bar));
+            RegisterObserver(bar);
             StartCoroutine(CheckFallingOrJumping());
         }
         protected override void Run()
@@ -41,13 +41,14 @@ namespace OBJECT
             Transform objTransform = Instantiate(_bullet).transform;
             objTransform.position = _rigidbody.position;
 
-            float radian = Default.GetPositionToRadian(_lookAt, Vector2.zero);
+            CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out BulletController controller));
+            // 현재 방향키를 어떤 방향으로 누르고 있는지를 확인해서 쏠 방향을 구하고
+            Vector2 dir = _lookAt.normalized + _direction * 0.25f;
+            controller.SetDirection(dir);
 
-            BulletController controller = objTransform.Find("Body").Find("Image").GetComponent<BulletController>();
-            controller.SetDirection(_lookAt != Vector2.zero ? new Vector2(Mathf.Cos(radian), Mathf.Sin(radian)).normalized :
-                                                              transform.eulerAngles.y == 180.0f ? Vector2.left : Vector2.right);
-
+            // 날아가는 방향의 각도로 회전
             Quaternion rotation = controller.transform.rotation;
+            float radian = Default.GetPositionToRadian(dir, Vector2.zero);
             float angle = Default.ConvertFromRadianToAngle(radian);
 
             rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, rotation.eulerAngles.x, angle);
@@ -55,8 +56,8 @@ namespace OBJECT
 
             _bullets.Add(objTransform.gameObject);
         }
-        protected override void Die() 
-        { 
+        protected override void Die()
+        {
             if (_isDie) return;
             _playerState.SetState(new DieState());
         }
@@ -85,47 +86,18 @@ namespace OBJECT
                     break;
             }
         }
-        private IEnumerator Jumping()
+        private IEnumerator Respawn()
         {
-            float jump = 7.0f;
-            _bodyCollider.isTrigger = true;
-
-            while (_body.localPosition.y >= 0)
-            {
-                yield return new WaitForFixedUpdate();
-                _body.localPosition += new Vector3(0.0f, jump, 0.0f) * Time.deltaTime;
-                jump -= Constants.GRAVITY * Time.deltaTime;
-            }
-
-            _bodyCollider.isTrigger = false;
-            _body.localPosition = new Vector2(0.0f, 0.0f);
-        }
-        private IEnumerator CheckFallingOrJumping()
-        {
-            while (true)
-            {
-                yield return new WaitForFixedUpdate();
-                _jumpValue = _body.localPosition.y - _beforeLocalY;
-
-                _animator.SetFloat("JumpSpeed", _jumpValue);
-                _beforeLocalY = _body.localPosition.y;
-            }
-        }
-        private IEnumerator Respawn() 
-        {
-            yield return new WaitForSeconds(5.0f);
+            yield return YieldCache.WaitForSeconds(5.0f);
             _playerState.SetState(new RunState());
             _animator.SetTrigger("Respawn");
             _rigidbody.position = _spawnPoint;
             _isDie = false;
             _hp = _maxHp;
         }
-        protected override void ObjFixedUpdate() { _playerState.Update(this); }
         protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
-        protected override void ObjUpdate() 
-        { 
-            NotifyObservers(); 
-        }
+        protected override void ObjFixedUpdate() { _playerState.Update(this); }
+        protected override void ObjUpdate() { NotifyObservers(); }
     }
     public partial class PlayerController : LivingObject
     {
@@ -148,44 +120,52 @@ namespace OBJECT
 
                 t._animator.speed = speed > 0.0f ? speed : 1;
 
-                if (Input.GetKeyDown(KeyCode.Space) || Mathf.Abs(t._jumpValue) > float.Epsilon)
+                if (Input.GetKeyDown(KeyCode.Space) || Mathf.Abs(t._jumpValue) > float.Epsilon) // 스페이스 바를 누르거나 공중에 띄워져있을때
                 {
                     t._playerState.SetState(new JumpState());
                     return;
                 }
-                if (Input.GetKey(KeyCode.UpArrow)   || Input.GetKey(KeyCode.DownArrow) || 
-                    Input.GetKey(KeyCode.LeftArrow) || Input.GetKey(KeyCode.RightArrow))
+
+                float x = Input.GetAxisRaw("FireHorizontal");
+                float y = Input.GetAxisRaw("FireVertical");
+
+                Vector2 attackDir = new Vector2(x, y);
+
+                if (attackDir != Vector2.zero)
                 {
+                    attackDir.x = x == 0 ? t._direction.x : x;
+                    t._lookAt = attackDir;
                     t._animator.SetTrigger("Attack");
-                    t._playerState.SetState(new AttackState());
+                    t._playerState.SetState(new AttackState(t._lookAt));
                 }
             }
             public override void Exit(PlayerController t) { t._animator.speed = 1; }
-            public RunState() {}
+            public RunState() { }
         }
         public sealed class HitState : State<PlayerController>
         {
-            public override void Enter(PlayerController t) 
+            public override void Enter(PlayerController t)
             {
                 t._animator.SetTrigger("Hit");
-                base.Enter(t); 
+                base.Enter(t);
             }
-            public HitState() {}
+            public HitState() { }
         }
         public sealed class JumpState : State<PlayerController>
         {
+            float _jump;
             public override void Enter(PlayerController t)
             {
-                if (t._body.localPosition.y <= 0.0f)
-                    t.StartCoroutine(t.Jumping());
                 base.Enter(t);
+                if (t._body.localPosition.y <= 0.0f)
+                    t.StartCoroutine(t.Jumping(_jump));
             }
             public override void Update(PlayerController t)
             {
                 if (t._jumpValue < 0.0f)
                     t._playerState.SetState(new DownState());
             }
-            public JumpState() {}
+            public JumpState(float jump = 7.0f) { _jump = jump; }
         }
         public sealed class DownState : State<PlayerController>
         {
@@ -194,24 +174,41 @@ namespace OBJECT
                 if (Mathf.Abs(t._jumpValue) < float.Epsilon)
                     t._playerState.SetState(new RunState());
             }
-            public DownState() {}
+            public DownState() { }
         }
         public sealed class AttackState : State<PlayerController>
         {
-            Vector2 _direction;
+            Vector2 _saveLookAt;
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
+                t._animator.speed = t._attackSpeed;
                 t._speed = 3.5f;
-                _direction = t._direction;
-            }
-            public override void Update(PlayerController t) 
-            { 
-                t._lookAt = new Vector2(Input.GetAxisRaw("FireHorizontal"), Input.GetAxisRaw("FireVertical"));
-            }
-            public override void Exit(PlayerController t) { t._speed = 5.0f; }
 
-            public AttackState() {}
+                if (_saveLookAt == Vector2.zero)
+                {
+                    float x = Input.GetAxisRaw("FireHorizontal");
+                    float y = Input.GetAxisRaw("FireVertical");
+
+                    Vector2 dir = new Vector2(x, y);
+                    _saveLookAt = dir != Vector2.zero ? dir : new Vector2(x != 0 ? x : t._lookAt.x, y != 0 ? y : t._lookAt.y);
+                }
+
+                t._lookAt = _saveLookAt;
+            }
+            public override void Update(PlayerController t)
+            {
+                Vector2 dir = new Vector2(Input.GetAxisRaw("FireHorizontal"), Input.GetAxisRaw("FireVertical"));
+                t._lookAt = dir != Vector2.zero ? _saveLookAt = dir : _saveLookAt;
+            }
+            public override void Exit(PlayerController t)
+            {
+                t._animator.speed = 1;
+                t._lookAt = _saveLookAt;
+                t._speed = 5.0f;
+            }
+            public AttackState() { _saveLookAt = Vector2.zero; }
+            public AttackState(Vector2 dir) { _saveLookAt = dir; }
         }
         public sealed class DieState : State<PlayerController>
         {
@@ -223,7 +220,7 @@ namespace OBJECT
                 t.StartCoroutine(t.Respawn());
             }
             public override void Update(PlayerController t) { t._direction = Vector2.zero; }
-            public DieState() {}
+            public DieState() { }
         }
     }
 }

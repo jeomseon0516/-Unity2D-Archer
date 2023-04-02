@@ -22,7 +22,7 @@ public class BackGroundsController : MonoBehaviour
   
     private void Awake()
     {
-        SpriteRenderer leftImage = transform.Find("Image").GetComponent<SpriteRenderer>();
+        transform.Find("Image").TryGetComponent(out SpriteRenderer leftImage);
         SpriteRenderer rightImage = leftImage;
         name = Default.GetRemoveSelectString(name, "(Clone)");
 

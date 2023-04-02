@@ -15,11 +15,11 @@ namespace OBJECT
         public void OnAttackBox(float isOn)
         {
             bool on = isOn > 0.0f ? true : false;
-            _bodyCollider.enabled = on;
+            _colTransform.gameObject.SetActive(on);
         }
         protected internal override void TriggerAction(Collider2D col) 
         {
-            ObjectBase obj = col.transform.parent.Find("Image").GetComponent<ObjectBase>();
+            CheckInComponent(col.transform.parent.Find("Image").TryGetComponent(out ObjectBase obj));
 
             if (TriggerCollision(obj.GetPhysics(), obj))
                 obj.TakeDamage(_atk);

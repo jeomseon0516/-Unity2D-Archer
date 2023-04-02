@@ -21,7 +21,7 @@ public sealed class EnemyManager : SingletonTemplate<EnemyManager>
         while (true)
         {
             MakingEnemy(camera);
-            yield return new WaitForSeconds(6.0f);
+            yield return YieldCache.WaitForSeconds(6.0f);
         }
     }
     void MakingEnemy(Camera camera)

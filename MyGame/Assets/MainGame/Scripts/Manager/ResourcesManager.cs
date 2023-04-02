@@ -23,17 +23,15 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
     }
     private void AddObject(OBJECTID id, string key, string path)
     {
-        // 해당 키가 이마 등록되어있다면?
-        if (_resourceDic.ContainsKey(id))
-            _resourceDic[id].Add(key, Resources.Load(path) as GameObject);
-        else
-            _resourceDic.Add(id, CreateDicGameObjectToString(key, path));
-    }
-    private Dictionary<string, GameObject> CreateDicGameObjectToString(string key, string path)
-    {
-        var dic = new Dictionary<string, GameObject>();
-        dic.Add(key, Resources.Load(path) as GameObject);
-        return dic;
+        Dictionary<string, GameObject> fromStringToObjList;
+
+        // 해당 키가 등록되어 있지 않다면?
+        if (!_resourceDic.TryGetValue(id, out fromStringToObjList))
+            _resourceDic.Add(id, fromStringToObjList = new Dictionary<string, GameObject>());
+  
+        GameObject obj;
+        if (!fromStringToObjList.TryGetValue(key, out obj))
+            fromStringToObjList.Add(key, Resources.Load(path) as GameObject);
     }
     public GameObject GetObjectToKey(OBJECTID id, string key)    
     {

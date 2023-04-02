@@ -198,7 +198,7 @@ public class CFX_Demo_New : MonoBehaviour
 	{
 		while(true)
 		{
-			yield return new WaitForSeconds(5.0f);
+			yield return YieldCache.WaitForSeconds(5.0f);
 			for(int i = onScreenParticles.Count - 1; i >= 0; i--)
 			{
 				if(onScreenParticles[i] == null)
