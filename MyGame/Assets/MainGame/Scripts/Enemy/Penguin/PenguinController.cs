@@ -18,6 +18,7 @@ namespace OBJECT
         {
             base.Init();
             _id = OBJECTID.PENGUIN;
+            _bullet = ResourcesManager.GetInstance().GetObjectToKey(_id, "Bullet");
 
             _attackDis = 0.65f;
             _hp = _maxHp = 1000;
@@ -32,14 +33,34 @@ namespace OBJECT
             _state = new StateMachine<PenguinController>();
             _state.SetState(new IdleState());
         }
-        protected override void ObjFixedUpdate()
+        private void CreateBullet(float power)
         {
-            _state.Update(this);
+            float force = power * 0.25f;
+            float angle = 360 / 32;
+
+            for (float i = 0; i < 360; i += angle)
+            {
+                Transform obj = Instantiate(_bullet).transform;
+
+                CheckInComponent(obj.Find("Body").Find("Image").TryGetComponent(out Snowball bullet));
+                obj.position = new Vector2(_physics.position.x, _physics.position.y - _offsetY);
+                bullet.SetSpeed(force * 2);
+                bullet.SetNextJump(force);
+
+                float radian = Default.ConvertFromAngleToRadian(i);
+
+                bullet.SetDirection(new Vector2(Mathf.Cos(radian), Mathf.Sin(radian)));
+            }
         }
         private IEnumerator Wait(float time)
         {
             yield return YieldCache.WaitForSeconds(time);
             _state.SetState(new IdleState());
+        }
+        protected override void ObjFixedUpdate()
+        {
+            _animator.SetFloat("JumpSpeed", _jumpValue);
+            _state.Update(this);
         }
         private void SetUseJump(bool useJump) { _useJump = useJump; }
         private void SetUseSlide(bool useSlide) { _useSlide = useSlide; }
@@ -196,6 +217,8 @@ namespace OBJECT
         }
         public sealed class JumpAttackState : State<PenguinController>
         {
+            float _power;
+
             public override void Enter(PenguinController t) 
             { 
                 base.Enter(t);
@@ -221,8 +244,13 @@ namespace OBJECT
                 if (t._body.localPosition.y < float.Epsilon)
                     t._state.SetState(new WaitState());
             }
-            public override void Exit(PenguinController t) { }
-            public JumpAttackState(PenguinController t) { t.StartCoroutine(t.Jumping(Random.Range(8.0f, 15.0f), Random.Range(20, 32))); }
+            public override void Exit(PenguinController t) { t.CreateBullet(_power); }
+            public JumpAttackState(PenguinController t) 
+            {
+                t._jump = Random.Range(8.0f, 15.0f);
+                _power = Random.Range(20, 32);
+                t.StartCoroutine(t.Jumping(_power)); 
+            }
         }
         public sealed class SlideAttackState : State<PenguinController>
         {

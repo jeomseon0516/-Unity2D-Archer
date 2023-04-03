@@ -40,6 +40,12 @@ namespace OBJECT
         protected int _atk;
         protected bool _isDie;
 
+        protected float _beforeLocalY; // 이전 프레임의 로컬 Y 
+        protected float _jumpValue;
+        protected float _jump; //현재 점프값
+
+        private Dictionary<string, IEnumerator> _coroutineList = new Dictionary<string, IEnumerator>();
+
         // default 값 세팅
         protected virtual void Awake()
         {
@@ -70,12 +76,11 @@ namespace OBJECT
             _heightOffset = _shadowSprRen.size.y;
 
             Transform size = _physics.Find("Size");
-            bool onSize = size != null ? true : false;
 
-            if (onSize)
+            if (size != null ? true : false)
             {
                 CheckInComponent(size.TryGetComponent(out BoxCollider2D box));
-                _size = box.size;
+                _size = box.bounds.size;
                 Destroy(box.gameObject);
             }
 
@@ -89,12 +94,12 @@ namespace OBJECT
         private void Update() { ObjUpdate(); }
         private void OnTriggerEnter2D(Collider2D col) { TriggerAction(col); }
         protected internal virtual void TriggerAction(Collider2D col) { }
-        protected internal virtual void CollisionAction(Collision2D obj) { }
-        protected virtual void GetDamageAction(int damage) { }
-        protected virtual void ObjFixedUpdate() { }
-        protected virtual void ObjUpdate() { }
-        protected virtual void Init() { }
-        protected virtual void Run() { }
+        protected internal virtual void CollisionAction(Collision2D obj) {}
+        protected virtual void GetDamageAction(int damage) {}
+        protected virtual void ObjFixedUpdate() {}
+        protected virtual void ObjUpdate() {}
+        protected virtual void Init() {}
+        protected virtual void Run() {}
         protected virtual void Die() { DestroyObj(); }
         private void FixedUpdate()
         {
@@ -126,13 +131,50 @@ namespace OBJECT
                 float jumpMyPosY = _body.localPosition.y;
 
                 float targetSizeY = obj.GetSize().y * 0.5f;
-                float mySizeY = _size.y * 0.5f;
+                float mySizeY     = _size.y         * 0.5f;
 
                 if (jumpTargetPosY + targetSizeY > jumpMyPosY - mySizeY &&
                     jumpTargetPosY - targetSizeY < jumpMyPosY + mySizeY) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
                     return true;
             }
             return false;
+        }
+        protected IEnumerator Jumping(float gravity = Constants.GRAVITY)
+        {
+            _bodyCollider.isTrigger = true;
+
+            while (_body.localPosition.y >= 0)
+            {
+                yield return YieldCache.WaitForFixedUpdate;
+                _body.localPosition += new Vector3(0.0f, _jump, 0.0f) * Time.deltaTime;
+                _jump -= gravity * Time.deltaTime;
+            }
+
+            _jump = 0;
+            _bodyCollider.isTrigger = false;
+            _body.localPosition = new Vector2(0.0f, 0.0f);
+        }
+        /* 점프를 하지 않는 객체가 있으니 객체별로 따로 호출 해줍니다. */
+        protected IEnumerator CheckFallingOrJumping()
+        {
+            while (true)
+            {
+                yield return YieldCache.WaitForFixedUpdate;
+                _jumpValue = _body.localPosition.y - _beforeLocalY;
+                _beforeLocalY = _body.localPosition.y;
+            }
+        }
+        protected void AddAfterResetCoroutine(string key, IEnumerator coroutine)
+        {
+            if (_coroutineList.ContainsKey(key))
+            {
+                StopCoroutine(_coroutineList[key]);
+                _coroutineList[key] = coroutine;
+            }
+            else
+                _coroutineList.Add(key, coroutine);
+
+            StartCoroutine(_coroutineList[key]);
         }
         private void CheckDeadToHp()
         {

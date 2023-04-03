@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using OBSERVER;
 
 /*
  * 코드 가독성을 위해 partial키워드로 분리
@@ -18,14 +19,14 @@ namespace OBJECT
             base.Init();
             _maxHp = _hp = 10000;
             _id = OBJECTID.PLAYER;
-            _attackSpeed = 4;
+            _attackSpeed = 10;
             _speed = 5.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
             _spawnPoint = _physics.position;
 
-            CheckInComponent(GameObject.Find("Canvas").transform.Find("HpBar").TryGetComponent(out PrograssBar bar));
+            CheckInComponent(GameObject.Find("Canvas").transform.Find("HpBar").TryGetComponent(out IObserver bar));
             RegisterObserver(bar);
             StartCoroutine(CheckFallingOrJumping());
         }
@@ -41,7 +42,7 @@ namespace OBJECT
             Transform objTransform = Instantiate(_bullet).transform;
             objTransform.position = _rigidbody.position;
 
-            CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out BulletController controller));
+            CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out DefaultBullet controller));
             // 현재 방향키를 어떤 방향으로 누르고 있는지를 확인해서 쏠 방향을 구하고
             Vector2 dir = _lookAt.normalized + _direction * 0.25f;
             controller.SetDirection(dir);
@@ -85,7 +86,11 @@ namespace OBJECT
             _hp = _maxHp;
         }
         protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
-        protected override void ObjFixedUpdate() { _playerState.Update(this); }
+        protected override void ObjFixedUpdate() 
+        {
+            _animator.SetFloat("JumpSpeed", _jumpValue);
+            _playerState.Update(this); 
+        }
         protected override void ObjUpdate() { NotifyObservers(); }
     }
     public partial class PlayerController : LivingObject
@@ -104,7 +109,13 @@ namespace OBJECT
         {
             public override void Update(PlayerController t)
             {
-                float speed = Mathf.Max(Mathf.Abs(t._direction.x), Mathf.Abs(t._direction.y));
+                float dirX = t._direction.x;
+                float dirY = t._direction.y;
+
+                dirX = dirX > 0 ? dirX : -dirX;
+                dirY = dirY > 0 ? dirY : -dirY;
+
+                float speed = dirX >= dirY ? dirX : dirY; /*Mathf.Max(Mathf.Abs(t._direction.x), Mathf.Abs(t._direction.y))*/ // 최적화
 
                 t._animator.speed = speed > 0.0f ? speed : 1;
 
@@ -145,7 +156,8 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
-                t.StartCoroutine(t.Jumping(_jump));
+                t._jump = t._body.localPosition.y < float.Epsilon ? _jump : t._jump;
+                t.AddAfterResetCoroutine("Jump", t.Jumping());
             }
             public override void Update(PlayerController t)
             {
