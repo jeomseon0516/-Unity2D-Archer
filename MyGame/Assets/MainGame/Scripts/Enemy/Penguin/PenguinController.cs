@@ -196,42 +196,42 @@ namespace OBJECT
         }
         public sealed class JumpAttackState : State<PenguinController>
         {
-            Vector2 _keepTargetPos;
             public override void Enter(PenguinController t) 
             { 
                 base.Enter(t);
                 t._direction = Vector2.zero;
-
-                Vector2 targetPos = t._target.GetPhysics().position;
-
-                _keepTargetPos = new Vector2(targetPos.x, targetPos.y + t._offsetY - t._target.GetOffSetY());
                 t.StartCoroutine(t.CoolTime(t.SetUseJump, t._jumpCoolTime));
             }
             public override void Update(PenguinController t) 
             {
                 Vector2 myPos = t.GetPhysics().position;
+                Vector2 targetPos = t._target.GetPhysics().position;
+                targetPos = new Vector2(targetPos.x, targetPos.y + t._offsetY - t._target.GetOffSetY());
 
-                t._lookAt = (_keepTargetPos - myPos).normalized;
+                t._lookAt = (targetPos - myPos).normalized;
 
-                float distance = Default.GetDistance(_keepTargetPos, myPos);
-                float radian = Default.GetPositionToRadian(_keepTargetPos, myPos);
+                float distance = Default.GetDistance(targetPos, myPos);
+                float radian   = Default.GetPositionToRadian(targetPos, myPos);
 
                 float x = Mathf.Cos(radian) * distance * 95.0f * 0.01f * t._speed * 2;
                 float y = Mathf.Sin(radian) * distance * 95.0f * 0.01f * t._speed * 2;
 
-                t._rigidbody.position += new Vector2(x, y) * Time.deltaTime;
+                t._rigidbody.MovePosition(t._rigidbody.position + new Vector2(x, y) * Time.deltaTime);
 
                 if (t._body.localPosition.y < float.Epsilon)
                     t._state.SetState(new WaitState());
             }
             public override void Exit(PenguinController t) { }
-
-            //TODO : 코루틴 여러개 호출되서 기능에 버그남 딕셔너리로 관리해줄 필요성이 있어보임
-            public JumpAttackState(PenguinController t) { t.StartCoroutine(t.Jumping(8.0f)); }
+            public JumpAttackState(PenguinController t) { t.StartCoroutine(t.Jumping(Random.Range(8.0f, 15.0f), Random.Range(20, 32))); }
         }
         public sealed class SlideAttackState : State<PenguinController>
         {
-            public override void Enter(PenguinController t) { base.Enter(t); }
+            public override void Enter(PenguinController t) 
+            { 
+                
+                base.Enter(t); 
+            }
+
             public override void Update(PenguinController t) { }
             public override void Exit(PenguinController t) { }
         }

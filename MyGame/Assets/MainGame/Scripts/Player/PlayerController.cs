@@ -18,7 +18,7 @@ namespace OBJECT
             base.Init();
             _maxHp = _hp = 10000;
             _id = OBJECTID.PLAYER;
-            _attackSpeed = 10;
+            _attackSpeed = 4;
             _speed = 5.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
@@ -46,14 +46,6 @@ namespace OBJECT
             Vector2 dir = _lookAt.normalized + _direction * 0.25f;
             controller.SetDirection(dir);
 
-            // 날아가는 방향의 각도로 회전
-            Quaternion rotation = controller.transform.rotation;
-            float radian = Default.GetPositionToRadian(dir, Vector2.zero);
-            float angle = Default.ConvertFromRadianToAngle(radian);
-
-            rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, rotation.eulerAngles.x, angle);
-            controller.transform.rotation = rotation;
-
             _bullets.Add(objTransform.gameObject);
         }
         protected override void Die()
@@ -71,9 +63,6 @@ namespace OBJECT
                     break;
                 case PLR_STATE.JUMP:
                     _playerState.SetState(new JumpState());
-                    break;
-                case PLR_STATE.DOWN:
-                    _playerState.SetState(new DownState());
                     break;
                 case PLR_STATE.ATTACK:
                     _playerState.SetState(new AttackState());
@@ -105,7 +94,6 @@ namespace OBJECT
         {
             RUN,
             JUMP,
-            DOWN,
             ATTACK,
             HIT,
             ACROBATIC,
@@ -120,7 +108,7 @@ namespace OBJECT
 
                 t._animator.speed = speed > 0.0f ? speed : 1;
 
-                if (Input.GetKeyDown(KeyCode.Space) || Mathf.Abs(t._jumpValue) > float.Epsilon) // 스페이스 바를 누르거나 공중에 띄워져있을때
+                if (Input.GetKeyDown(KeyCode.Space) || t._body.localPosition.y > float.Epsilon) // 스페이스 바를 누르거나 공중에 띄워져있을때
                 {
                     t._playerState.SetState(new JumpState());
                     return;
@@ -157,24 +145,14 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
-                if (t._body.localPosition.y <= 0.0f)
-                    t.StartCoroutine(t.Jumping(_jump));
+                t.StartCoroutine(t.Jumping(_jump));
             }
             public override void Update(PlayerController t)
             {
-                if (t._jumpValue < 0.0f)
-                    t._playerState.SetState(new DownState());
-            }
-            public JumpState(float jump = 7.0f) { _jump = jump; }
-        }
-        public sealed class DownState : State<PlayerController>
-        {
-            public override void Update(PlayerController t)
-            {
-                if (Mathf.Abs(t._jumpValue) < float.Epsilon)
+                if (t._body.localPosition.y < float.Epsilon)
                     t._playerState.SetState(new RunState());
             }
-            public DownState() { }
+            public JumpState(float jump = 7.0f) { _jump = jump; }
         }
         public sealed class AttackState : State<PlayerController>
         {

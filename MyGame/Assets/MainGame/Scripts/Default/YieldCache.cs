@@ -9,6 +9,7 @@ public static class YieldCache
 {
     private static readonly Dictionary<float, WaitForSeconds> _time = new Dictionary<float, WaitForSeconds>();
     public static readonly WaitForFixedUpdate WaitForFixedUpdate = new WaitForFixedUpdate();
+    public static readonly WaitForEndOfFrame waitForEndOfFrame = new WaitForEndOfFrame();
     public static WaitForSeconds WaitForSeconds(float time)
     {
         WaitForSeconds wfs;

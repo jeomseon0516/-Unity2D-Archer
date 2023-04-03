@@ -15,13 +15,25 @@ namespace OBJECT
             _smoke = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "Smoke");
             _hitEffect = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.FX, "HitEffect");
             _speed = 15.0f;
-            _atk = 2;
             _time = 10.0f;
+            _atk = 2;
             _hp = 3;
             _makeSmoke = true;
         }
         private IEnumerator Start()
         {
+            Quaternion rotation = transform.rotation;
+            float radian = Default.GetPositionToRadian(_direction, Vector2.zero);
+            float angle  = Default.ConvertFromRadianToAngle(radian);
+
+            rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, rotation.eulerAngles.x, angle);
+            transform.rotation = rotation;
+
+            UpdateShadowAndCollider();
+            _shadow.transform.eulerAngles = transform.eulerAngles;
+            _heightOffset = (_bodyCollider.bounds.max.y - _bodyCollider.bounds.min.y) * 2;
+            _size = new Vector2(0.0f, _heightOffset);
+
             yield return YieldCache.WaitForSeconds(_time);
             _hp = 0;
         }
@@ -55,15 +67,7 @@ namespace OBJECT
             CreateEffect(transform.position, _smoke);
             _animator.SetTrigger("Die");
         }
-        protected override void ObjFixedUpdate()
-        {
-            if (_isDie) return;
-
-            UpdateShadowAndCollider();
-            _lookAt = Vector3.zero;
-            _shadow.transform.eulerAngles = transform.eulerAngles;
-            _heightOffset = (_bodyCollider.bounds.max.y - _bodyCollider.bounds.min.y) * _body.lossyScale.y;
-        }
+        protected override void ObjFixedUpdate() { _lookAt = Vector2.zero; }
         private void CreateEffect(Vector2 pos, GameObject effect) { if (_makeSmoke) Instantiate(effect).transform.position = pos; }
         private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); } // 카메라 매니저를 만들어주는게 좋지않을까?
         public void SetDirection(Vector2 dir) { _direction = dir; }

@@ -62,7 +62,10 @@ namespace OBJECT
             _state.SetState(new DieState());
             Destroy(_bodyCollider);
         }
-        protected override void ObjFixedUpdate() { _state.Update(this); }
+        protected override void ObjFixedUpdate() 
+        {
+            _state.Update(this); 
+        }
         protected override void GetDamageAction(int damage) { _state.SetState(new HitState()); }
         private void SetUseSkill(bool useSkill) { _useSkill = useSkill; }
     }

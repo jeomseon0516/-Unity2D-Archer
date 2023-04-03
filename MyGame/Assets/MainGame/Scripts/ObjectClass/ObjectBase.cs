@@ -30,6 +30,7 @@ namespace OBJECT
         protected Vector2 _direction;
         protected Vector2 _lookAt;
         protected Vector2 _shadowPos;
+        protected Vector2 _size;
         protected float _heightOffset;
         protected float _offsetY;
         protected float _speed;
@@ -67,6 +68,16 @@ namespace OBJECT
 
             CheckInComponent(_shadow.TryGetComponent(out RectTransform rectT));
             _heightOffset = _shadowSprRen.size.y;
+
+            Transform size = _physics.Find("Size");
+            bool onSize = size != null ? true : false;
+
+            if (onSize)
+            {
+                CheckInComponent(size.TryGetComponent(out BoxCollider2D box));
+                _size = box.size;
+                Destroy(box.gameObject);
+            }
 
             _isDie = false;
             _hp = 10;
@@ -114,8 +125,11 @@ namespace OBJECT
                 float jumpTargetPosY = obj.GetBody().localPosition.y;
                 float jumpMyPosY = _body.localPosition.y;
 
-                if (jumpTargetPosY + obj.GetHeightOffset() > jumpMyPosY - _heightOffset &&
-                    jumpTargetPosY - obj.GetHeightOffset() < jumpMyPosY + _heightOffset) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
+                float targetSizeY = obj.GetSize().y * 0.5f;
+                float mySizeY = _size.y * 0.5f;
+
+                if (jumpTargetPosY + targetSizeY > jumpMyPosY - mySizeY &&
+                    jumpTargetPosY - targetSizeY < jumpMyPosY + mySizeY) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
                     return true;
             }
             return false;
@@ -161,6 +175,7 @@ namespace OBJECT
         public void TakeDamage(int damage) { _hp -= damage; }
         public Transform GetPhysics() { return _physics; }
         public Transform GetBody() { return _body; }
+        public Vector2 GetSize() { return _size; }
         public float GetHeightOffset() { return _heightOffset; }
         public float GetOffSetY() { return _offsetY; }
         public int GetMaxHp() { return _maxHp; }
