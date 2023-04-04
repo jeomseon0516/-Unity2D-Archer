@@ -7,6 +7,9 @@ namespace OBJECT
     public partial class PenguinController : EnemyBase
     {
         StateMachine<PenguinController> _state;
+        BoxCollider2D _boxCol;
+        Vector2 _keepBoxSize;
+        Vector2 _keepBoxOffset;
 
         bool _useJump;
         bool _useSlide;
@@ -28,6 +31,11 @@ namespace OBJECT
 
             _useJump = true;
             _useSlide = true;
+
+            CheckInComponent(_attackBox.TryGetComponent(out _boxCol));
+
+            _keepBoxSize   = _boxCol.size;
+            _keepBoxOffset = _boxCol.offset;
 
             StartCoroutine(CheckFallingOrJumping());
             _state = new StateMachine<PenguinController>();
@@ -63,7 +71,7 @@ namespace OBJECT
         }
         private void FastChaseTarget(Vector2 myPos, Vector2 targetPos, float distance, float speed = 2)
         {
-            float radian   = Default.GetPositionToRadian(targetPos, myPos);
+            float radian = Default.GetPositionToRadian(targetPos, myPos);
 
             float x = Mathf.Cos(radian) * distance * 95.0f * 0.01f * speed;
             float y = Mathf.Sin(radian) * distance * 95.0f * 0.01f * speed;
@@ -83,6 +91,7 @@ namespace OBJECT
             JUMPATTACK,
             SLIDEATTACK,
             CHASEATTACK,
+            SLIDEATTACK_WAIT,
             WAIT,
             DIE
         }
@@ -177,34 +186,27 @@ namespace OBJECT
                 }
 
                 int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
-                Vector2 movePoint = HuntingAttackGetMovePoint(t, xDir, targetPos, myPos); ;
+                Vector2 movePoint = new Vector2(targetPos.x + 1.5f * xDir, targetPos.y);
 
                 if (t._useSlide)
-                    movePoint = SkillAndGetMovePoint(t, xDir, targetPos, myPos);
+                {
+                    t._state.SetState(new SlideAttackWait());
+                    return;
+                }
                 else if (t._useJump)
+                {
                     t._state.SetState(new JumpAttackState(t));
+                    return;
+                }
+
+                if (t.CheckAttack(t, xDir, movePoint, myPos, 0.25f))
+                {
+                    t._state.SetState(new AttackState());
+                    return;
+                }
       
                 t._direction = (movePoint - myPos).normalized;
                 t._lookAt    = (targetPos - myPos).normalized;
-            }
-            private Vector2 SkillAndGetMovePoint(PenguinController t, int xDir, Vector2 targetPosition, Vector2 myPosition)
-            {
-                Vector2 movePoint = new Vector2(targetPosition.x + Random.Range(4.0f, 6.0f) * xDir, _yTemp);
-
-                if (Default.GetDistance(movePoint, myPosition) <= 1.0f)
-                    t._state.SetState(new SlideAttackState());
-
-                return movePoint;
-            }
-            private Vector2 HuntingAttackGetMovePoint(PenguinController t, int xDir, Vector2 targetPosition, Vector2 myPosition)
-            {
-                Vector2 movePoint = new Vector2(targetPosition.x + 1.5f * xDir, targetPosition.y);
-
-                if (Mathf.Abs(movePoint.x - myPosition.x) <= t._attackDis &&
-                    Mathf.Abs(movePoint.y - myPosition.y) <= t._attackDis * 0.25f)
-                    t._state.SetState(new AttackState());
-
-                return movePoint;
             }
         }
         public sealed class AttackState : State<PenguinController>
@@ -213,6 +215,7 @@ namespace OBJECT
             {
                 base.Enter(t);
                 t._animator.SetTrigger("Attack");
+
                 t._direction = Vector2.zero;
                 t._lookAt = (t._target.transform.position - t._physics.position).normalized;
             }
@@ -237,10 +240,23 @@ namespace OBJECT
                 t._lookAt = (targetPos - myPos).normalized;
                 t.FastChaseTarget(myPos, targetPos, distance);
 
+                if (!t._attackBox.activeSelf && t._jumpValue < float.Epsilon) //낙하하는 타이밍에 어택박스를 켜준다.
+                {
+                    t.OnAttackBox(1);
+                    t._boxCol.offset = new Vector2(0, -1.63f);
+                    t._boxCol.size = new Vector2(1.5f, 1.02f);
+                }
+
                 if (t._body.localPosition.y < float.Epsilon)
                     t._state.SetState(new WaitState());
             }
-            public override void Exit(PenguinController t) { t.CreateBullet(_power); }
+            public override void Exit(PenguinController t) 
+            {
+                t.OnAttackBox(0);
+                t.CreateBullet(_power);
+                t._boxCol.offset = t._keepBoxOffset;
+                t._boxCol.size   = t._keepBoxSize;
+            }
             public JumpAttackState(PenguinController t) 
             {
                 t._jump = Random.Range(8.0f, 15.0f);
@@ -251,38 +267,50 @@ namespace OBJECT
         }
         public sealed class SlideAttackState : State<PenguinController>
         {
+            float _time;
             Vector2 _movePoint;
             public override void Enter(PenguinController t)
             {
                 base.Enter(t);
+
                 t.GetTargetAndMyPos(out Vector2 myPos, out _movePoint);
                 t._animator.SetTrigger("Slide");
+                _time = 3.0f;
+
+                t.OnAttackBox(1);
+                t._boxCol.offset = new Vector2(0, -1.48f);
+                t._boxCol.size   = new Vector2(2.36f, 1.43f);
 
                 float distance = Default.GetDistance(_movePoint, myPos);
-                _movePoint += (_movePoint - myPos).normalized * distance * 90.0f * 0.01f;
+                _movePoint += (_movePoint - myPos).normalized * distance * 60.0f * 0.01f;
             }
             public override void Update(PenguinController t) 
             {
+                _time -= Time.deltaTime;
                 Vector2 myPos = new Vector2(t._physics.position.x, t._physics.position.y - t._offsetY);
 
                 float distanceX = Mathf.Abs(_movePoint.x - myPos.x);
                 float distance  = Default.GetDistance(_movePoint, myPos);
 
-                t.FastChaseTarget(myPos, _movePoint, distance, 1.5f);
+                t.FastChaseTarget(myPos, _movePoint, distance, 1.25f);
 
-                print(distanceX);
-                if (distanceX < 0.001f)
+                if (distanceX < 0.1f || _time <= 0.0f)
                     t._state.SetState(new WaitState(1.0f));
             }
             public override void Exit(PenguinController t) 
             {
-                t.StartCoroutine(t.CoolTime(t.SetUseSlide, 5.0f));
+                t.StartCoroutine(t.CoolTime(t.SetUseSlide, 5.0f)); 
+                t.OnAttackBox(0);
+                t._boxCol.offset = t._keepBoxOffset;
+                t._boxCol.size   = t._keepBoxSize;
             }
         }
         public sealed class ChaseAttackState : State<PenguinController>
         {
             public override void Enter(PenguinController t) { base.Enter(t); }
-            public override void Update(PenguinController t) { }
+            public override void Update(PenguinController t)
+            {
+            }
             public override void Exit(PenguinController t) { }
         }
         public sealed class DieState : State<PenguinController>
@@ -291,12 +319,49 @@ namespace OBJECT
             public override void Update(PenguinController t) { }
             public override void Exit(PenguinController t) { }
         }
+        public sealed class SlideAttackWait : State<PenguinController>
+        {
+            Vector2 _keepTargetPos;
+
+            public override void Enter(PenguinController t) 
+            { 
+                base.Enter(t);
+
+                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
+                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
+
+                _keepTargetPos = new Vector2(targetPos.x + Random.Range(4.0f, 6.0f) * xDir,
+                                             Random.Range(0.0f, 1.5f) * Random.Range(0, 2) == 0 ? 1 : -1); // 오프셋을 랜덤으로 구하고 위쪽 방향인지 아래쪽방향인지 랜덤으로 구한다.
+            }
+            public override void Update(PenguinController t) 
+            {
+                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
+                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
+
+                if (Default.GetDistance(_keepTargetPos, myPos) <= 1.0f)
+                {
+                    t._state.SetState(new SlideAttackState());
+                    return;
+                }
+
+                Vector2 movePoint = new Vector2(targetPos.x + 1.5f * xDir, targetPos.y);
+
+                if (t.CheckAttack(t, xDir, movePoint, myPos, 0.25f))
+                {
+                    t._state.SetState(new AttackState());
+                    return;
+                }
+
+                t._direction = (_keepTargetPos - myPos).normalized;
+                t._lookAt    = (targetPos - myPos).normalized;
+            }
+            public override void Exit(PenguinController t) { }
+        }
         public sealed class WaitState : State<PenguinController>
         {
             float _time;
             public override void Enter(PenguinController t) 
             {
-                print("adf");
                 base.Enter(t);
                 t._direction = Vector2.zero;
                 t.StartCoroutine(t.Wait(_time));

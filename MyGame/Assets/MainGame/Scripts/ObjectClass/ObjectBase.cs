@@ -21,6 +21,7 @@ namespace OBJECT
         protected SpriteRenderer _shadowSprRen;
         protected Rigidbody2D _rigidbody;
         protected Collider2D _bodyCollider;
+        protected Collider2D _collider;
         protected Transform _colTransform;
         protected Transform _physics;
         protected Transform _body;
@@ -54,8 +55,10 @@ namespace OBJECT
 
             _body = transform.parent;
 
-            _colTransform    = _body.Find("Collider");
+            _colTransform    = _body.Find("Size");
             _originalColSize = _body.localScale;
+
+            CheckInComponent(_body.Find("Collider").TryGetComponent(out _collider));
 
             CheckInComponent(_colTransform.TryGetComponent(out _bodyCollider));
             _bodyCollider.gameObject.AddComponent<ObjectPhysics>();
@@ -77,11 +80,11 @@ namespace OBJECT
 
             Transform size = _physics.Find("Size");
 
-            if (size != null ? true : false)
+            if (!ReferenceEquals(size, null) ? true : false)
             {
                 CheckInComponent(size.TryGetComponent(out BoxCollider2D box));
                 _size = box.size;
-                //Destroy(box.gameObject);
+                Destroy(box.gameObject);
             }
 
             _isDie = false;
@@ -126,22 +129,22 @@ namespace OBJECT
             if (targetPosY + obj.GetHeightOffset() > myPosY - _heightOffset &&
                 targetPosY - obj.GetHeightOffset() < myPosY + _heightOffset)
             {
-                // 해당 타겟이 같은 y 좌표에 있는지 체크한다.
-                float jumpTargetPosY = obj.GetBody().localPosition.y * 0.5f;
-                float jumpMyPosY = _body.localPosition.y * 0.5f;
+                //해당 타겟이 같은 y 좌표에 있는지 체크한다.
+                //float jumpTargetPosY = obj.GetBody().localPosition.y * 0.5f;
+                //float jumpMyPosY = _body.localPosition.y * 0.5f;
 
-                float targetSizeY = obj.GetSize().y;
-                float mySizeY     = _size.y;
+                //float targetSizeY = obj.GetSize().y;
+                //float mySizeY = _size.y;
 
-                if (jumpTargetPosY + targetSizeY > jumpMyPosY - mySizeY &&
-                    jumpTargetPosY - targetSizeY < jumpMyPosY + mySizeY) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
+                //if (jumpTargetPosY + targetSizeY > jumpMyPosY - mySizeY &&
+                //    jumpTargetPosY - targetSizeY < jumpMyPosY + mySizeY) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
                     return true;
             }
             return false;
         }
         protected IEnumerator Jumping(float gravity = Constants.GRAVITY)
         {
-            _bodyCollider.isTrigger = true;
+            _collider.isTrigger = true;
 
             while (_body.localPosition.y >= 0)
             {
@@ -151,7 +154,7 @@ namespace OBJECT
             }
 
             _jump = 0;
-            _bodyCollider.isTrigger = false;
+            _collider.isTrigger = false;
             _body.localPosition = new Vector2(0.0f, 0.0f);
         }
         /* 점프를 하지 않는 객체가 있으니 객체별로 따로 호출 해줍니다. */
@@ -198,9 +201,9 @@ namespace OBJECT
         }
         private void SettingZNode()
         {
-            if (_isDie) return;
+            if (ReferenceEquals(_shadowSprRen, null) || !_shadowSprRen) return;
 
-            _sprRen.sortingOrder = (int)((_shadow.position.y) * 10) * -1;
+            _sprRen.sortingOrder = (int)((_physics.position.y - _offsetY) * 10) * -1;
             _shadowSprRen.sortingOrder = _sprRen.sortingOrder - 1;
         }
         protected void UpdateShadowAndCollider()

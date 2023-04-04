@@ -19,7 +19,7 @@ namespace OBJECT
             base.Init();
             _maxHp = _hp = 50;
             _id = OBJECTID.PLAYER;
-            _attackSpeed = 2;
+            _attackSpeed = 10;
             _speed = 5.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
@@ -108,14 +108,8 @@ namespace OBJECT
         public sealed class RunState : State<PlayerController>
         {
             public override void Update(PlayerController t)
-            {
-                float dirX = t._direction.x;
-                float dirY = t._direction.y;
-
-                dirX = dirX > 0 ? dirX : -dirX;
-                dirY = dirY > 0 ? dirY : -dirY;
-
-                float speed = dirX >= dirY ? dirX : dirY; /*Mathf.Max(Mathf.Abs(t._direction.x), Mathf.Abs(t._direction.y))*/ // 최적화
+            { 
+                float speed = t.GetFromDirectionToSpeed(t._direction); /*Mathf.Max(Mathf.Abs(t._direction.x), Mathf.Abs(t._direction.y))*/ // 최적화
 
                 t._animator.speed = speed > 0.0f ? speed : 1;
 

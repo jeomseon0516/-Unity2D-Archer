@@ -11,17 +11,16 @@ namespace OBJECT
 
         protected virtual void CreateBullet() {}
         protected override void Init() { _bullet = ResourcesManager.GetInstance().GetObjectToKey(_id, "Bullet"); }
-        protected override void Run() 
+        protected override void Run() { _animator.SetFloat("Speed", GetFromDirectionToSpeed(_direction)); }
+        protected float GetFromDirectionToSpeed(Vector2 direction)
         {
-            float dirX = _direction.x;
-            float dirY = _direction.y;
+            float dirX = direction.x;
+            float dirY = direction.y;
 
             dirX = dirX > 0 ? dirX : -dirX; // Abs
             dirY = dirY > 0 ? dirY : -dirY;
 
-            float speed = dirX >= dirY ? dirX : dirY; // Max
-
-            _animator.SetFloat("Speed", speed);
+            return dirX >= dirY ? dirX : dirY; // Max
         }
     }
     public abstract partial class LivingObject : ObjectBase, ISubject

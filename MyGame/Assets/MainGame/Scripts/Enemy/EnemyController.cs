@@ -79,6 +79,7 @@ namespace OBJECT
             TARGETING,
             ATTACK,
             SKILL,
+            SKILL_WAIT,
             HIT,
             DIE
         }
@@ -128,12 +129,6 @@ namespace OBJECT
         /* -----------------------------------------------------------Targeting-------------------------------------------------- */
         public class TargetingState : State<EnemyController>
         {
-            float _yTemp;
-            public override void Enter(EnemyController t)
-            {
-                _yTemp = Random.Range(0.0f, 1.5f) * Random.Range(0, 2) == 0 ? 1 : -1;
-                base.Enter(t);
-            }
             public override void Update(EnemyController t)
             {
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
@@ -145,32 +140,22 @@ namespace OBJECT
                 }
 
                 int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
-                Vector2 movePoint = HuntingAttackGetMovePoint(t, xDir, targetPos, myPos);
+                Vector2 movePoint = new Vector2(targetPos.x + 1.5f * xDir, targetPos.y);
 
                 if (t._useSkill)
-                    movePoint = SkillAndGetMovePoint(t, xDir, targetPos, myPos);
-                
-                t._direction = (movePoint - myPos).normalized;
-                t._lookAt    = (targetPos - myPos).normalized;
-            }
-            private Vector2 SkillAndGetMovePoint(EnemyController t, int xDir, Vector2 targetPosition, Vector2 myPosition)
-            {
-                Vector2 movePoint = new Vector2(targetPosition.x + Random.Range(4.0f, 6.0f) * xDir, _yTemp);
+                {
+                    t._state.SetState(new SkillWait());
+                    return;
+                }
 
-                if (Default.GetDistance(movePoint, myPosition) <= 1.0f)
-                    t._state.SetState(new SkillState());
-
-                return movePoint;
-            }
-            private Vector2 HuntingAttackGetMovePoint(EnemyController t, int xDir, Vector2 targetPosition, Vector2 myPosition)
-            {
-                Vector2 movePoint = new Vector2(targetPosition.x + 1.5f * xDir, targetPosition.y);
-
-                if (Mathf.Abs(movePoint.x - myPosition.x) <= t._attackDis &&
-                    Mathf.Abs(movePoint.y - myPosition.y) <= t._attackDis * 0.15f)
+                if (t.CheckAttack(t, xDir, movePoint, myPos))
+                {
                     t._state.SetState(new AttackState());
+                    return;
+                }
 
-                return movePoint;
+                t._direction = (movePoint - myPos).normalized;
+                t._lookAt =    (targetPos - myPos).normalized;
             }
             public TargetingState() {}
         }
@@ -219,6 +204,38 @@ namespace OBJECT
                 t._direction = Vector2.zero;
             }
             public DieState() {}
+        }
+        public class SkillWait : State<EnemyController>
+        {
+            float _yTemp;
+            public override void Enter(EnemyController t)
+            {
+                base.Enter(t);
+                _yTemp = Random.Range(0.0f, 1.5f) * Random.Range(0, 2) == 0 ? 1 : -1;
+            }
+            public override void Update(EnemyController t)
+            {
+                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
+                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
+
+                Vector2 movePoint = new Vector2(targetPos.x + Random.Range(4.0f, 6.0f) * xDir, _yTemp);
+
+                if (Default.GetDistance(movePoint, myPos) <= 1.0f)
+                {
+                    t._state.SetState(new SkillState());
+                    return;
+                }
+
+                if (t.CheckAttack(t, xDir, new Vector2(targetPos.x + 1.5f * xDir, targetPos.y), myPos))
+                {
+                    t._state.SetState(new AttackState());
+                    return;
+                }
+
+                t._direction = (movePoint - myPos).normalized;
+                t._lookAt    = (targetPos - myPos).normalized;
+            }
+            public SkillWait() { }
         }
     }
 }

@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4739753614512922863}
   - component: {fileID: 1579447356176767701}
-  m_Layer: 8
+  m_Layer: 13
   m_Name: Collider
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -58,7 +58,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5326225496277441101}
   - component: {fileID: 2863457203547115571}
-  m_Layer: 12
+  m_Layer: 8
   m_Name: Size
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -72,13 +72,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3157304685407215317}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0.014, y: 0.353, z: 0}
+  m_LocalRotation: {x: -0, y: -1, z: -0, w: 0}
+  m_LocalPosition: {x: -0.014000001, y: 0.35300002, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 9148323377750494851}
-  m_RootOrder: 2
+  m_Father: {fileID: 5391534132496792782}
+  m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!61 &2863457203547115571
 BoxCollider2D:
@@ -90,7 +90,7 @@ BoxCollider2D:
   m_Enabled: 1
   m_Density: 1
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
   m_Offset: {x: -0.0029216334, y: -0.35506353}
@@ -255,7 +255,6 @@ Transform:
   m_Children:
   - {fileID: 5391534132496792782}
   - {fileID: 1148000162091417986}
-  - {fileID: 5326225496277441101}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -400,6 +399,7 @@ Transform:
   - {fileID: 6466097405401295109}
   - {fileID: 2993902115541295698}
   - {fileID: 4739753614512922863}
+  - {fileID: 5326225496277441101}
   m_Father: {fileID: 9148323377750494851}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 180, z: 0}

@@ -58,6 +58,14 @@ namespace OBJECT
             Transform targetTransform = _target.GetPhysics();
             targetPos = new Vector2(targetTransform.position.x, targetTransform.position.y - _target.GetOffsetY());
         }
+        protected bool CheckAttack(EnemyBase t, int xDir, Vector2 movePoint, Vector2 myPosition, float yDis = 0.15f)
+        {
+            if (Mathf.Abs(movePoint.x - myPosition.x) <= t._attackDis &&
+                Mathf.Abs(movePoint.y - myPosition.y) <= t._attackDis * yDis)
+                return true;
+
+            return false;
+        }
         protected internal override void TriggerAction(Collider2D col) 
         {
             if (LayerMask.LayerToName(col.gameObject.layer).Equals("Player")) return;
