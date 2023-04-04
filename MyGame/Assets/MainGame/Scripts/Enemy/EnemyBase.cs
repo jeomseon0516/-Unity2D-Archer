@@ -52,6 +52,12 @@ namespace OBJECT
 
             return new Vector2(_rigidbody.position.x + offset.x * xDir, 0.0f + offset.y * yDir);
         }
+        protected void GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos)
+        {
+            myPos = new Vector2(_physics.position.x, _physics.position.y - _offsetY);
+            Transform targetTransform = _target.GetPhysics();
+            targetPos = new Vector2(targetTransform.position.x, targetTransform.position.y - _target.GetOffsetY());
+        }
         protected internal override void TriggerAction(Collider2D col) 
         {
             if (LayerMask.LayerToName(col.gameObject.layer).Equals("Player")) return;

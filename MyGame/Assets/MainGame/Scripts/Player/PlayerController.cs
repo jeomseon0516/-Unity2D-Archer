@@ -17,9 +17,9 @@ namespace OBJECT
         protected override void Init()
         {
             base.Init();
-            _maxHp = _hp = 10000;
+            _maxHp = _hp = 50;
             _id = OBJECTID.PLAYER;
-            _attackSpeed = 10;
+            _attackSpeed = 2;
             _speed = 5.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();

@@ -80,8 +80,8 @@ namespace OBJECT
             if (size != null ? true : false)
             {
                 CheckInComponent(size.TryGetComponent(out BoxCollider2D box));
-                _size = box.bounds.size;
-                Destroy(box.gameObject);
+                _size = box.size;
+                //Destroy(box.gameObject);
             }
 
             _isDie = false;
@@ -120,18 +120,18 @@ namespace OBJECT
         // TODO : 점프때문에 GetPhysics사용해야함
         protected internal bool TriggerCollision(Transform targetPhysics, ObjectBase obj)
         {
-            float targetPosY = targetPhysics.position.y - obj.GetOffSetY();
+            float targetPosY = targetPhysics.position.y - obj.GetOffsetY();
             float myPosY = _physics.position.y - _offsetY;
 
             if (targetPosY + obj.GetHeightOffset() > myPosY - _heightOffset &&
                 targetPosY - obj.GetHeightOffset() < myPosY + _heightOffset)
             {
                 // 해당 타겟이 같은 y 좌표에 있는지 체크한다.
-                float jumpTargetPosY = obj.GetBody().localPosition.y;
-                float jumpMyPosY = _body.localPosition.y;
+                float jumpTargetPosY = obj.GetBody().localPosition.y * 0.5f;
+                float jumpMyPosY = _body.localPosition.y * 0.5f;
 
-                float targetSizeY = obj.GetSize().y * 0.5f;
-                float mySizeY     = _size.y         * 0.5f;
+                float targetSizeY = obj.GetSize().y;
+                float mySizeY     = _size.y;
 
                 if (jumpTargetPosY + targetSizeY > jumpMyPosY - mySizeY &&
                     jumpTargetPosY - targetSizeY < jumpMyPosY + mySizeY) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
@@ -219,7 +219,7 @@ namespace OBJECT
         public Transform GetBody() { return _body; }
         public Vector2 GetSize() { return _size; }
         public float GetHeightOffset() { return _heightOffset; }
-        public float GetOffSetY() { return _offsetY; }
+        public float GetOffsetY() { return _offsetY; }
         public int GetMaxHp() { return _maxHp; }
         public int GetHp() { return _hp; }
         public int GetAtk() { return _atk; }

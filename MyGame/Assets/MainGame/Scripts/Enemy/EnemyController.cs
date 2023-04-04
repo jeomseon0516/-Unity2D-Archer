@@ -31,7 +31,7 @@ namespace OBJECT
                 CheckInComponent(skillTransform.Find("Body").Find("Image").TryGetComponent(out ObjectBase skill));
                 skillTransform.position = new Vector2(
                     tPhysicsTransform.position.x + 0.15f,
-                    tPhysicsTransform.position.y + skill.GetOffSetY() - _target.GetOffSetY());
+                    tPhysicsTransform.position.y + skill.GetOffsetY() - _target.GetOffsetY());
             }
         }
         // TODO : HitAnimation재생
@@ -136,28 +136,22 @@ namespace OBJECT
             }
             public override void Update(EnemyController t)
             {
-                Vector2 myPosition = new Vector2(t._physics.position.x, t._physics.position.y - t._offsetY);
-                Transform targetTransform = t._target.transform;
-                Vector2 targetPosition = targetTransform.position;
+                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
 
-                if (!t._isHunting && Default.GetDistance(targetPosition, myPosition) > t._searchDis) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
+                if (!t._isHunting && Default.GetDistance(targetPos, myPos) > t._searchDis) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
                 {
                     t._state.SetState(new IdleState());
                     return;
                 }
 
-                t.CheckInComponent(targetTransform.TryGetComponent(out ObjectBase targetObj));
-
-                int xDir = myPosition.x - targetPosition.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
-                Vector2 movePoint = Vector2.zero;
-
-                movePoint = HuntingAttackGetMovePoint(t, xDir, targetObj, targetPosition, myPosition);
+                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
+                Vector2 movePoint = HuntingAttackGetMovePoint(t, xDir, targetPos, myPos);
 
                 if (t._useSkill)
-                    movePoint = SkillAndGetMovePoint(t, xDir, targetPosition, myPosition);
+                    movePoint = SkillAndGetMovePoint(t, xDir, targetPos, myPos);
                 
-                t._direction = (movePoint - myPosition).normalized;
-                t._lookAt    = (targetPosition - myPosition).normalized;
+                t._direction = (movePoint - myPos).normalized;
+                t._lookAt    = (targetPos - myPos).normalized;
             }
             private Vector2 SkillAndGetMovePoint(EnemyController t, int xDir, Vector2 targetPosition, Vector2 myPosition)
             {
@@ -168,9 +162,9 @@ namespace OBJECT
 
                 return movePoint;
             }
-            private Vector2 HuntingAttackGetMovePoint(EnemyController t, int xDir, ObjectBase targetObj, Vector2 targetPosition, Vector2 myPosition)
+            private Vector2 HuntingAttackGetMovePoint(EnemyController t, int xDir, Vector2 targetPosition, Vector2 myPosition)
             {
-                Vector2 movePoint = new Vector2(targetPosition.x + 1.5f * xDir, targetPosition.y - targetObj.GetOffSetY());
+                Vector2 movePoint = new Vector2(targetPosition.x + 1.5f * xDir, targetPosition.y);
 
                 if (Mathf.Abs(movePoint.x - myPosition.x) <= t._attackDis &&
                     Mathf.Abs(movePoint.y - myPosition.y) <= t._attackDis * 0.15f)

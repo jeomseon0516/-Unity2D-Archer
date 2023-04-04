@@ -47,9 +47,7 @@ namespace OBJECT
             }
 
             if (_speed < 0.0001f)
-            {
                 _hp = 0;
-            }
         }
         protected override void BulletInit() {}
         public void SetNextJump(float nextJump) { _nextJump = nextJump; }
