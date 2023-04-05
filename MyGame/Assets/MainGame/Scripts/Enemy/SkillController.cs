@@ -17,12 +17,9 @@ namespace OBJECT
             bool on = isOn > 0.0f ? true : false;
             _colTransform.gameObject.SetActive(on);
         }
-        protected internal override void TriggerAction(Collider2D col) 
+        protected internal override void OnCollision(ObjectBase obj, Collider2D col)
         {
-            CheckInComponent(col.transform.parent.Find("Image").TryGetComponent(out ObjectBase obj));
-
-            if (TriggerCollision(obj.GetPhysics(), obj))
-                obj.TakeDamage(_atk);
+            obj.TakeDamage(_atk);
         }
     }
 }

@@ -7,8 +7,6 @@ namespace OBJECT
 {
     public abstract class BulletBase : ObjectBase
     {
-        List<GameObject> _colList = new List<GameObject>();
-
         protected float _time;
         protected override void Init()
         {
@@ -25,22 +23,6 @@ namespace OBJECT
             _hp = 0;
         }
 
-        protected bool CheckCollision(GameObject colObj) 
-        {
-            for (int i = 0; i < _colList.Count; ++i)
-            {
-                if (ReferenceEquals(_colList[i], null) || !_colList[i])
-                {
-                    _colList.RemoveAt(i);
-                    --i;
-                    continue;
-                }
-                if (_colList[i].Equals(colObj)) return true;
-            }
-
-            return false;
-        }
-        protected void AddColList(GameObject obj) { _colList.Add(obj); }
         protected override void ObjFixedUpdate() { BulletPattern(); }
         protected virtual void BulletPattern() { _lookAt = Vector2.zero; }
         protected abstract void BulletInit();

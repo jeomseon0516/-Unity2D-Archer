@@ -8,13 +8,7 @@ namespace OBJECT
     public class AttackBox : MonoBehaviour
     {
         private ObjectBase _objBase;
-        private void OnTriggerEnter2D(Collider2D col) 
-        {
-            col.transform.parent.Find("Image").TryGetComponent(out ObjectBase obj);
-
-            if (_objBase.TriggerCollision(obj.GetPhysics(), obj))
-                obj.TakeDamage(_objBase.GetAtk());
-        }
+        private void OnTriggerEnter2D(Collider2D col) { _objBase.TriggerCollision(col, gameObject); }
         public void SetObjectBase(ObjectBase obj) { _objBase = obj; }
     }
 }

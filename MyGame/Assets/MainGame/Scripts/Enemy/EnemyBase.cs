@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using OBSERVER;
 
 namespace OBJECT
 {
@@ -17,6 +18,9 @@ namespace OBJECT
         {
             base.Init();
             CheckInComponent(GameObject.Find("Player").transform.Find("Body").Find("Image").TryGetComponent(out _target));
+
+            CheckInComponent(_body.Find("HealthCanvas").Find("HpBar").TryGetComponent(out IObserver bar));
+            RegisterObserver(bar);
 
             _attackBox = _body.Find("AttackBox").gameObject;
             _attackBox.gameObject.AddComponent<AttackBox>().SetObjectBase(this);
@@ -37,6 +41,9 @@ namespace OBJECT
         {
             bool on = isOn > 0.0f ? true : false;
             _attackBox.SetActive(on);
+
+            if (!on)
+                ClearColList();
         }
         protected IEnumerator CoolTime(SetSkill skill, float time)
         {
@@ -69,12 +76,12 @@ namespace OBJECT
         }
         protected internal override void TriggerAction(Collider2D col) 
         {
-            if (LayerMask.LayerToName(col.gameObject.layer).Equals("Player")) return;
+            if (LayerMask.LayerToName(col.gameObject.layer).Equals("Player") ||
+                LayerMask.LayerToName(col.gameObject.layer).Equals("Bullet")) return;
 
-            CheckInComponent(col.transform.parent.Find("Image").TryGetComponent(out ObjectBase obj));
-
-            if (TriggerCollision(obj.GetPhysics(), obj))
-                AddAfterResetCoroutine("Targeting", TargetingObject()); // 플레이어에게 공격받으면 10초동안은 거리에 상관없이 무조건 플레이어를 쫒아다닌다.
+            TriggerCollision(col, _colTransform.gameObject);
         }
+        protected override void GetDamageAction(int damage) { AddAfterResetCoroutine("Targeting", TargetingObject()); }
+        protected internal override void OnCollision(ObjectBase obj, Collider2D col) { obj.TakeDamage(_atk); }
     }
 }

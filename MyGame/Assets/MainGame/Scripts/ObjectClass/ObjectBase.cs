@@ -46,6 +46,7 @@ namespace OBJECT
         protected float _jump; //현재 점프값
 
         private Dictionary<string, IEnumerator> _coroutineList = new Dictionary<string, IEnumerator>();
+        private List<GameObject> _colList = new List<GameObject>();
 
         // default 값 세팅
         protected virtual void Awake()
@@ -92,14 +93,15 @@ namespace OBJECT
         }
         private void Update() { ObjUpdate(); }
         private void OnTriggerEnter2D(Collider2D col) { TriggerAction(col); }
-        protected internal virtual void TriggerAction(Collider2D col) { }
         protected internal virtual void CollisionAction(Collision2D obj) {}
+        protected internal virtual void OnCollision(ObjectBase obj, Collider2D col) {}
         protected virtual void GetDamageAction(int damage) {}
         protected virtual void ObjFixedUpdate() {}
         protected virtual void ObjUpdate() {}
         protected virtual void Init() {}
         protected virtual void Run() {}
         protected virtual void Die() { DestroyObj(); }
+        protected internal virtual void TriggerAction(Collider2D col) { TriggerCollision(col, _colTransform.gameObject); }
         private void FixedUpdate()
         {
             if (_hp < _beforeHp && !_isDie)
@@ -115,21 +117,43 @@ namespace OBJECT
             ChangeFlipXToHor(_lookAt.x);
             SettingZNode();
         }
+        protected internal void TriggerCollision(Collider2D col, GameObject colTransform) 
+        {
+            CheckInComponent(col.transform.parent.Find("Image").TryGetComponent(out ObjectBase obj));
+
+            if (!CheckCollision(col.gameObject))
+            {
+                if (TriggerCollision(obj.GetPhysics(), obj))
+                {
+                    OnCollision(obj, col);
+                    AddColList(col.gameObject); ;
+                }
+                else
+                {
+                    colTransform.SetActive(false);
+                }
+            }
+
+            colTransform.SetActive(true);
+        }
         // TODO : 점프때문에 GetPhysics사용해야함
         protected internal bool TriggerCollision(Transform targetPhysics, ObjectBase obj)
         {
             float targetPosY = targetPhysics.position.y - obj.GetOffsetY();
             float myPosY = _physics.position.y - _offsetY;
 
-            if (targetPosY + obj.GetHeightOffset() > myPosY - _heightOffset &&
-                targetPosY - obj.GetHeightOffset() < myPosY + _heightOffset)
+            float targetHeightOffset = obj.GetHeightOffset() * 0.5f;
+            float myHeightOffset     = _heightOffset * 0.5f;
+
+            if (targetPosY + targetHeightOffset > myPosY - myHeightOffset &&
+                targetPosY - targetHeightOffset < myPosY + myHeightOffset)
             {
                 //해당 타겟이 같은 y 좌표에 있는지 체크한다.
-                //float jumptarGetPosY = obj.GetBody().localPosition.y;
-                //float jumpMyPosY = _body.localPosition.y;
+                //float jumptarGetPosY = obj.GetBody().localPosition.y - obj.GetOffsetY();
+                //float jumpMyPosY     = _body.localPosition.y - _offsetY;
 
                 //float targetSizeY = obj.GetSize().y * 0.5f;
-                //float mySizeY = _size.y * 0.5f;
+                //float mySizeY     = _size.y * 0.5f;
 
                 //if (jumptarGetPosY + targetSizeY > jumpMyPosY - mySizeY &&
                 //    jumptarGetPosY - targetSizeY < jumpMyPosY + mySizeY) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
@@ -143,9 +167,9 @@ namespace OBJECT
 
             while (_body.localPosition.y >= 0)
             {
-                yield return YieldCache.WaitForFixedUpdate;
                 _body.localPosition += new Vector3(0.0f, _jump, 0.0f) * Time.deltaTime;
                 _jump -= gravity * Time.deltaTime;
+                yield return YieldCache.WaitForFixedUpdate;
             }
 
             _jump = 0;
@@ -173,6 +197,24 @@ namespace OBJECT
             }
             DestroyObj();
         }
+        // 공격이 여러번 호출 되는 것을 위한 처리
+        protected bool CheckCollision(GameObject colObj)
+        {
+            for (int i = 0; i < _colList.Count; ++i)
+            {
+                if (ReferenceEquals(_colList[i], null) || !_colList[i])
+                {
+                    _colList.RemoveAt(i);
+                    --i;
+                    continue;
+                }
+                if (_colList[i].Equals(colObj)) 
+                    return true;
+            }
+
+            return false;
+        }
+        // 공격이 끝났을 때 호출
         protected void AddAfterResetCoroutine(string key, IEnumerator coroutine)
         {
             if (_coroutineList.ContainsKey(key))
@@ -220,8 +262,10 @@ namespace OBJECT
             _colTransform.localEulerAngles = transform.localEulerAngles;
         }
         private void CheckHeight() { _shadow.localPosition = new Vector2(_shadowPos.x, _shadowPos.y - _body.localPosition.y * 0.5f); }
-        protected void DestroyObj() { Destroy(_physics.gameObject); }
         protected void CheckInComponent(bool inCom) { if (!inCom) print("해당 컴포넌트는 존재 하지 않습니다." + this.transform.root.name); }
+        protected void AddColList(GameObject obj) { _colList.Add(obj); }
+        protected void DestroyObj() { Destroy(_physics.gameObject); }
+        protected void ClearColList() { _colList.Clear(); }
         public void TakeDamage(int damage) { _hp -= damage; }
         public Transform GetPhysics() { return _physics; }
         public Transform GetBody() { return _body; }

@@ -11,8 +11,7 @@ namespace OBJECT
         Vector2 _keepBoxSize;
         Vector2 _keepBoxOffset;
 
-        bool _useJump;
-        bool _useSlide;
+        Queue<State<PenguinController>> _skillQueue = new Queue<State<PenguinController>>(); // 큐로 스킬을 쌓아둔다
 
         float _jumpCoolTime;
         float _slideCoolTime;
@@ -24,7 +23,7 @@ namespace OBJECT
             base.Init();
 
             _attackDis = 0.65f;
-            _hp = _maxHp = 1000;
+            _hp = _maxHp = 500;
 
             _jumpCoolTime  = 7.5f;
             _slideCoolTime = 5.0f;
@@ -32,15 +31,14 @@ namespace OBJECT
             _isActive = true;
             _atk = 5;
 
-            _useJump = true;
-            _useSlide = true;
-
             CheckInComponent(_attackBox.TryGetComponent(out _boxCol));
 
             _keepBoxSize   = _boxCol.size;
             _keepBoxOffset = _boxCol.offset;
 
             StartCoroutine(CheckFallingOrJumping());
+            _skillQueue.Enqueue(new SlideAttackWait());
+            _skillQueue.Enqueue(new JumpAttackState());
             _state = new StateMachine<PenguinController>();
             _state.SetState(new IdleState());
         }
@@ -66,16 +64,16 @@ namespace OBJECT
         {
             StartCoroutine(FadeOutObject());
         }
-        private IEnumerator Wait(float time)
-        {
-            yield return YieldCache.WaitForSeconds(time);
-            _state.SetState(new IdleState());
-        }
         protected override void ObjFixedUpdate()
         {
             if (!_isActive) return;
             _animator.SetFloat("JumpSpeed", _jumpValue);
             _state.Update(this);
+        }
+        private IEnumerator Wait(float time)
+        {
+            yield return YieldCache.WaitForSeconds(time);
+            _state.SetState(new IdleState());
         }
         private void FastChaseTarget(Vector2 myPos, Vector2 targetPos, float distance, float speed = 2)
         {
@@ -86,8 +84,16 @@ namespace OBJECT
 
             _direction = new Vector2(x, y);
         }
-        private void SetUseJump(bool useJump) { _useJump = useJump; }
-        private void SetUseSlide(bool useSlide) { _useSlide = useSlide; }
+        private IEnumerator SetUseJump(float time) 
+        {
+            yield return YieldCache.WaitForSeconds(time);
+            _skillQueue.Enqueue(new JumpAttackState());
+        }
+        private IEnumerator SetUseSlide(float time) 
+        {
+            yield return YieldCache.WaitForSeconds(time);
+            _skillQueue.Enqueue(new SlideAttackWait());
+        }
     }
     public partial class PenguinController : EnemyBase
     {
@@ -117,7 +123,7 @@ namespace OBJECT
                     _state.SetState(new AttackState());
                     break;
                 case PENGUIN_STATE.JUMPATTACK:
-                    _state.SetState(new JumpAttackState(this));
+                    _state.SetState(new JumpAttackState());
                     break;
                 case PENGUIN_STATE.SLIDEATTACK:
                     _state.SetState(new SlideAttackState());
@@ -196,14 +202,9 @@ namespace OBJECT
                 int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
                 Vector2 movePoint = new Vector2(targetPos.x + 1.5f * xDir, targetPos.y);
 
-                if (t._useSlide)
+                if (t._skillQueue.Count > 0)
                 {
-                    t._state.SetState(new SlideAttackWait());
-                    return;
-                }
-                else if (t._useJump)
-                {
-                    t._state.SetState(new JumpAttackState(t));
+                    t._state.SetState(t._skillQueue.Dequeue());
                     return;
                 }
 
@@ -233,12 +234,14 @@ namespace OBJECT
         {
             float _power;
             int _atk;
-
             public override void Enter(PenguinController t) 
             { 
                 base.Enter(t);
+                t._jump = Random.Range(8.0f, 15.0f);
+                _power = Random.Range(20, 32);
+                t.StartCoroutine(t.Jumping(_power));
+
                 t._direction = Vector2.zero;
-                t.StartCoroutine(t.CoolTime(t.SetUseJump, t._jumpCoolTime));
                 _atk = t._atk;
                 t._atk = 7;
             }
@@ -265,16 +268,10 @@ namespace OBJECT
             {
                 t.OnAttackBox(0);
                 t.CreateBullet(_power);
+                t.StartCoroutine(t.SetUseJump(Random.Range(t._jumpCoolTime - 2.5f, t._jumpCoolTime + 2.5f)));
                 t._boxCol.offset = t._keepBoxOffset;
                 t._boxCol.size   = t._keepBoxSize;
                 t._atk = _atk;
-            }
-            public JumpAttackState(PenguinController t) 
-            {
-                t._jump = Random.Range(8.0f, 15.0f);
-                _power  = Random.Range(20, 32);
-
-                t.StartCoroutine(t.Jumping(_power)); 
             }
         }
         public sealed class SlideAttackState : State<PenguinController>
@@ -314,7 +311,7 @@ namespace OBJECT
             }
             public override void Exit(PenguinController t) 
             {
-                t.StartCoroutine(t.CoolTime(t.SetUseSlide, 5.0f)); 
+                t.StartCoroutine(t.SetUseSlide(Random.Range(t._slideCoolTime - 1.5f, t._slideCoolTime + 1.5f))); 
                 t.OnAttackBox(0);
                 t._boxCol.offset = t._keepBoxOffset;
                 t._boxCol.size   = t._keepBoxSize;
@@ -323,9 +320,13 @@ namespace OBJECT
         }
         public sealed class ChaseAttackState : State<PenguinController>
         {
-            public override void Enter(PenguinController t) { base.Enter(t); }
+            public override void Enter(PenguinController t) 
+            { 
+                base.Enter(t);
+            }
             public override void Update(PenguinController t)
             {
+
             }
             public override void Exit(PenguinController t) { }
         }
@@ -354,7 +355,7 @@ namespace OBJECT
                 int xDir = myPos.x - targetPos.x > 0 ? 1 : -1;
 
                 if (Default.GetDistance(_keepTargetPos, myPos) <= 1.0f ||
-                    Default.GetDistance(targetPos, myPos) <= 10.0f)
+                    Default.GetDistance(targetPos, myPos) >= 15.0f)
                 {
                     t._state.SetState(new SlideAttackState());
                     return;

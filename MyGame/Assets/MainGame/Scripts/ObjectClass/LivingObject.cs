@@ -10,8 +10,12 @@ namespace OBJECT
         protected GameObject _bullet;
 
         protected virtual void CreateBullet() {}
-        protected override void Init() { _bullet = ResourcesManager.GetInstance().GetObjectToKey(_id, "Bullet"); }
+        protected override void Init() 
+        { 
+            _bullet = ResourcesManager.GetInstance().GetObjectToKey(_id, "Bullet");
+        }
         protected override void Run() { _animator.SetFloat("Speed", GetFromDirectionToSpeed(_direction)); }
+        protected override void ObjUpdate() { NotifyObservers(); }
         protected float GetFromDirectionToSpeed(Vector2 direction)
         {
             float dirX = direction.x;

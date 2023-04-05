@@ -82,7 +82,7 @@ AnimatorStateTransition:
   m_Conditions:
   - m_ConditionMode: 3
     m_ConditionEvent: JumpSpeed
-    m_EventTreshold: -0.0001
+    m_EventTreshold: -0.00001
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: 2619243851788233064}
   m_Solo: 0

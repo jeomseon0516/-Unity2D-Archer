@@ -22,13 +22,12 @@ namespace OBJECT
         {
             if (LayerMask.LayerToName(col.gameObject.layer).Contains("Wall")) return;
 
-            CheckInComponent(col.transform.parent.Find("Image").TryGetComponent(out ObjectBase obj));
-
-            if (TriggerCollision(obj.GetPhysics(), obj))
-            {
-                DestroyObj();
-                obj.TakeDamage(_atk);
-            }
+            TriggerCollision(col, _colTransform.gameObject);
+        }
+        protected internal override void OnCollision(ObjectBase obj, Collider2D col)
+        {
+            DestroyObj();
+            obj.TakeDamage(_atk);
         }
         protected override void Die()
         {

@@ -91,7 +91,6 @@ namespace OBJECT
             _animator.SetFloat("JumpSpeed", _jumpValue);
             _playerState.Update(this); 
         }
-        protected override void ObjUpdate() { NotifyObservers(); }
     }
     public partial class PlayerController : LivingObject
     {
