@@ -17,17 +17,20 @@ namespace OBJECT
         float _jumpCoolTime;
         float _slideCoolTime;
 
+        bool _isActive;
         protected override void Init()
         {
-            base.Init();
             _id = OBJECTID.PENGUIN;
-            _bullet = ResourcesManager.GetInstance().GetObjectToKey(_id, "Bullet");
+            base.Init();
 
             _attackDis = 0.65f;
             _hp = _maxHp = 1000;
 
             _jumpCoolTime  = 7.5f;
             _slideCoolTime = 5.0f;
+
+            _isActive = true;
+            _atk = 5;
 
             _useJump = true;
             _useSlide = true;
@@ -43,7 +46,7 @@ namespace OBJECT
         }
         private void CreateBullet(float power)
         {
-            float angle = 360 / 32;
+            float angle = 360 / 8;
 
             for (float i = 0; i < 360; i += angle)
             {
@@ -52,12 +55,16 @@ namespace OBJECT
                 CheckInComponent(obj.Find("Body").Find("Image").TryGetComponent(out Snowball bullet));
                 obj.position = new Vector2(_physics.position.x, _physics.position.y - _offsetY);
                 bullet.SetSpeed(power * 0.4f);
-                bullet.SetNextJump(power * 0.25f);
+                bullet.SetNextJump(power * 0.5f);
 
                 float radian = Default.ConvertFromAngleToRadian(i);
 
                 bullet.SetDirection(new Vector2(Mathf.Cos(radian), Mathf.Sin(radian)));
             }
+        }
+        protected override void Die()
+        {
+            StartCoroutine(FadeOutObject());
         }
         private IEnumerator Wait(float time)
         {
@@ -66,6 +73,7 @@ namespace OBJECT
         }
         protected override void ObjFixedUpdate()
         {
+            if (!_isActive) return;
             _animator.SetFloat("JumpSpeed", _jumpValue);
             _state.Update(this);
         }
@@ -224,12 +232,15 @@ namespace OBJECT
         public sealed class JumpAttackState : State<PenguinController>
         {
             float _power;
+            int _atk;
 
             public override void Enter(PenguinController t) 
             { 
                 base.Enter(t);
                 t._direction = Vector2.zero;
                 t.StartCoroutine(t.CoolTime(t.SetUseJump, t._jumpCoolTime));
+                _atk = t._atk;
+                t._atk = 7;
             }
             public override void Update(PenguinController t) 
             {
@@ -256,6 +267,7 @@ namespace OBJECT
                 t.CreateBullet(_power);
                 t._boxCol.offset = t._keepBoxOffset;
                 t._boxCol.size   = t._keepBoxSize;
+                t._atk = _atk;
             }
             public JumpAttackState(PenguinController t) 
             {
@@ -268,6 +280,7 @@ namespace OBJECT
         public sealed class SlideAttackState : State<PenguinController>
         {
             float _time;
+            int _atk;
             Vector2 _movePoint;
             public override void Enter(PenguinController t)
             {
@@ -276,6 +289,8 @@ namespace OBJECT
                 t.GetTargetAndMyPos(out Vector2 myPos, out _movePoint);
                 t._animator.SetTrigger("Slide");
                 _time = 3.0f;
+                _atk = t._atk;
+                t._atk = 10;
 
                 t.OnAttackBox(1);
                 t._boxCol.offset = new Vector2(0, -1.48f);
@@ -303,6 +318,7 @@ namespace OBJECT
                 t.OnAttackBox(0);
                 t._boxCol.offset = t._keepBoxOffset;
                 t._boxCol.size   = t._keepBoxSize;
+                t._atk = _atk;
             }
         }
         public sealed class ChaseAttackState : State<PenguinController>
@@ -322,7 +338,6 @@ namespace OBJECT
         public sealed class SlideAttackWait : State<PenguinController>
         {
             Vector2 _keepTargetPos;
-
             public override void Enter(PenguinController t) 
             { 
                 base.Enter(t);
@@ -336,9 +351,10 @@ namespace OBJECT
             public override void Update(PenguinController t) 
             {
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
-                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
+                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1;
 
-                if (Default.GetDistance(_keepTargetPos, myPos) <= 1.0f)
+                if (Default.GetDistance(_keepTargetPos, myPos) <= 1.0f ||
+                    Default.GetDistance(targetPos, myPos) <= 10.0f)
                 {
                     t._state.SetState(new SlideAttackState());
                     return;

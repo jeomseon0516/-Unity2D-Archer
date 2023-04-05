@@ -26,13 +26,13 @@ namespace OBJECT
 
             if (TriggerCollision(obj.GetPhysics(), obj))
             {
-                --_hp;
+                DestroyObj();
                 obj.TakeDamage(_atk);
             }
         }
         protected override void Die()
         {
-            DestroyObj();
+            StartCoroutine(FadeOutObject());
         }
         protected override void BulletPattern()
         {

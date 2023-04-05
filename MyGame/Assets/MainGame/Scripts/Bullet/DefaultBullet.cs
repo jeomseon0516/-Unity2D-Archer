@@ -28,7 +28,7 @@ namespace OBJECT
             UpdateShadowAndCollider();
             _shadow.transform.eulerAngles = transform.eulerAngles;
             _heightOffset = (_bodyCollider.bounds.max.y - _bodyCollider.bounds.min.y) * 2;
-            _size = new Vector2(0.0f, _heightOffset);
+            //_size = new Vector2(0.0f, _size.x);
         }
         protected internal override void TriggerAction(Collider2D col)
         {
@@ -41,13 +41,27 @@ namespace OBJECT
 
             CheckInComponent(col.transform.parent.Find("Image").TryGetComponent(out ObjectBase obj));
 
-            if (TriggerCollision(obj.GetPhysics(), obj))
+            if (!CheckCollision(col.gameObject))
             {
-                --_hp;
-                obj.TakeDamage(_atk);
-                CreateEffect(new Vector2(col.transform.position.x, transform.position.y), _hitEffect);
-                ActionCamera(Camera.main.gameObject);
+                if (TriggerCollision(obj.GetPhysics(), obj))
+                {
+                    --_hp;
+                    obj.TakeDamage(_atk);
+                    CreateEffect(new Vector2(col.transform.position.x, transform.position.y), _hitEffect);
+                    ActionCamera(Camera.main.gameObject);
+                    AddColList(col.gameObject);
+                }
+                else
+                {
+                    _colTransform.gameObject.SetActive(false);
+                }
             }
+        }
+        protected override void BulletPattern() // Update
+        {
+            base.BulletPattern();
+            if (!ReferenceEquals(_colTransform, null) && _colTransform)
+                _colTransform.gameObject.SetActive(true);
         }
         private void EffectAfterDestroy(GameObject obj, GameObject effect)
         {
@@ -61,6 +75,7 @@ namespace OBJECT
             CreateEffect(transform.position, _smoke);
             _animator.SetTrigger("Die");
         }
+
         private void CreateEffect(Vector2 pos, GameObject effect) { if (_makeSmoke) Instantiate(effect).transform.position = pos; }
         private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); } // 카메라 매니저를 만들어주는게 좋지않을까?
         public void SetAtk(int atk) { _atk = atk; }

@@ -78,14 +78,10 @@ namespace OBJECT
             CheckInComponent(_shadow.TryGetComponent(out RectTransform rectT));
             _heightOffset = _shadowSprRen.size.y;
 
-            Transform size = _physics.Find("Size");
+            Transform size = _body.Find("Size");
 
-            if (!ReferenceEquals(size, null) ? true : false)
-            {
-                CheckInComponent(size.TryGetComponent(out BoxCollider2D box));
-                _size = box.size;
-                Destroy(box.gameObject);
-            }
+            CheckInComponent(size.TryGetComponent(out BoxCollider2D box));
+            _size = box.size;
 
             _isDie = false;
             _hp = 10;
@@ -111,7 +107,6 @@ namespace OBJECT
 
             _beforeHp = _hp;
             _lookAt = _direction;
-
             CheckDeadToHp();
             ObjFixedUpdate();
             Run();
@@ -130,14 +125,14 @@ namespace OBJECT
                 targetPosY - obj.GetHeightOffset() < myPosY + _heightOffset)
             {
                 //해당 타겟이 같은 y 좌표에 있는지 체크한다.
-                //float jumpTargetPosY = obj.GetBody().localPosition.y * 0.5f;
-                //float jumpMyPosY = _body.localPosition.y * 0.5f;
+                //float jumptarGetPosY = obj.GetBody().localPosition.y;
+                //float jumpMyPosY = _body.localPosition.y;
 
-                //float targetSizeY = obj.GetSize().y;
-                //float mySizeY = _size.y;
+                //float targetSizeY = obj.GetSize().y * 0.5f;
+                //float mySizeY = _size.y * 0.5f;
 
-                //if (jumpTargetPosY + targetSizeY > jumpMyPosY - mySizeY &&
-                //    jumpTargetPosY - targetSizeY < jumpMyPosY + mySizeY) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
+                //if (jumptarGetPosY + targetSizeY > jumpMyPosY - mySizeY &&
+                //    jumptarGetPosY - targetSizeY < jumpMyPosY + mySizeY) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
                     return true;
             }
             return false;
@@ -166,6 +161,17 @@ namespace OBJECT
                 _jumpValue = _body.localPosition.y - _beforeLocalY;
                 _beforeLocalY = _body.localPosition.y;
             }
+        }
+        protected IEnumerator FadeOutObject()
+        {
+            Color keepColor = _sprRen.color;
+
+            while (_sprRen.color.a > float.Epsilon)
+            {
+                _sprRen.color = new Color(keepColor.r, keepColor.g, keepColor.b, _sprRen.color.a - 0.01f);
+                yield return YieldCache.WaitForFixedUpdate;
+            }
+            DestroyObj();
         }
         protected void AddAfterResetCoroutine(string key, IEnumerator coroutine)
         {
@@ -212,7 +218,6 @@ namespace OBJECT
 
             _colTransform.localScale = new Vector2(_originalColSize.x * average, _originalColSize.y);
             _colTransform.localEulerAngles = transform.localEulerAngles;
-            _shadow.localScale = new Vector2(_originalShadowScale.x * average, _originalShadowScale.y);
         }
         private void CheckHeight() { _shadow.localPosition = new Vector2(_shadowPos.x, _shadowPos.y - _body.localPosition.y * 0.5f); }
         protected void DestroyObj() { Destroy(_physics.gameObject); }

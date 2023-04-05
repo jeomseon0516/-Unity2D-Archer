@@ -15,6 +15,7 @@ namespace OBJECT
         protected delegate void SetSkill(bool isUse);
         protected override void Init()
         {
+            base.Init();
             CheckInComponent(GameObject.Find("Player").transform.Find("Body").Find("Image").TryGetComponent(out _target));
 
             _attackBox = _body.Find("AttackBox").gameObject;
@@ -69,6 +70,7 @@ namespace OBJECT
         protected internal override void TriggerAction(Collider2D col) 
         {
             if (LayerMask.LayerToName(col.gameObject.layer).Equals("Player")) return;
+
             CheckInComponent(col.transform.parent.Find("Image").TryGetComponent(out ObjectBase obj));
 
             if (TriggerCollision(obj.GetPhysics(), obj))

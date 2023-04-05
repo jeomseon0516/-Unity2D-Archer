@@ -1799,6 +1799,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Boss (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 227380143710054105, guid: 7c601555772cff24eaee88a436634efc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 227380143710054110, guid: 7c601555772cff24eaee88a436634efc, type: 3}
       propertyPath: m_RootOrder
       value: 1
@@ -2733,6 +2737,10 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 13
       objectReference: {fileID: 0}
+    - target: {fileID: 5528220043043779392, guid: efc048f9d1c694f42976ed7da60e5ac2, type: 3}
+      propertyPath: m_SleepingMode
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 5528220043043779395, guid: efc048f9d1c694f42976ed7da60e5ac2, type: 3}
       propertyPath: m_RootOrder
       value: 3
@@ -2793,6 +2801,10 @@ PrefabInstance:
     - target: {fileID: 227380143710054105, guid: 7c601555772cff24eaee88a436634efc, type: 3}
       propertyPath: m_Name
       value: Boss
+      objectReference: {fileID: 0}
+    - target: {fileID: 227380143710054105, guid: 7c601555772cff24eaee88a436634efc, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 227380143710054110, guid: 7c601555772cff24eaee88a436634efc, type: 3}
       propertyPath: m_RootOrder
