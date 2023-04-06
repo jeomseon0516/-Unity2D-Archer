@@ -17,9 +17,10 @@ namespace OBJECT
             bool on = isOn > 0.0f ? true : false;
             _colTransform.gameObject.SetActive(on);
         }
-        protected internal override void OnCollision(ObjectBase obj, Collider2D col)
+        protected override void OnCollision(ObjectBase obj, Collider2D col)
         {
-            obj.TakeDamage(_atk);
+            Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
+            obj.TakeDamage(_atk, force * 2);
         }
     }
 }

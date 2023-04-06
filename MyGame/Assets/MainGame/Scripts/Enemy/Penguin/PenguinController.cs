@@ -15,6 +15,7 @@ namespace OBJECT
 
         float _jumpCoolTime;
         float _slideCoolTime;
+        float _chaseCoolTime;
 
         bool _isActive;
         protected override void Init()
@@ -25,21 +26,25 @@ namespace OBJECT
             _attackDis = 0.65f;
             _hp = _maxHp = 500;
 
-            _jumpCoolTime = 7.5f;
-            _slideCoolTime = 5.0f;
+            _jumpCoolTime = 12.5f;
+            _chaseCoolTime = 8.0f;
+            _slideCoolTime = 6.0f;
 
             _isActive = true;
             _atk = 5;
 
             CheckInComponent(_attackBox.TryGetComponent(out _boxCol));
 
-            _keepBoxSize = _boxCol.size;
+            _keepBoxSize   = _boxCol.size;
             _keepBoxOffset = _boxCol.offset;
 
             StartCoroutine(CheckFallingOrJumping());
-            _skillQueue.Enqueue(new ChaseAttackState());
-            _skillQueue.Enqueue(new SlideAttackWait());
-            _skillQueue.Enqueue(new JumpAttackState());
+
+            /*쿨타임이 있는 스킬 패턴들은 큐로 관리 쿨타임이 다 되면 큐에 넣고 호출*/
+            AddAfterResetCoroutine("Jump", SetUseSkill(Random.Range(_jumpCoolTime - 2.5f, _jumpCoolTime + 2.5f), new JumpAttackState()));
+            StartCoroutine(SetUseSkill(Random.Range(_chaseCoolTime - 1.5f, _chaseCoolTime + 1.5f), new ChaseAttackState()));
+            StartCoroutine(SetUseSkill(Random.Range(_slideCoolTime - 1.5f, _slideCoolTime + 1.5f), new SlideAttackWait()));
+
             _state = new StateMachine<PenguinController>();
             _state.SetState(new IdleState());
         }
@@ -90,6 +95,11 @@ namespace OBJECT
         { 
             StartCoroutine(FadeOutObject());
             Destroy(_colTransform.gameObject);
+        }
+        protected override void OnCollision(ObjectBase obj, Collider2D col)
+        {
+            Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
+            obj.TakeDamage(_atk, force * 2);
         }
     }
     public partial class PenguinController : EnemyBase
@@ -224,7 +234,6 @@ namespace OBJECT
                 t._direction = Vector2.zero;
                 t._lookAt = (t._target.transform.position - t._physics.position).normalized;
             }
-            public override void Exit(PenguinController t) { t.OnAttackBox(0); } // 공격 박스 off
         }
         public sealed class JumpAttackState : State<PenguinController>
         {
@@ -264,7 +273,7 @@ namespace OBJECT
             {
                 t.OnAttackBox(0);
                 t.CreateBullet(_power);
-                t.StartCoroutine(t.SetUseSkill(
+                t.AddAfterResetCoroutine("Jump", t.SetUseSkill(
                     Random.Range(t._jumpCoolTime - 2.5f, t._jumpCoolTime + 2.5f), 
                     new JumpAttackState()));
                 t._boxCol.offset = t._keepBoxOffset;
@@ -310,8 +319,7 @@ namespace OBJECT
             public override void Exit(PenguinController t) 
             {
                 t.StartCoroutine(t.SetUseSkill(
-                    Random.Range(t._slideCoolTime - 1.5f, t._slideCoolTime + 1.5f), 
-                    new SlideAttackWait())); 
+                    Random.Range(t._slideCoolTime - 1.5f, t._slideCoolTime + 1.5f), new SlideAttackWait())); 
                 t.OnAttackBox(0);
                 t._boxCol.offset = t._keepBoxOffset;
                 t._boxCol.size   = t._keepBoxSize;
@@ -329,7 +337,7 @@ namespace OBJECT
             {
                 base.Enter(t);
                 _chaseTime = 2.0f;
-                _count = 5;
+                _count = 3;
 
                 t._direction = Vector2.zero;
             }
@@ -337,16 +345,30 @@ namespace OBJECT
             {
                 _chaseTime -= Time.deltaTime;
 
+                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
+                float radian = Default.GetPositionToRadian(targetPos, myPos);
+
+                // 급한대로 여기서 총알 생성 이후에 리팩토링 필요함
                 if (_chaseTime < float.Epsilon)
                 {
                     t._animator.SetTrigger("Attack");
                     --_count;
                     _chaseTime = 2.0f;
+
+                    float plusRadian = Default.ConvertFromAngleToRadian(30.0f);
+
+                    for (int i = -1; i < 2; ++i)
+                    {
+                        Transform obj = Instantiate(t._bullet).transform;
+
+                        t.CheckInComponent(obj.Find("Body").Find("Image").TryGetComponent(out Snowball bullet));
+                        obj.position = new Vector2(t._physics.position.x, t._physics.position.y - t._offsetY);
+                        bullet.SetSpeed(20);
+                        bullet.SetNextJump(10);
+                        bullet.SetDirection(new Vector2(Mathf.Cos(radian + plusRadian * i), Mathf.Sin(radian + plusRadian * i)));
+                    }
                 }
 
-                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
-
-                float radian = Default.GetPositionToRadian(targetPos, myPos);
                 float distance = Default.GetDistance(targetPos, myPos);
 
                 t._direction = new Vector2(Mathf.Cos(radian), Mathf.Sin(radian));
@@ -363,8 +385,8 @@ namespace OBJECT
             {
                 if (_count <= 0)
                 {
-                    t._state.SetState(new TargetingState());
-                    t.StartCoroutine(t.SetUseSkill(10.0f, new ChaseAttackState()));
+                    t._state.SetState(Random.Range(0, 2) == 0 ? new WaitState(2.0f) : new JumpAttackState());
+                    t.StartCoroutine(t.SetUseSkill(Random.Range(t._chaseCoolTime - 1.5f, t._chaseCoolTime + 1.5f), new ChaseAttackState()));
                 }
                 else
                 {
@@ -426,6 +448,10 @@ namespace OBJECT
                 base.Enter(t);
                 t._direction = Vector2.zero;
                 t.AddAfterResetCoroutine("Wait", t.Wait(_time));
+            }
+            public override void Exit(PenguinController t)
+            {
+                t.ZeroForce();
             }
             public WaitState(float time = 1.5f) { _time = time; } 
         }

@@ -42,9 +42,11 @@ namespace OBJECT
             bool on = isOn > 0.0f ? true : false;
             _attackBox.SetActive(on);
 
+            // 어택 박스가 꺼지면 리스트의 요소들을 모두 클리어한다.
             if (!on)
                 ClearColList();
         }
+        // 사용하지 않음
         protected IEnumerator CoolTime(SetSkill skill, float time)
         {
             skill(false);
@@ -82,6 +84,10 @@ namespace OBJECT
             TriggerCollision(col, _colTransform.gameObject);
         }
         protected override void GetDamageAction(int damage) { AddAfterResetCoroutine("Targeting", TargetingObject()); }
-        protected internal override void OnCollision(ObjectBase obj, Collider2D col) { obj.TakeDamage(_atk); }
+        protected override void OnCollision(ObjectBase obj, Collider2D col) 
+        {
+            Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
+            obj.TakeDamage(_atk, force * 2);
+        }
     }
 }

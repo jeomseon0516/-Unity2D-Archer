@@ -43,7 +43,7 @@ namespace OBJECT
             objTransform.position = _rigidbody.position;
 
             CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out DefaultBullet controller));
-            // 현재 방향키를 어떤 방향으로 누르고 있는지를 확인해서 쏠 방향을 구하고 이동중인 방향만큼 더 해주면
+            // 현재 방향키를 어떤 방향으로 누르고 있는지를 확인해서 쏠 방향을 구하고 이동중인 방향만큼 더 해주면 총알이 플레이어의 움직임의 영향을 받게 된다.
             Vector2 dir = _lookAt.normalized + _direction * 0.25f;
             controller.SetDirection(dir);
 

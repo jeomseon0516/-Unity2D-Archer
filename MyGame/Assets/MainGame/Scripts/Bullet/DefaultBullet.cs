@@ -41,10 +41,11 @@ namespace OBJECT
             /*TODO : 모듈화*/
             TriggerCollision(col, _colTransform.gameObject);
         }
-        protected internal override void OnCollision(ObjectBase obj, Collider2D col)
+        protected override void OnCollision(ObjectBase obj, Collider2D col)
         {
             --_hp;
-            obj.TakeDamage(_atk);
+            Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
+            obj.TakeDamage(_atk, force * 2);
             CreateEffect(new Vector2(col.transform.position.x, transform.position.y), _hitEffect);
             ActionCamera(Camera.main.gameObject);
         }

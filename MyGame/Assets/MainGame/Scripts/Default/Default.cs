@@ -16,6 +16,11 @@ static public class Default
 
         return Mathf.Sqrt(x * x + y * y);
     }
+    public static Vector2 GetFromPostionToDirection(Vector2 p1, Vector2 p2)
+    {
+        float radian = GetPositionToRadian(p1, p2);
+        return new Vector2(Mathf.Cos(radian), Mathf.Sin(radian));
+    }
     public static int GetIntParseString(string number) { return int.TryParse(number, out int num) ? num : 0; }
     public static float GetFloatParseString(string number) { return float.TryParse(number, out float num) ? num : 0.0f; }
     public static float GetPositionToRadian(Vector2 p1, Vector2 p2) { return Mathf.Atan2(p1.y - p2.y, p1.x - p2.x); }

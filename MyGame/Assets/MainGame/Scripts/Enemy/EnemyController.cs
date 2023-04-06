@@ -84,7 +84,7 @@ namespace OBJECT
             DIE
         }
         /* -----------------------------------------------------------Idle-------------------------------------------------- */
-        public class IdleState : State<EnemyController>
+        public sealed class IdleState : State<EnemyController>
         {
             Vector3 _randPoint;
             float   _coolTime;
@@ -127,7 +127,7 @@ namespace OBJECT
             public IdleState() {}
         }
         /* -----------------------------------------------------------Targeting-------------------------------------------------- */
-        public class TargetingState : State<EnemyController>
+        public sealed class TargetingState : State<EnemyController>
         {
             public override void Update(EnemyController t)
             {
@@ -160,7 +160,7 @@ namespace OBJECT
             public TargetingState() {}
         }
         /* -----------------------------------------------------------Attack-------------------------------------------------- */
-        public class AttackState : State<EnemyController>
+        public sealed class AttackState : State<EnemyController>
         {
             public override void Enter(EnemyController t) 
             {
@@ -172,7 +172,7 @@ namespace OBJECT
             public override void Exit(EnemyController t) { t.OnAttackBox(0); } // 공격 박스 off
             public AttackState() {}
         }
-        public class SkillState : State<EnemyController>
+        public sealed class SkillState : State<EnemyController>
         {
             public override void Enter(EnemyController t)
             {
@@ -185,7 +185,7 @@ namespace OBJECT
             public SkillState() {}
         }
         /* -----------------------------------------------------------Hit-------------------------------------------------- */
-        public class HitState : State<EnemyController>
+        public sealed class HitState : State<EnemyController>
         {
             public override void Enter(EnemyController t) 
             {
@@ -196,7 +196,7 @@ namespace OBJECT
             public HitState() { }
         }
         /* -----------------------------------------------------------Die-------------------------------------------------- */
-        public class DieState : State<EnemyController>
+        public sealed class DieState : State<EnemyController>
         {
             public override void Enter(EnemyController t)
             {
@@ -205,7 +205,7 @@ namespace OBJECT
             }
             public DieState() {}
         }
-        public class SkillWait : State<EnemyController>
+        public sealed class SkillWait : State<EnemyController>
         {
             float _yTemp;
             public override void Enter(EnemyController t)

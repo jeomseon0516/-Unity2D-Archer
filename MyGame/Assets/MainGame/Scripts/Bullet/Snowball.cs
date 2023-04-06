@@ -4,6 +4,12 @@ using UnityEngine;
 
 namespace OBJECT
 {
+    public enum PATTERN
+    {
+        ALLDIRECTION,
+        TARGETING
+    }
+
     public class Snowball : BulletBase
     {
         private float _nextJump;
@@ -24,10 +30,11 @@ namespace OBJECT
 
             TriggerCollision(col, _colTransform.gameObject);
         }
-        protected internal override void OnCollision(ObjectBase obj, Collider2D col)
+        protected override void OnCollision(ObjectBase obj, Collider2D col)
         {
             DestroyObj();
-            obj.TakeDamage(_atk);
+            Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
+            obj.TakeDamage(_atk, force * 2);
         }
         protected override void Die()
         {

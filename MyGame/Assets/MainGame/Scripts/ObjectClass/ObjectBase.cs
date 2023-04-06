@@ -15,37 +15,22 @@ namespace OBJECT
 {
     public abstract class ObjectBase : MonoBehaviour
     {
-        protected OBJECTID _id;
-        protected Animator _animator;
-        protected SpriteRenderer _sprRen;
-        protected SpriteRenderer _shadowSprRen;
+        protected Vector2 _size, _shadowPos, _direction, _lookAt, _originalColSize, _originalShadowScale;
+        protected Transform _physics, _colTransform, _body, _shadow;
+        protected SpriteRenderer _sprRen, _shadowSprRen;
+        protected float _heightOffset, _offsetY, _speed; // _heightOffset : 그림자 오프셋입니다.
+        protected Collider2D _bodyCollider, _collider;
+        protected int _beforeHp, _maxHp, _hp, _atk;
         protected Rigidbody2D _rigidbody;
-        protected Collider2D _bodyCollider;
-        protected Collider2D _collider;
-        protected Transform _colTransform;
-        protected Transform _physics;
-        protected Transform _body;
-        protected Transform _shadow;
-        protected Vector2 _originalColSize;
-        protected Vector2 _originalShadowScale;
-        protected Vector2 _direction;
-        protected Vector2 _lookAt;
-        protected Vector2 _shadowPos;
-        protected Vector2 _size;
-        private Vector2 _addForce;
-        protected float _heightOffset;
-        protected float _offsetY;
-        protected float _speed;
-        protected int _beforeHp;
-        protected int _maxHp;
-        protected int _hp;
-        protected int _atk;
+        protected Animator _animator;
+        protected OBJECTID _id;
         protected bool _isDie;
 
         protected float _beforeLocalY; // 이전 프레임의 로컬 Y 
-        protected float _jumpValue;
+        protected float _jumpValue; // 이전 프레임과 현재 프레임의 Y좌표 차
         protected float _jump; //현재 점프값
 
+        private Vector2 _addForce;
         private Dictionary<string, IEnumerator> _coroutineList = new Dictionary<string, IEnumerator>();
         private List<GameObject> _colList = new List<GameObject>();
 
@@ -93,15 +78,19 @@ namespace OBJECT
         }
         private void Update() { ObjUpdate(); }
         private void OnTriggerEnter2D(Collider2D col) { TriggerAction(col); }
+        protected internal virtual void TriggerAction(Collider2D col) { TriggerCollision(col, _colTransform.gameObject); }
         protected internal virtual void CollisionAction(Collision2D obj) {}
-        protected internal virtual void OnCollision(ObjectBase obj, Collider2D col) {}
+        protected virtual void OnCollision(ObjectBase obj, Collider2D col) {}
         protected virtual void GetDamageAction(int damage) {}
         protected virtual void ObjFixedUpdate() {}
         protected virtual void ObjUpdate() {}
         protected virtual void Init() {}
         protected virtual void Run() {}
         protected virtual void Die() { DestroyObj(); }
-        protected internal virtual void TriggerAction(Collider2D col) { TriggerCollision(col, _colTransform.gameObject); }
+         /*
+            해당 함수 안에서 호출되는 함수들은 오브젝트 베이스를 상속받는 객체들이 기본적으로 동작해야하는 함수들을 넣어놨습니다. 
+            해당 함수들은 상속받은 객체에서는 따로 호출이 불가능합니다.
+         */
         private void FixedUpdate()
         {
             if (_hp < _beforeHp && !_isDie)
@@ -136,7 +125,6 @@ namespace OBJECT
 
             colTransform.SetActive(true);
         }
-        // TODO : 점프때문에 GetPhysics사용해야함
         protected bool Collision(Transform targetPhysics, ObjectBase obj)
         {
             float targetPosY = targetPhysics.position.y - obj.GetOffsetY();
@@ -167,8 +155,8 @@ namespace OBJECT
 
             while (_body.localPosition.y >= 0)
             {
-                _body.localPosition += new Vector3(0.0f, _jump, 0.0f) * Time.deltaTime;
-                _jump -= gravity * Time.deltaTime;
+                _body.localPosition += new Vector3(0.0f, _jump, 0.0f) * Time.fixedDeltaTime;
+                _jump -= gravity * Time.fixedDeltaTime;
                 yield return YieldCache.WaitForFixedUpdate;
             }
 
@@ -197,6 +185,9 @@ namespace OBJECT
             }
             DestroyObj();
         }
+        /*
+         * 해당 함수를 통해서만 _addForce에 접근 할 수 있습니다.
+         */
         private IEnumerator CoroutineAddForce(Vector2 force)
         {
             _addForce += force; // addForce는 중첩되서 들어올 수 있으므로
@@ -221,7 +212,7 @@ namespace OBJECT
         {
             AddAfterResetCoroutine("AddForce", CoroutineAddForce(force));
         }
-        // 공격이 여러번 호출 되는 것을 위한 처리
+        // 하나의 객체에 공격이 여러번 호출 되는 것을 위한 처리
         protected bool CheckCollision(GameObject colObj)
         {
             for (int i = 0; i < _colList.Count; ++i)
@@ -238,7 +229,11 @@ namespace OBJECT
 
             return false;
         }
-        // 공격이 끝났을 때 호출
+        /* 
+           리스트로 관리해야 하는 코루틴을 해당 함수로 호출합니다.
+           하나의 코루틴이 여러개가 호출되는 걸 방지하기 위한 함수입니다.
+           스크립트 내에서 하나씩만 동작해야하는 코루틴은 해당 함수를 통해 호출 합니다.
+         */
         protected void AddAfterResetCoroutine(string key, IEnumerator coroutine)
         {
             if (_coroutineList.ContainsKey(key))
@@ -251,10 +246,23 @@ namespace OBJECT
 
             StartCoroutine(_coroutineList[key]);
         }
+        /*
+         * 정지만 시켜주어야 하는 코루틴을 호출합니다.
+         */
         protected void FindCoroutineStop(string key)
         {
             if (_coroutineList.TryGetValue(key, out IEnumerator coroutine))
                 StopCoroutine(coroutine);
+        }
+        /*
+        * 중간에 로테이션이 되는 객체들에서 사용하는 함수입니다. 플레이어 총알에 사용됩니다.
+        */
+        protected void UpdateShadowAndCollider()
+        {
+            float average = (_sprRen.bounds.max.x - _sprRen.bounds.min.x) / (_sprRen.localBounds.size.x * _sprRen.transform.lossyScale.x);
+
+            _colTransform.localScale = new Vector2(_originalColSize.x * average, _originalColSize.y);
+            _colTransform.localEulerAngles = transform.localEulerAngles;
         }
         private void CheckDeadToHp()
         {
@@ -262,11 +270,19 @@ namespace OBJECT
             Die();
             _isDie = true;
         }
+        /* 
+         * 오브젝트 베이스를 상속받는 모든 객체는 해당 함수로 움직입니다.. _direction에 정규화 시킨 벡터를 넣어주면 해당 방향으로 움직입니다.
+         * 정규화가 아닌 벡터를 넣어주면 해당 크기만큼 빠르게 움직입니다.
+         * AddForce를 통해서 힘을 받은 방향으로 밀립니다.
+         * */
         private void Move(float moveX, float moveY)
         {
             _rigidbody.MovePosition(_rigidbody.position + (new Vector2(moveX * _speed, moveY * (_speed * 0.5f)) + 
                                                            new Vector2(_addForce.x, _addForce.y * 0.5f)) * Time.deltaTime);
         }
+        /*
+         * 방향에 맞게 플립시켜줍니다.
+         */
         private void ChangeFlipXToHor(float hor)
         {
             Quaternion rotation = _physics.rotation;
@@ -276,6 +292,9 @@ namespace OBJECT
 
             _physics.rotation = rotation;
         }
+        /*
+         * 어떤 객체를 먼저 드로우 할지 결정하는 함수입니다. y좌표로 구합니다.
+         */
         private void SettingZNode()
         {
             if (ReferenceEquals(_shadowSprRen, null) || !_shadowSprRen) return;
@@ -283,19 +302,29 @@ namespace OBJECT
             _sprRen.sortingOrder = (int)((_physics.position.y - _offsetY) * 10) * -1;
             _shadowSprRen.sortingOrder = _sprRen.sortingOrder - 1;
         }
-        protected void UpdateShadowAndCollider()
+        public void TakeDamage(int damage, Vector2 force)
         {
-            float average = (_sprRen.bounds.max.x - _sprRen.bounds.min.x) / (_sprRen.localBounds.size.x * _sprRen.transform.lossyScale.x);
+            _hp -= damage;
 
-            _colTransform.localScale = new Vector2(_originalColSize.x * average, _originalColSize.y);
-            _colTransform.localEulerAngles = transform.localEulerAngles;
+            if (_physics.name.Contains("Boss"))
+                return;
+
+            ZeroForce();
+            AddForce(force);
         }
+        public void TakeDamage(int damage) { _hp -= damage; }
+        /*
+            공중에 띄워진만큼 그림자를 멀어지게 합니다.
+         */
         private void CheckHeight() { _shadow.localPosition = new Vector2(_shadowPos.x, _shadowPos.y - _body.localPosition.y * 0.5f); }
+        /*
+         * TryGetComponent로 불러와지는 것들을 위해 만든 함수.
+         */
         protected void CheckInComponent(bool inCom) { if (!inCom) print("해당 컴포넌트는 존재 하지 않습니다." + this.transform.root.name); }
         protected void AddColList(GameObject obj) { _colList.Add(obj); }
         protected void DestroyObj() { Destroy(_physics.gameObject); }
         protected void ClearColList() { _colList.Clear(); }
-        public void TakeDamage(int damage) { _hp -= damage; }
+        protected void ZeroForce() { _addForce = Vector2.zero; }
         public Transform GetPhysics() { return _physics; }
         public Transform GetBody() { return _body; }
         public Vector2 GetSize() { return _size; }
