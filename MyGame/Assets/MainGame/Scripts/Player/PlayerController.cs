@@ -19,7 +19,7 @@ namespace OBJECT
             base.Init();
             _maxHp = _hp = 50;
             _id = OBJECTID.PLAYER;
-            _attackSpeed = 10;
+            _attackSpeed = 4;
             _speed = 5.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
@@ -43,16 +43,11 @@ namespace OBJECT
             objTransform.position = _rigidbody.position;
 
             CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out DefaultBullet controller));
-            // 현재 방향키를 어떤 방향으로 누르고 있는지를 확인해서 쏠 방향을 구하고
+            // 현재 방향키를 어떤 방향으로 누르고 있는지를 확인해서 쏠 방향을 구하고 이동중인 방향만큼 더 해주면
             Vector2 dir = _lookAt.normalized + _direction * 0.25f;
             controller.SetDirection(dir);
 
             _bullets.Add(objTransform.gameObject);
-        }
-        protected override void Die()
-        {
-            if (_isDie) return;
-            _playerState.SetState(new DieState());
         }
         /* 해당 함수는 하이어라키에서 애니메이션 이벤트로 호출되는 함수 입니다. 스크립트 내에서 상태 전환이 필요한 경우 new 키워드를 사용해 초기화 합니다. */
         private void SetState(PLR_STATE state)
@@ -85,12 +80,13 @@ namespace OBJECT
             _isDie = false;
             _hp = _maxHp;
         }
-        protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
         protected override void ObjFixedUpdate() 
         {
             _animator.SetFloat("JumpSpeed", _jumpValue);
             _playerState.Update(this); 
         }
+        protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
+        protected override void Die() { _playerState.SetState(new DieState()); }
     }
     public partial class PlayerController : LivingObject
     {

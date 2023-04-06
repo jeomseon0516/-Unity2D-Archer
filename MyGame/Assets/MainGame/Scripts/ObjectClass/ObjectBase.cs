@@ -32,6 +32,7 @@ namespace OBJECT
         protected Vector2 _lookAt;
         protected Vector2 _shadowPos;
         protected Vector2 _size;
+        private Vector2 _addForce;
         protected float _heightOffset;
         protected float _offsetY;
         protected float _speed;
@@ -75,10 +76,9 @@ namespace OBJECT
             _lookAt = new Vector2(0.0f, 0.0f);
 
             _offsetY = _physics.position.y - _shadow.position.y;
-
-            CheckInComponent(_shadow.TryGetComponent(out RectTransform rectT));
             _heightOffset = _shadowSprRen.size.y;
 
+            _addForce = Vector2.zero;
             Transform size = _body.Find("Size");
 
             CheckInComponent(size.TryGetComponent(out BoxCollider2D box));
@@ -123,10 +123,10 @@ namespace OBJECT
 
             if (!CheckCollision(col.gameObject))
             {
-                if (TriggerCollision(obj.GetPhysics(), obj))
+                if (Collision(obj.GetPhysics(), obj))
                 {
                     OnCollision(obj, col);
-                    AddColList(col.gameObject); ;
+                    AddColList(col.gameObject);
                 }
                 else
                 {
@@ -137,7 +137,7 @@ namespace OBJECT
             colTransform.SetActive(true);
         }
         // TODO : 점프때문에 GetPhysics사용해야함
-        protected internal bool TriggerCollision(Transform targetPhysics, ObjectBase obj)
+        protected bool Collision(Transform targetPhysics, ObjectBase obj)
         {
             float targetPosY = targetPhysics.position.y - obj.GetOffsetY();
             float myPosY = _physics.position.y - _offsetY;
@@ -197,6 +197,30 @@ namespace OBJECT
             }
             DestroyObj();
         }
+        private IEnumerator CoroutineAddForce(Vector2 force)
+        {
+            _addForce += force; // addForce는 중첩되서 들어올 수 있으므로
+            while (Mathf.Abs(_addForce.x) > float.Epsilon ||
+                   Mathf.Abs(_addForce.y) > float.Epsilon)
+            {
+                // 빼야할 값
+                float xDir = _addForce.x > float.Epsilon ? 1 : -1;
+                float yDir = _addForce.y > float.Epsilon ? 1 : -1;
+
+                float addForceX = Mathf.Abs(_addForce.x);
+                float addForceY = Mathf.Abs(_addForce.y);
+
+                addForceX -= 2.0f * Time.fixedDeltaTime;
+                addForceY -= 2.0f * Time.fixedDeltaTime;
+                _addForce = new Vector2(addForceX * xDir, addForceY * yDir);
+
+                yield return YieldCache.WaitForFixedUpdate;
+            }
+        }
+        protected void AddForce(Vector2 force)
+        {
+            AddAfterResetCoroutine("AddForce", CoroutineAddForce(force));
+        }
         // 공격이 여러번 호출 되는 것을 위한 처리
         protected bool CheckCollision(GameObject colObj)
         {
@@ -227,6 +251,11 @@ namespace OBJECT
 
             StartCoroutine(_coroutineList[key]);
         }
+        protected void FindCoroutineStop(string key)
+        {
+            if (_coroutineList.TryGetValue(key, out IEnumerator coroutine))
+                StopCoroutine(coroutine);
+        }
         private void CheckDeadToHp()
         {
             if (_hp > 0 || _isDie) return;
@@ -235,8 +264,8 @@ namespace OBJECT
         }
         private void Move(float moveX, float moveY)
         {
-            if (moveX == 0.0f && moveY == 0.0f) return;
-            _rigidbody.MovePosition(_rigidbody.position + new Vector2(moveX * _speed, moveY * (_speed * 0.5f)) * Time.deltaTime);
+            _rigidbody.MovePosition(_rigidbody.position + (new Vector2(moveX * _speed, moveY * (_speed * 0.5f)) + 
+                                                           new Vector2(_addForce.x, _addForce.y * 0.5f)) * Time.deltaTime);
         }
         private void ChangeFlipXToHor(float hor)
         {

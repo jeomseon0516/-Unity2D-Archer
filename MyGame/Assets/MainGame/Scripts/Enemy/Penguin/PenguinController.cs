@@ -25,7 +25,7 @@ namespace OBJECT
             _attackDis = 0.65f;
             _hp = _maxHp = 500;
 
-            _jumpCoolTime  = 7.5f;
+            _jumpCoolTime = 7.5f;
             _slideCoolTime = 5.0f;
 
             _isActive = true;
@@ -33,10 +33,11 @@ namespace OBJECT
 
             CheckInComponent(_attackBox.TryGetComponent(out _boxCol));
 
-            _keepBoxSize   = _boxCol.size;
+            _keepBoxSize = _boxCol.size;
             _keepBoxOffset = _boxCol.offset;
 
             StartCoroutine(CheckFallingOrJumping());
+            _skillQueue.Enqueue(new ChaseAttackState());
             _skillQueue.Enqueue(new SlideAttackWait());
             _skillQueue.Enqueue(new JumpAttackState());
             _state = new StateMachine<PenguinController>();
@@ -60,10 +61,6 @@ namespace OBJECT
                 bullet.SetDirection(new Vector2(Mathf.Cos(radian), Mathf.Sin(radian)));
             }
         }
-        protected override void Die()
-        {
-            StartCoroutine(FadeOutObject());
-        }
         protected override void ObjFixedUpdate()
         {
             if (!_isActive) return;
@@ -84,15 +81,15 @@ namespace OBJECT
 
             _direction = new Vector2(x, y);
         }
-        private IEnumerator SetUseJump(float time) 
+        private IEnumerator SetUseSkill(float time, State<PenguinController> state)
         {
             yield return YieldCache.WaitForSeconds(time);
-            _skillQueue.Enqueue(new JumpAttackState());
+            _skillQueue.Enqueue(state);
         }
-        private IEnumerator SetUseSlide(float time) 
-        {
-            yield return YieldCache.WaitForSeconds(time);
-            _skillQueue.Enqueue(new SlideAttackWait());
+        protected override void Die() 
+        { 
+            StartCoroutine(FadeOutObject());
+            Destroy(_colTransform.gameObject);
         }
     }
     public partial class PenguinController : EnemyBase
@@ -179,7 +176,6 @@ namespace OBJECT
                     }
                 }
             }
-            public override void Exit(PenguinController t) {}
         }
         public sealed class TargetingState : State<PenguinController>
         {
@@ -268,7 +264,9 @@ namespace OBJECT
             {
                 t.OnAttackBox(0);
                 t.CreateBullet(_power);
-                t.StartCoroutine(t.SetUseJump(Random.Range(t._jumpCoolTime - 2.5f, t._jumpCoolTime + 2.5f)));
+                t.StartCoroutine(t.SetUseSkill(
+                    Random.Range(t._jumpCoolTime - 2.5f, t._jumpCoolTime + 2.5f), 
+                    new JumpAttackState()));
                 t._boxCol.offset = t._keepBoxOffset;
                 t._boxCol.size   = t._keepBoxSize;
                 t._atk = _atk;
@@ -311,24 +309,69 @@ namespace OBJECT
             }
             public override void Exit(PenguinController t) 
             {
-                t.StartCoroutine(t.SetUseSlide(Random.Range(t._slideCoolTime - 1.5f, t._slideCoolTime + 1.5f))); 
+                t.StartCoroutine(t.SetUseSkill(
+                    Random.Range(t._slideCoolTime - 1.5f, t._slideCoolTime + 1.5f), 
+                    new SlideAttackWait())); 
                 t.OnAttackBox(0);
                 t._boxCol.offset = t._keepBoxOffset;
                 t._boxCol.size   = t._keepBoxSize;
                 t._atk = _atk;
             }
         }
+        /*
+         * 플레이어를 추격하며 계속 쫒아다닌다
+         */
         public sealed class ChaseAttackState : State<PenguinController>
         {
+            float _chaseTime;
+            int _count;
             public override void Enter(PenguinController t) 
-            { 
+            {
                 base.Enter(t);
+                _chaseTime = 2.0f;
+                _count = 5;
+
+                t._direction = Vector2.zero;
             }
             public override void Update(PenguinController t)
             {
+                _chaseTime -= Time.deltaTime;
 
+                if (_chaseTime < float.Epsilon)
+                {
+                    t._animator.SetTrigger("Attack");
+                    --_count;
+                    _chaseTime = 2.0f;
+                }
+
+                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
+
+                float radian = Default.GetPositionToRadian(targetPos, myPos);
+                float distance = Default.GetDistance(targetPos, myPos);
+
+                t._direction = new Vector2(Mathf.Cos(radian), Mathf.Sin(radian));
+                t._lookAt = (targetPos - myPos).normalized;
+
+                float x = t._direction.x * 10 * 0.01f;
+                float y = t._direction.y * 10 * 0.01f;
+
+                Vector2 movement = new Vector2(x, y);
+
+                t.AddForce(movement);
             }
-            public override void Exit(PenguinController t) { }
+            public override void Exit(PenguinController t) 
+            {
+                if (_count <= 0)
+                {
+                    t._state.SetState(new TargetingState());
+                    t.StartCoroutine(t.SetUseSkill(10.0f, new ChaseAttackState()));
+                }
+                else
+                {
+                    t.FindCoroutineStop("Wait"); // 어택 후 WaitState호출후 코루틴으로 패턴을 전환하기 때문에 해당 코루틴을 찾아 정지
+                    t._state.SetState(this);
+                }
+            }
         }
         public sealed class DieState : State<PenguinController>
         {
@@ -345,9 +388,10 @@ namespace OBJECT
 
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
                 int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
+                int yDir = Random.Range(0, 2) == 0 ? 1 : -1;
 
                 _keepTargetPos = new Vector2(targetPos.x + Random.Range(4.0f, 6.0f) * xDir,
-                                             Random.Range(0.0f, 1.5f) * Random.Range(0, 2) == 0 ? 1 : -1); // 오프셋을 랜덤으로 구하고 위쪽 방향인지 아래쪽방향인지 랜덤으로 구한다.
+                                                           Random.Range(0.0f, 1.5f) * yDir); // 오프셋을 랜덤으로 구하고 위쪽 방향인지 아래쪽방향인지 랜덤으로 구한다.
             }
             public override void Update(PenguinController t) 
             {
@@ -381,7 +425,7 @@ namespace OBJECT
             {
                 base.Enter(t);
                 t._direction = Vector2.zero;
-                t.StartCoroutine(t.Wait(_time));
+                t.AddAfterResetCoroutine("Wait", t.Wait(_time));
             }
             public WaitState(float time = 1.5f) { _time = time; } 
         }

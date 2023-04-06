@@ -23,6 +23,7 @@ public abstract class State<T> : IState<T> where T : ObjectBase
     public virtual void Exit(T t)   {}
 
     public StateFunc GetStateFunc() { return _stateFunc; }
+    protected void SetStateFunce(StateFunc stateFunc) { _stateFunc = stateFunc; }
     public State() { _stateFunc = Enter; }
 }
 public class StateMachine<T> where T : ObjectBase

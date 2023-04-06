@@ -48,10 +48,6 @@ namespace OBJECT
             CreateEffect(new Vector2(col.transform.position.x, transform.position.y), _hitEffect);
             ActionCamera(Camera.main.gameObject);
         }
-        protected override void BulletPattern() // Update
-        {
-            base.BulletPattern();
-        }
         private void EffectAfterDestroy(GameObject obj, GameObject effect)
         {
             CreateEffect(obj.transform.position, effect);

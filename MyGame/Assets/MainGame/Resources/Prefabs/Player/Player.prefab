@@ -255,7 +255,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5899406491371932798}
-  - {fileID: 5899406492826315280}
+  - {fileID: 4478353554168017796}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -348,7 +348,7 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 5899406492826315280}
+  - component: {fileID: 4478353554168017796}
   - component: {fileID: 5899406492826315281}
   m_Layer: 6
   m_Name: Shadow
@@ -357,26 +357,21 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!224 &5899406492826315280
-RectTransform:
+--- !u!4 &4478353554168017796
+Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5899406492826315287}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.044, y: -0.36, z: 0}
   m_LocalScale: {x: 1.5, y: 2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5528220043043779395}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -0.044, y: -0.36}
-  m_SizeDelta: {x: 0.64, y: 0.16}
-  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!212 &5899406492826315281
 SpriteRenderer:
   m_ObjectHideFlags: 0

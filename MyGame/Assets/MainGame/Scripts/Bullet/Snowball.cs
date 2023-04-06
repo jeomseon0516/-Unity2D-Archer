@@ -32,6 +32,7 @@ namespace OBJECT
         protected override void Die()
         {
             StartCoroutine(FadeOutObject());
+            Destroy(_colTransform.gameObject);
         }
         protected override void BulletPattern()
         {

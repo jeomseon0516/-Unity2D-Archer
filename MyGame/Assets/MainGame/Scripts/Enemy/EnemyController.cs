@@ -60,7 +60,7 @@ namespace OBJECT
         protected override void Die()
         {
             _state.SetState(new DieState());
-            Destroy(_bodyCollider);
+            Destroy(_colTransform.gameObject);
         }
         protected override void ObjFixedUpdate() 
         {
