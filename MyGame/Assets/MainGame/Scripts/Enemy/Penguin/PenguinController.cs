@@ -153,6 +153,8 @@ namespace OBJECT
             bool _isMove;
             public override void Enter(PenguinController t)
             {
+                t.ZeroForce();
+
                 _coolTime = Random.Range(0.0f, 3.0f);
                 _isMove = false;
                 base.Enter(t);
@@ -343,7 +345,7 @@ namespace OBJECT
             }
             public override void Update(PenguinController t)
             {
-                _chaseTime -= Time.deltaTime;
+                _chaseTime -= Time.fixedDeltaTime;
 
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
                 float radian = Default.GetPositionToRadian(targetPos, myPos);
@@ -352,7 +354,6 @@ namespace OBJECT
                 if (_chaseTime < float.Epsilon)
                 {
                     t._animator.SetTrigger("Attack");
-                    --_count;
                     _chaseTime = 2.0f;
 
                     float plusRadian = Default.ConvertFromAngleToRadian(30.0f);
@@ -369,8 +370,6 @@ namespace OBJECT
                     }
                 }
 
-                float distance = Default.GetDistance(targetPos, myPos);
-
                 t._direction = new Vector2(Mathf.Cos(radian), Mathf.Sin(radian));
                 t._lookAt = (targetPos - myPos).normalized;
 
@@ -383,10 +382,11 @@ namespace OBJECT
             }
             public override void Exit(PenguinController t) 
             {
-                if (_count <= 0)
+                if (--_count <= 0)
                 {
                     t._state.SetState(Random.Range(0, 2) == 0 ? new WaitState(2.0f) : new JumpAttackState());
                     t.StartCoroutine(t.SetUseSkill(Random.Range(t._chaseCoolTime - 1.5f, t._chaseCoolTime + 1.5f), new ChaseAttackState()));
+                    t.ZeroForce();
                 }
                 else
                 {
@@ -451,7 +451,6 @@ namespace OBJECT
             }
             public override void Exit(PenguinController t)
             {
-                t.ZeroForce();
             }
             public WaitState(float time = 1.5f) { _time = time; } 
         }
