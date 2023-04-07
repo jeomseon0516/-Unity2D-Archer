@@ -22,7 +22,6 @@ namespace OBJECT
             yield return YieldCache.WaitForSeconds(_time);
             _hp = 0;
         }
-
         protected override void ObjFixedUpdate() { BulletPattern(); }
         protected virtual void BulletPattern() { _lookAt = Vector2.zero; }
         protected abstract void BulletInit();

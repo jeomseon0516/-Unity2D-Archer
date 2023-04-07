@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using OBJECT.SNOWBALL; 
 
 namespace OBJECT
 {
@@ -47,24 +48,6 @@ namespace OBJECT
 
             _state = new StateMachine<PenguinController>();
             _state.SetState(new IdleState());
-        }
-        private void CreateBullet(float power)
-        {
-            float angle = 360 / 8;
-
-            for (float i = 0; i < 360; i += angle)
-            {
-                Transform obj = Instantiate(_bullet).transform;
-
-                CheckInComponent(obj.Find("Body").Find("Image").TryGetComponent(out Snowball bullet));
-                obj.position = new Vector2(_physics.position.x, _physics.position.y - _offsetY);
-                bullet.SetSpeed(power * 0.4f);
-                bullet.SetNextJump(power * 0.5f);
-
-                float radian = Default.ConvertFromAngleToRadian(i);
-
-                bullet.SetDirection(new Vector2(Mathf.Cos(radian), Mathf.Sin(radian)));
-            }
         }
         protected override void ObjFixedUpdate()
         {
@@ -273,8 +256,8 @@ namespace OBJECT
             }
             public override void Exit(PenguinController t) 
             {
+                CreateSnowBall.AllDirection(t._bullet, new Vector2(t._physics.position.x, t._physics.position.y - t._offsetY), _power);
                 t.OnAttackBox(0);
-                t.CreateBullet(_power);
                 t.AddAfterResetCoroutine("Jump", t.SetUseSkill(
                     Random.Range(t._jumpCoolTime - 2.5f, t._jumpCoolTime + 2.5f), 
                     new JumpAttackState()));
@@ -356,18 +339,7 @@ namespace OBJECT
                     t._animator.SetTrigger("Attack");
                     _chaseTime = 2.0f;
 
-                    float plusRadian = Default.ConvertFromAngleToRadian(30.0f);
-
-                    for (int i = -1; i < 2; ++i)
-                    {
-                        Transform obj = Instantiate(t._bullet).transform;
-
-                        t.CheckInComponent(obj.Find("Body").Find("Image").TryGetComponent(out Snowball bullet));
-                        obj.position = new Vector2(t._physics.position.x, t._physics.position.y - t._offsetY);
-                        bullet.SetSpeed(20);
-                        bullet.SetNextJump(10);
-                        bullet.SetDirection(new Vector2(Mathf.Cos(radian + plusRadian * i), Mathf.Sin(radian + plusRadian * i)));
-                    }
+                    CreateSnowBall.Targeting(t._bullet, new Vector2(t._physics.position.x, t._physics.position.y - t._offsetY), radian);
                 }
 
                 t._direction = new Vector2(Mathf.Cos(radian), Mathf.Sin(radian));
@@ -386,7 +358,6 @@ namespace OBJECT
                 {
                     t._state.SetState(Random.Range(0, 2) == 0 ? new WaitState(2.0f) : new JumpAttackState());
                     t.StartCoroutine(t.SetUseSkill(Random.Range(t._chaseCoolTime - 1.5f, t._chaseCoolTime + 1.5f), new ChaseAttackState()));
-                    t.ZeroForce();
                 }
                 else
                 {
@@ -421,7 +392,7 @@ namespace OBJECT
                 int xDir = myPos.x - targetPos.x > 0 ? 1 : -1;
 
                 if (Default.GetDistance(_keepTargetPos, myPos) <= 1.0f ||
-                    Default.GetDistance(targetPos, myPos) >= 15.0f)
+                    Default.GetDistance(targetPos, myPos) >= 20.0f)
                 {
                     t._state.SetState(new SlideAttackState());
                     return;
@@ -448,9 +419,6 @@ namespace OBJECT
                 base.Enter(t);
                 t._direction = Vector2.zero;
                 t.AddAfterResetCoroutine("Wait", t.Wait(_time));
-            }
-            public override void Exit(PenguinController t)
-            {
             }
             public WaitState(float time = 1.5f) { _time = time; } 
         }
