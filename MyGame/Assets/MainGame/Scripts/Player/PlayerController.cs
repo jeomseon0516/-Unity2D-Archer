@@ -20,7 +20,7 @@ namespace OBJECT
             _maxHp = _hp = 50;
             _id = OBJECTID.PLAYER;
             _attackSpeed = 4;
-            _speed = 5.0f;
+            _speed = 200.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());

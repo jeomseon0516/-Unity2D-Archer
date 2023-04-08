@@ -160,9 +160,9 @@ namespace OBJECT
                 yield return YieldCache.WaitForFixedUpdate;
             }
 
-            _jump = 0;
+            _jump = 0.0f; ;
             _collider.isTrigger = false;
-            _body.localPosition = new Vector2(0.0f, 0.0f);
+            _body.localPosition = Vector2.zero;
         }
         /* 점프를 하지 않는 객체가 있으니 객체별로 따로 호출 해줍니다. */
         protected IEnumerator CheckFallingOrJumping()

@@ -17,8 +17,8 @@ namespace OBJECT
         protected override void Init()
         {
             base.Init();
-            CheckInComponent(GameObject.Find("Player").transform.Find("Body").Find("Image").TryGetComponent(out _target));
 
+            CheckInComponent(GameObject.Find("Player").transform.Find("Body").Find("Image").TryGetComponent(out _target));
             CheckInComponent(_body.Find("HealthCanvas").Find("HpBar").TryGetComponent(out IObserver bar));
             RegisterObserver(bar);
 
