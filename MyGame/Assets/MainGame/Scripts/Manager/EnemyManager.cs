@@ -6,11 +6,11 @@ using OBJECT;
 public sealed class EnemyManager : SingletonTemplate<EnemyManager>
 {
     private GameObject _prefab;
-    private GameObject _parent;
+    private Transform _parent;
     private bool _isMake;
     protected override void Init()
     {
-        _parent = GameObject.Find("EnemyList");
+        _parent = GameObject.Find("EnemyList").transform;
         _prefab = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.ENEMY, "Prefab");
         _isMake = false;
     }
@@ -35,9 +35,9 @@ public sealed class EnemyManager : SingletonTemplate<EnemyManager>
         Vector2 randvec = new Vector2(camera.transform.position.x + ((camera.orthographicSize * camera.aspect) + offset.x) * xDir,
                 0.0f + offset.y * yDir);
 
-        GameObject obj = Instantiate(_prefab);
-        obj.transform.position = randvec;
-        obj.transform.parent = _parent.transform;
+        Transform obj = Instantiate(_prefab).transform;
+        obj.position = randvec;
+        obj.parent = _parent;
     }
     public void SetIsMakeEnemy(bool isMake)
     {
@@ -46,9 +46,9 @@ public sealed class EnemyManager : SingletonTemplate<EnemyManager>
         if (!isMake)
             return;
 
-        for (int i = 0; i < _parent.transform.childCount; ++i)
+        for (int i = 0; i < _parent.childCount; ++i)
         {
-            _parent.transform.GetChild(i).gameObject.SetActive(true);
+            _parent.GetChild(i).gameObject.SetActive(true);
         }
     }
     private EnemyManager() {}

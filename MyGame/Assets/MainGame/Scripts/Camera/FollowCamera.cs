@@ -40,7 +40,7 @@ public class FollowCamera : MonoBehaviour
         Vector2 pos = new Vector2(transform.position.x, transform.position.y - _offsetY);
 
         float distance = Default.GetDistance(_player.transform.position, pos);
-        float radian = Default.GetPositionToRadian(_player.transform.position, pos);
+        float radian   = Default.GetPositionToRadian(_player.transform.position, pos);
         // Vector3 direction = (_player.transform.position - pos).normalized; 부자연스러움
 
         float x = Mathf.Cos(radian) /*direction.x*/ * distance * 75.0f * 0.01f * _maxSpeed; // 매 프레임당 카메라 앵커의 거리와 플레이어의 75퍼센트 비율만큼만 이동
