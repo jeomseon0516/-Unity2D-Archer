@@ -26,7 +26,9 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
             _instance = FindObjectOfType<T>();
 
             lock (_obj)
+            {
                 _instance = GetInstanceFindObject();
+            }
         }
 
         return _instance;
@@ -39,12 +41,12 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
             return;
         }
         if (_instance == null)
-            _instance = GetComponent<T>();
+            TryGetComponent(out _instance);
 
         DontDestroyOnLoad(gameObject);
         Init();
     }
     private static T GetInstanceFindObject() { return _instance == null ? new GameObject(typeof(T).ToString(), typeof(T)).GetComponent<T>() : _instance; }
     protected abstract void Init();
-    protected SingletonTemplate() { }
+    protected SingletonTemplate() {}
 }

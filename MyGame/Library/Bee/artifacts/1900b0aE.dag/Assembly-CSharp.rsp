@@ -387,8 +387,11 @@
 "Assets/MainGame/Scripts/Manager/ControllerManager.cs"
 "Assets/MainGame/Scripts/Manager/DataManager.cs"
 "Assets/MainGame/Scripts/Manager/EnemyManager.cs"
+"Assets/MainGame/Scripts/Manager/GameManager.cs"
+"Assets/MainGame/Scripts/Manager/PlayerManager.cs"
 "Assets/MainGame/Scripts/Manager/ResourcesManager.cs"
 "Assets/MainGame/Scripts/Manager/SingletonTemplate.cs"
+"Assets/MainGame/Scripts/Manager/UIManager.cs"
 "Assets/MainGame/Scripts/ObjectClass/AttackBox.cs"
 "Assets/MainGame/Scripts/ObjectClass/LivingObject.cs"
 "Assets/MainGame/Scripts/ObjectClass/ObjectBase.cs"
@@ -397,9 +400,13 @@
 "Assets/MainGame/Scripts/Player/PlayerInfo.cs"
 "Assets/MainGame/Scripts/ProjectSetting/Frame.cs"
 "Assets/MainGame/Scripts/UI/EnemyHpBar.cs"
+"Assets/MainGame/Scripts/UI/MainMenu.cs"
 "Assets/MainGame/Scripts/UI/PrograssBar.cs"
-"Assets/MainMenu/Scripts/ButtonController.cs"
+"Assets/MainGame/Scripts/UI/UI.cs"
+"Assets/MainMenu/Scripts/ButtonBase.cs"
 "Assets/MainMenu/Scripts/ExampleManager.cs"
+"Assets/MainMenu/Scripts/ExitButton.cs"
+"Assets/MainMenu/Scripts/StartButton.cs"
 -langversion:9.0
 
 /deterministic

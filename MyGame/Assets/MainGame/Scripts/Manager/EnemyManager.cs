@@ -51,5 +51,12 @@ public sealed class EnemyManager : SingletonTemplate<EnemyManager>
             _parent.GetChild(i).gameObject.SetActive(true);
         }
     }
+    public void AllRemoveEnemy()
+    {
+        for (int i = 0; i < _parent.childCount; i++)
+        {
+            Destroy(_parent.GetChild(i));
+        }
+    }
     private EnemyManager() {}
 }

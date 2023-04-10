@@ -10,25 +10,22 @@ namespace OBJECT
 {
     public partial class PlayerController : LivingObject
     {
-        private List<GameObject> _bullets = new List<GameObject>();
         private StateMachine<PlayerController> _playerState;
         private Vector2 _spawnPoint;
         private float _attackSpeed;
         protected override void Init()
         {
+            _id = OBJECTID.PLAYER;
             base.Init();
             _maxHp = _hp = 50;
-            _id = OBJECTID.PLAYER;
             _attackSpeed = 4;
-            _speed = 200.0f;
+            _speed = 5.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
             _spawnPoint = _physics.position;
 
-            CheckInComponent(GameObject.Find("Canvas").transform.Find("HpBar").TryGetComponent(out IObserver bar));
-            RegisterObserver(bar);
-            StartCoroutine(CheckFallingOrJumping());
+            AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
         }
         protected override void Run()
         {
@@ -46,8 +43,6 @@ namespace OBJECT
             // 현재 방향키를 어떤 방향으로 누르고 있는지를 확인해서 쏠 방향을 구하고 이동중인 방향만큼 더 해주면 총알이 플레이어의 움직임의 영향을 받게 된다.
             Vector2 dir = _lookAt.normalized + _direction * 0.25f;
             controller.SetDirection(dir);
-
-            _bullets.Add(objTransform.gameObject);
         }
         /* 해당 함수는 하이어라키에서 애니메이션 이벤트로 호출되는 함수 입니다. 스크립트 내에서 상태 전환이 필요한 경우 new 키워드를 사용해 초기화 합니다. */
         private void SetState(PLR_STATE state)
@@ -74,16 +69,21 @@ namespace OBJECT
         private IEnumerator Respawn()
         {
             yield return YieldCache.WaitForSeconds(5.0f);
-            _playerState.SetState(new RunState());
             _animator.SetTrigger("Respawn");
-            _rigidbody.position = _spawnPoint;
-            _isDie = false;
-            _hp = _maxHp;
+            ResetPlayer();
         }
         protected override void ObjFixedUpdate() 
         {
             _animator.SetFloat("JumpSpeed", _jumpValue);
             _playerState.Update(this); 
+        }
+        public void ResetPlayer()
+        {
+            _playerState.SetState(new RunState());
+            AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
+            _rigidbody.position = _spawnPoint;
+            _isDie = false;
+            _hp = _maxHp;
         }
         protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
         protected override void Die() { _playerState.SetState(new DieState()); }

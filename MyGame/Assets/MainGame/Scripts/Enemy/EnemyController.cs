@@ -62,11 +62,8 @@ namespace OBJECT
             _state.SetState(new DieState());
             Destroy(_colTransform.gameObject);
         }
-        protected override void ObjFixedUpdate() 
-        {
-            _state.Update(this); 
-        }
         protected override void GetDamageAction(int damage) { _state.SetState(new HitState()); }
+        protected override void ObjFixedUpdate() { _state.Update(this); }
         private void SetUseSkill(bool useSkill) { _useSkill = useSkill; }
     }
 

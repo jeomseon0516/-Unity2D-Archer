@@ -13,6 +13,7 @@ namespace OBSERVER
     }
     public interface IObserver
     {
-        public void UpdateData(ObjectBase obj);
+        public void UpdateData(ISubject obj);
     }
+
 }

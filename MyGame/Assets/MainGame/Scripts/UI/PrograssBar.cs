@@ -8,22 +8,24 @@ using OBSERVER;
 /*
  * 옵저버 패턴으로 바꿔주자
  */
-public partial class PrograssBar : MonoBehaviour, IObserver
+public partial class PrograssBar : UI, IPlayerObserver
 {
     Slider _slider;
-    private void Awake() { _slider = transform.GetComponent<Slider>(); }
+    protected override void Init()
+    {
+        _uiName = "PlayerHpBar";
+        PlayerManager.GetInstance().RegisterObserver(this);
+        TryGetComponent(out _slider);
+        gameObject.SetActive(false);
+    }
 }
 
-public partial class PrograssBar : MonoBehaviour, IObserver
+public partial class PrograssBar : UI, IPlayerObserver
 {
     public void UpdateData(int hp, int maxHp)
     {
         _slider.maxValue = maxHp;
         _slider.value = hp;
     }
-    public void UpdateData(ObjectBase obj)
-    {
-        _slider.maxValue = obj.GetMaxHp();
-        _slider.value = obj.GetHp();
-    }
+    public void UpdateData(ISubject obj) {}
 }

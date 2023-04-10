@@ -5,7 +5,7 @@ using OBSERVER;
 
 namespace OBJECT
 {
-    public abstract class EnemyBase : LivingObject
+    public abstract partial class EnemyBase : LivingObject, ISubject
     {
         protected GameObject _attackBox;
         protected ObjectBase _target;
@@ -18,8 +18,8 @@ namespace OBJECT
         {
             base.Init();
 
-            CheckInComponent(GameObject.Find("Player").transform.Find("Body").Find("Image").TryGetComponent(out _target));
-            CheckInComponent(_body.Find("HealthCanvas").Find("HpBar").TryGetComponent(out IObserver bar));
+            CheckInComponent(PlayerManager.GetInstance().GetInGamePlayer().TryGetComponent(out _target));
+            CheckInComponent(_body.Find("HealthCanvas").Find("HpBar").TryGetComponent(out IEnemyObserver bar));
             RegisterObserver(bar);
 
             _attackBox = _body.Find("AttackBox").gameObject;
@@ -83,11 +83,41 @@ namespace OBJECT
 
             TriggerCollision(col, _colTransform.gameObject);
         }
-        protected override void GetDamageAction(int damage) { AddAfterResetCoroutine("Targeting", TargetingObject()); }
         protected override void OnCollision(ObjectBase obj, Collider2D col) 
         {
             Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
             obj.TakeDamage(_atk, force * 2);
         }
+        protected override void ObjUpdate() { NotifyObservers(); }
+        protected override void GetDamageAction(int damage) { AddAfterResetCoroutine("Targeting", TargetingObject()); }
+    }
+
+    public abstract partial class EnemyBase : LivingObject, ISubject
+    {
+        List<IEnemyObserver> _observers = new List<IEnemyObserver>();
+
+        public void NotifyObservers()
+        {
+            for (int i = 0; i < _observers.Count; ++i) { _observers[i].UpdateData(this); }
+        }
+        public void RegisterObserver(IEnemyObserver observer) 
+        {
+            if (_observers.Contains(observer)) return;
+            _observers.Add(observer);
+        }
+        public void RemoveObserver(IEnemyObserver observer) 
+        {
+            if (!_observers.Contains(observer)) return;
+            _observers.Remove(observer);
+        }
+
+        public void RegisterObserver(IObserver observer) { }
+        public void RemoveObserver(IObserver observer) {}
+    }
+ 
+    public interface IEnemyObserver : IObserver
+    {
+        public void UpdateData(int hp, int maxHp);
+        public void UpdateData(ObjectBase obj) {}
     }
 }

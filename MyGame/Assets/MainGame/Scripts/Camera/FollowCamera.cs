@@ -15,18 +15,11 @@ public class FollowCamera : MonoBehaviour
      * 라디안값 = 육십분법 * PI / 180.0f
      * 육십분법 = 라디안 값 * 180 / 디그리 변환 값 
      */
+
     private void Start()
     {
-        try
-        {
-            _player = GameObject.Find("Player").gameObject;
-            _moveCameraMethod = FollowPlayer;
-        }
-        catch (System.NullReferenceException ex)
-        {
-            print("Catch : " + ex.Message);
-            _moveCameraMethod = WaitingPlayGame;
-        }
+        _player = PlayerManager.GetInstance().GetInHierarchyPlayer();
+;       _moveCameraMethod = WaitingPlayGame;
         _floor = transform.position.y + Camera.main.orthographicSize * 0.5f;
         _offsetY = transform.position.y;
         _maxSpeed = 2.0f; // 델타타임 보정하면 속도가 느리므로
@@ -37,6 +30,12 @@ public class FollowCamera : MonoBehaviour
     }
     private void FollowPlayer()
     {
+        if (!_player.activeSelf)
+        {
+            _moveCameraMethod = WaitingPlayGame;
+            return;
+        }
+
         Vector2 pos = new Vector2(transform.position.x, transform.position.y - _offsetY);
 
         float distance = Default.GetDistance(_player.transform.position, pos);
@@ -60,6 +59,12 @@ public class FollowCamera : MonoBehaviour
     }
     private void WaitingPlayGame()
     {
+        if (_player.activeSelf)
+        {
+            _moveCameraMethod = FollowPlayer;
+            return;
+        }
+
         transform.position += new Vector3(2.0f, 0.0f, 0.0f) * Time.deltaTime;
     }
 }
