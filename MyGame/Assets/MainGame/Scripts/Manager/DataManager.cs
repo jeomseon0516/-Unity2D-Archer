@@ -42,7 +42,7 @@ public class DataManager : SingletonTemplate<DataManager>
         var jsonData = Resources.Load<TextAsset>("SaveFile/Data");
         DataForm form = JsonUtility.FromJson<DataForm>(jsonData.ToString());
 
-        _value = int.Parse(form.age);
+        _value = Default.GetIntParseString(form.age);
         _userName = form.name;
 
         print(jsonData);
