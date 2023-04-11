@@ -10,9 +10,9 @@ public class MemberForm
     public int pk;
     public string name;
     public int age;
-    public string gender;
+    public int gender;
 
-    public MemberForm(int pk, string name, int age, string gender)
+    public MemberForm(int pk, string name, int age, int gender)
     {
         this.pk     = pk;
         this.name   = name;
@@ -21,6 +21,7 @@ public class MemberForm
     }
 }
 
+[System.Serializable]
 public class UserInfo
 {
     public int pk;
@@ -35,12 +36,13 @@ public class UserInfo
     }
 }
 
+[System.Serializable]
 public class UserData
 {
-    public MemberForm memberForm;
-    public UserInfo userInfo;
+    public string memberForm;
+    public string userInfo;
 
-    public UserData(MemberForm memberForm, UserInfo userInfo)
+    public UserData(string memberForm, string userInfo)
     {
         this.memberForm = memberForm;
         this.userInfo = userInfo;
@@ -51,7 +53,7 @@ public class ExampleManager : MonoBehaviour
 {
     private string URL = "https://script.google.com/macros/s/AKfycbwH9NtpHxpdVkzHcKZkynlBzDMXiGclCotvnnALR3JJnH8uxtHjLgRPxElZHMgBgAVe/exec";
 
-    IEnumerator Start()
+    private void Start()
     {
         // 요청을 하기위한 작업
         //MemberForm memberForm = new MemberForm("변사또", 45, 5);
@@ -61,21 +63,21 @@ public class ExampleManager : MonoBehaviour
         //form.AddField("Name", memberForm.name);
         //form.AddField("Age",  memberForm.age);
         //form.AddField("Pk",   memberForm.pk);
-        MemberForm memberForm = new MemberForm(5, "변사또", 5, "남자");
-        UserInfo userInfo     = new UserInfo(5, "byeun2018@gmail.com", "1591");
-        UserData userData     = new UserData(memberForm, userInfo);
+        //pk가 0일경우 회원가입 또는 존재하지 않는 회원
+        StartCoroutine(RegistUser(new MemberForm(0, "신재훈", 21, 3), new UserInfo(0, "ssam0708@gmail.com", "iloveshowta1337")));
+    }
 
+    private IEnumerator RegistUser(MemberForm memberForm, UserInfo userInfo)
+    {
         WWWForm wwwForm = new WWWForm();
-        wwwForm.AddField("Order", "sing up");
-        wwwForm.AddField("MemberForm", JsonUtility.ToJson(memberForm));
-        wwwForm.AddField("UserInfo",   JsonUtility.ToJson(userInfo));
+        wwwForm.AddField("order", "sign up");
+        wwwForm.AddField("memberForm", JsonUtility.ToJson(memberForm));
+        wwwForm.AddField("userInfo",   JsonUtility.ToJson(userInfo));
 
         // 응답에 대한 작업
         using (UnityWebRequest request = UnityWebRequest.Post(URL, wwwForm))
         {
             yield return request.SendWebRequest();
-            UserData jsonData = JsonUtility.FromJson<UserData>(request.downloadHandler.text);
-
             print(request.downloadHandler.text);
         }
     }
