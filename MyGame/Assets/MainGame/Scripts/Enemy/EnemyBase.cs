@@ -70,11 +70,8 @@ namespace OBJECT
         }
         protected bool CheckAttack(EnemyBase t, int xDir, Vector2 movePoint, Vector2 myPosition, float yDis = 0.085f)
         {
-            if (Mathf.Abs(movePoint.x - myPosition.x) <= t._attackDis &&
-                Mathf.Abs(movePoint.y - myPosition.y) <= t._attackDis * yDis)
-                return true;
-
-            return false;
+            return Mathf.Abs(movePoint.x - myPosition.x) <= t._attackDis &&
+                   Mathf.Abs(movePoint.y - myPosition.y) <= t._attackDis * yDis;
         }
         protected internal override void TriggerAction(Collider2D col) 
         {
@@ -87,6 +84,40 @@ namespace OBJECT
         {
             Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
             obj.TakeDamage(_atk, force * 2);
+        }
+        protected void RunStateMethod(ref float coolTime, ref bool isMove, ref Vector3 randPoint)
+        {
+            if (coolTime > 0.0f) // 쿨타임일땐 처리하지 않음
+            {
+                coolTime -= Time.deltaTime;
+                return;
+            }
+            if (!isMove) // 쿨타임이 끝났고 현재 랜덤한 위치로 이동중이지 않으면?
+            {
+                randPoint = RandomMovePosition();
+                isMove = true;
+                return;
+            }
+
+            _direction = (randPoint - _physics.position).normalized;
+
+            if (Default.GetDistance(randPoint, _physics.position) > 1.0f)
+                return; // 목표 위치로 이동이 끝났다면
+
+            _direction = Vector2.zero;
+            coolTime = Random.Range(0.0f, 3.0f);
+            isMove = false;
+        }
+        protected void SetAttackState()
+        {
+            _animator.SetTrigger("Attack");
+            _direction = Vector2.zero;
+            _lookAt = (_target.transform.position - _physics.position).normalized;
+        }
+        protected void SetLookAtAndDirection(Vector2 movePoint, Vector2 targetPos, Vector2 myPos)
+        {
+            _direction = (movePoint - myPos).normalized;
+            _lookAt    = (targetPos - myPos).normalized;
         }
         protected override void ObjUpdate() { NotifyObservers(); }
         protected override void GetDamageAction(int damage) { AddAfterResetCoroutine("Targeting", TargetingObject()); }

@@ -99,8 +99,8 @@ namespace OBJECT
             _beforeHp = _hp;
             _lookAt = _direction;
             CheckDeadToHp();
-            ObjFixedUpdate();
             Run();
+            ObjFixedUpdate();
             Move(_direction.x, _direction.y);
             CheckHeight();
             ChangeFlipXToHor(_lookAt.x);
@@ -108,20 +108,17 @@ namespace OBJECT
         }
         protected internal void TriggerCollision(Collider2D col, GameObject colTransform) 
         {
+            if (CheckCollision(col.gameObject)) return;
+
             CheckInComponent(col.transform.parent.Find("Image").TryGetComponent(out ObjectBase obj));
 
-            if (!CheckCollision(col.gameObject))
+            if (Collision(obj.GetPhysics(), obj))
             {
-                if (Collision(obj.GetPhysics(), obj))
-                {
-                    OnCollision(obj, col);
-                    AddColList(col.gameObject);
-                }
-                else
-                {
-                    colTransform.SetActive(false);
-                }
+                OnCollision(obj, col);
+                AddColList(col.gameObject);
             }
+            else
+                colTransform.SetActive(false); // 껐다 키면 TriggerEnter 재호출
 
             colTransform.SetActive(true);
         }
@@ -133,21 +130,10 @@ namespace OBJECT
             float targetHeightOffset = obj.GetHeightOffset() * 0.5f;
             float myHeightOffset     = _heightOffset * 0.5f;
 
-            if (targetPosY + targetHeightOffset > myPosY - myHeightOffset &&
-                targetPosY - targetHeightOffset < myPosY + myHeightOffset)
-            {
-                //해당 타겟이 같은 y 좌표에 있는지 체크한다.
-                //float jumptarGetPosY = obj.GetBody().localPosition.y - obj.GetOffsetY();
-                //float jumpMyPosY     = _body.localPosition.y - _offsetY;
+            bool isCollision = targetPosY + targetHeightOffset > myPosY - myHeightOffset &&
+                               targetPosY - targetHeightOffset < myPosY + myHeightOffset;
 
-                //float targetSizeY = obj.GetSize().y * 0.5f;
-                //float mySizeY     = _size.y * 0.5f;
-
-                //if (jumptarGetPosY + targetSizeY > jumpMyPosY - mySizeY &&
-                //    jumptarGetPosY - targetSizeY < jumpMyPosY + mySizeY) //해당 타겟이 점프중이며 같은 높이에 있는지 체크한다.
-                    return true;
-            }
-            return false;
+            return isCollision;
         }
         protected IEnumerator Jumping(float gravity = Constants.GRAVITY)
         {
@@ -160,7 +146,7 @@ namespace OBJECT
                 yield return YieldCache.WaitForFixedUpdate;
             }
 
-            _jump = 0.0f; ;
+            _jump = 0.0f;
             _collider.isTrigger = false;
             _body.localPosition = Vector2.zero;
         }
@@ -251,13 +237,14 @@ namespace OBJECT
          */
         protected void FindCoroutineStop(string key)
         {
-            if (_coroutineList.TryGetValue(key, out IEnumerator coroutine))
-                StopCoroutine(coroutine);
+            if (!_coroutineList.TryGetValue(key, out IEnumerator coroutine)) return;
+            StopCoroutine(coroutine);
         }
         /*
-        * 중간에 로테이션이 되는 객체들에서 사용하는 함수입니다. 플레이어 총알에 사용됩니다.
+        * 중간에 회전이 되는 객체들에서 사용하는 함수입니다. 플레이어 총알에 사용됩니다. 
+        * 그림자와 콜라이더를 객체가 회전하는 만큼 함께 회전 시켜줍니다.
         */
-        protected void UpdateShadowAndCollider()
+        protected void UpdateCollider()
         {
             float average = (_sprRen.bounds.max.x - _sprRen.bounds.min.x) / (_sprRen.localBounds.size.x * _sprRen.transform.lossyScale.x);
 

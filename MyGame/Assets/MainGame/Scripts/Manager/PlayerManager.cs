@@ -11,6 +11,7 @@ public class PlayerManager : SingletonTemplate<PlayerManager>, ISubject
     private GameObject _inHierarchyPlayer;
     private List<IPlayerObserver> _observers = new List<IPlayerObserver>();
     private int _hp, _maxHp;
+
     protected override void Init()
     {
         _inHierarchyPlayer = Instantiate(ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.PLAYER, "Player"));

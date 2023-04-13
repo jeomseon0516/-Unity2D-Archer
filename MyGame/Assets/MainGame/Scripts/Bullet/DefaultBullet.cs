@@ -25,7 +25,7 @@ namespace OBJECT
             rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, rotation.eulerAngles.x, angle);
             transform.rotation = rotation;
 
-            UpdateShadowAndCollider();
+            UpdateCollider();
             _shadow.transform.eulerAngles = transform.eulerAngles;
             _heightOffset = (_bodyCollider.bounds.max.y - _bodyCollider.bounds.min.y) * 2;
         }

@@ -52,6 +52,7 @@ namespace OBJECT
         protected override void ObjFixedUpdate()
         {
             if (!_isActive) return;
+
             _animator.SetFloat("JumpSpeed", _jumpValue);
             _state.Update(this);
         }
@@ -73,6 +74,12 @@ namespace OBJECT
         {
             yield return YieldCache.WaitForSeconds(time);
             _skillQueue.Enqueue(state);
+        }
+        private void SetAttackBox(float onBox, Vector2 offset, Vector2 size)
+        {
+            OnAttackBox(onBox);
+            _boxCol.offset = offset;
+            _boxCol.size  = size;
         }
         protected override void Die() 
         { 
@@ -136,11 +143,11 @@ namespace OBJECT
             bool _isMove;
             public override void Enter(PenguinController t)
             {
+                base.Enter(t);
                 t.ZeroForce();
 
                 _coolTime = Random.Range(0.0f, 3.0f);
                 _isMove = false;
-                base.Enter(t);
             }
             public override void Update(PenguinController t)
             {
@@ -149,27 +156,8 @@ namespace OBJECT
                     t._state.SetState(new TargetingState());
                     return;
                 }
-                if (_coolTime > 0.0f) // 쿨타임일땐 처리하지 않음
-                {
-                    _coolTime -= Time.deltaTime;
-                    return;
-                }
-                if (!_isMove) // 쿨타임이 끝났고 현재 랜덤한 위치로 이동중이지 않으면?
-                {
-                    _isMove = true;
-                    _randPoint = t.RandomMovePosition();
-                }
-                else // 랜덤한 위치로 이동중일때
-                {
-                    t._direction = (_randPoint - t._physics.position).normalized;
 
-                    if (Default.GetDistance(_randPoint, t._physics.position) <= 1.0f) // 목표 위치로 이동이 끝났다면
-                    {
-                        t._direction = Vector2.zero;
-                        _coolTime = Random.Range(0.0f, 3.0f);
-                        _isMove = false;
-                    }
-                }
+                t.RunStateMethod(ref _coolTime, ref _isMove, ref _randPoint);
             }
         }
         public sealed class TargetingState : State<PenguinController>
@@ -204,9 +192,8 @@ namespace OBJECT
                     t._state.SetState(new AttackState());
                     return;
                 }
-      
-                t._direction = (movePoint - myPos).normalized;
-                t._lookAt    = (targetPos - myPos).normalized;
+
+                t.SetLookAtAndDirection(movePoint, targetPos, myPos);
             }
         }
         public sealed class AttackState : State<PenguinController>
@@ -214,10 +201,7 @@ namespace OBJECT
             public override void Enter(PenguinController t)
             {
                 base.Enter(t);
-                t._animator.SetTrigger("Attack");
-
-                t._direction = Vector2.zero;
-                t._lookAt = (t._target.transform.position - t._physics.position).normalized;
+                t.SetAttackState();
             }
         }
         public sealed class JumpAttackState : State<PenguinController>
@@ -227,6 +211,7 @@ namespace OBJECT
             public override void Enter(PenguinController t) 
             { 
                 base.Enter(t);
+
                 t._jump = Random.Range(8.0f, 15.0f);
                 _power = Random.Range(20, 32);
                 t.StartCoroutine(t.Jumping(_power));
@@ -245,11 +230,7 @@ namespace OBJECT
                 t.FastChaseTarget(myPos, targetPos, distance);
 
                 if (!t._attackBox.activeSelf && t._jumpValue < float.Epsilon) //낙하하는 타이밍에 어택박스를 켜준다.
-                {
-                    t.OnAttackBox(1);
-                    t._boxCol.offset = new Vector2(0, -1.63f);
-                    t._boxCol.size = new Vector2(1.5f, 1.02f);
-                }
+                    t.SetAttackBox(1, new Vector2(0, -1.63f), new Vector2(1.5f, 1.02f));
 
                 if (t._body.localPosition.y < float.Epsilon)
                     t._state.SetState(new WaitState());
@@ -257,12 +238,10 @@ namespace OBJECT
             public override void Exit(PenguinController t) 
             {
                 CreateSnowBall.AllDirection(t._bullet, new Vector2(t._physics.position.x, t._physics.position.y - t._offsetY), _power);
-                t.OnAttackBox(0);
                 t.AddAfterResetCoroutine("Jump", t.SetUseSkill(
                     Random.Range(t._jumpCoolTime - 2.5f, t._jumpCoolTime + 2.5f), 
                     new JumpAttackState()));
-                t._boxCol.offset = t._keepBoxOffset;
-                t._boxCol.size   = t._keepBoxSize;
+                t.SetAttackBox(0, t._keepBoxOffset, t._keepBoxSize);
                 t._atk = _atk;
             }
         }
@@ -275,15 +254,12 @@ namespace OBJECT
             {
                 base.Enter(t);
 
+                t.SetAttackBox(1, new Vector2(0, -1.48f), new Vector2(2.36f, 1.43f));
                 t.GetTargetAndMyPos(out Vector2 myPos, out _movePoint);
                 t._animator.SetTrigger("Slide");
                 _time = 3.0f;
                 _atk = t._atk;
                 t._atk = 10;
-
-                t.OnAttackBox(1);
-                t._boxCol.offset = new Vector2(0, -1.48f);
-                t._boxCol.size   = new Vector2(2.36f, 1.43f);
 
                 float distance = Default.GetDistance(_movePoint, myPos);
                 _movePoint += (_movePoint - myPos).normalized * distance * 60.0f * 0.01f;
@@ -303,11 +279,8 @@ namespace OBJECT
             }
             public override void Exit(PenguinController t) 
             {
-                t.StartCoroutine(t.SetUseSkill(
-                    Random.Range(t._slideCoolTime - 1.5f, t._slideCoolTime + 1.5f), new SlideAttackWait())); 
-                t.OnAttackBox(0);
-                t._boxCol.offset = t._keepBoxOffset;
-                t._boxCol.size   = t._keepBoxSize;
+                t.StartCoroutine(t.SetUseSkill(Random.Range(t._slideCoolTime - 1.5f, t._slideCoolTime + 1.5f), new SlideAttackWait()));
+                t.SetAttackBox(0, t._keepBoxOffset, t._keepBoxSize);
                 t._atk = _atk;
             }
         }
@@ -317,6 +290,7 @@ namespace OBJECT
         public sealed class ChaseAttackState : State<PenguinController>
         {
             float _chaseTime;
+            Vector3 _beforePosition;
             int _count;
             public override void Enter(PenguinController t) 
             {
@@ -324,6 +298,7 @@ namespace OBJECT
                 _chaseTime = 2.0f;
                 _count = 3;
 
+                _beforePosition = t._physics.position;
                 t._direction = Vector2.zero;
             }
             public override void Update(PenguinController t)
@@ -333,15 +308,17 @@ namespace OBJECT
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
                 float radian = Default.GetPositionToRadian(targetPos, myPos);
 
-                // 급한대로 여기서 총알 생성 이후에 리팩토링 필요함
+                Vector3 moveDir = (t._physics.position - _beforePosition).normalized;
+                float distance = Default.GetDistance(t._physics.position, _beforePosition);
+
                 if (_chaseTime < float.Epsilon)
                 {
                     t._animator.SetTrigger("Attack");
                     _chaseTime = 2.0f;
-
-                    CreateSnowBall.Targeting(t._bullet, new Vector2(t._physics.position.x, t._physics.position.y - t._offsetY), radian);
+                    CreateSnowBall.Targeting(t._bullet, moveDir * distance * 10, myPos, radian);
                 }
 
+                _beforePosition = t._physics.position;
                 t._direction = new Vector2(Mathf.Cos(radian), Mathf.Sin(radian));
                 t._lookAt = (targetPos - myPos).normalized;
 
@@ -406,8 +383,7 @@ namespace OBJECT
                     return;
                 }
 
-                t._direction = (_keepTargetPos - myPos).normalized;
-                t._lookAt    = (targetPos - myPos).normalized;
+                t.SetLookAtAndDirection(_keepTargetPos, targetPos, myPos);
             }
             public override void Exit(PenguinController t) { }
         }

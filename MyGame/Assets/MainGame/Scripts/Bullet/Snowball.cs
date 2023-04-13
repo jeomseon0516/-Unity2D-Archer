@@ -83,7 +83,7 @@ namespace OBJECT
                     bullet.SetNextJump(power * 0.5f);
                 }
             }
-            static public void Targeting(GameObject ball, Vector2 createPosition, float radian)
+            static public void Targeting(GameObject ball, Vector2 direction, Vector2 createPosition, float radian)
             {
                 float plusRadian = Default.ConvertFromAngleToRadian(30.0f);
 
@@ -95,7 +95,7 @@ namespace OBJECT
                     obj.position = createPosition;
                     bullet.SetSpeed(20);
                     bullet.SetNextJump(10);
-                    bullet.SetDirection(new Vector2(Mathf.Cos(radian + plusRadian * i), Mathf.Sin(radian + plusRadian * i)));
+                    bullet.SetDirection(new Vector2(Mathf.Cos(radian + plusRadian * i), Mathf.Sin(radian + plusRadian * i)) + direction);
                 }
             }
         }

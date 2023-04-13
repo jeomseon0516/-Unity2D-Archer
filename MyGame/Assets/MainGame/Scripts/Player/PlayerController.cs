@@ -45,6 +45,48 @@ namespace OBJECT
             controller.SetDirection(dir);
         }
         /* 해당 함수는 하이어라키에서 애니메이션 이벤트로 호출되는 함수 입니다. 스크립트 내에서 상태 전환이 필요한 경우 new 키워드를 사용해 초기화 합니다. */
+        private IEnumerator Respawn()
+        {
+            yield return YieldCache.WaitForSeconds(5.0f);
+            _animator.SetTrigger("Respawn");
+            ResetPlayer();
+        }
+        protected override void ObjFixedUpdate() 
+        {
+            _animator.SetFloat("JumpSpeed", _jumpValue);
+            _playerState.Update(this); 
+        }
+        public void ResetPlayer()
+        {
+            _playerState.SetState(new RunState());
+            AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
+            _rigidbody.position = _spawnPoint;
+            _isDie = false;
+            _hp = _maxHp;
+        }
+        public bool OnStartJump()
+        {
+            if (!Input.GetKeyDown(KeyCode.Space) && _body.localPosition.y < float.Epsilon) return false; // 스페이스 바를 누르거나 공중에 띄워져있을때
+
+            _playerState.SetState(new JumpState());
+            return true;
+        }
+        protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
+        protected override void Die() { _playerState.SetState(new DieState()); }
+    }
+    public partial class PlayerController : LivingObject
+    {
+        public enum PLR_STATE
+        {
+            RUN,
+            JUMP,
+            DOUBLEJUMP,
+            DASH,
+            ATTACK,
+            HIT,
+            ACROBATIC,
+            DIE
+        }
         private void SetState(PLR_STATE state)
         {
             switch (state)
@@ -66,53 +108,17 @@ namespace OBJECT
                     break;
             }
         }
-        private IEnumerator Respawn()
-        {
-            yield return YieldCache.WaitForSeconds(5.0f);
-            _animator.SetTrigger("Respawn");
-            ResetPlayer();
-        }
-        protected override void ObjFixedUpdate() 
-        {
-            _animator.SetFloat("JumpSpeed", _jumpValue);
-            _playerState.Update(this); 
-        }
-        public void ResetPlayer()
-        {
-            _playerState.SetState(new RunState());
-            AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
-            _rigidbody.position = _spawnPoint;
-            _isDie = false;
-            _hp = _maxHp;
-        }
-        protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
-        protected override void Die() { _playerState.SetState(new DieState()); }
-    }
-    public partial class PlayerController : LivingObject
-    {
-        public enum PLR_STATE
-        {
-            RUN,
-            JUMP,
-            ATTACK,
-            HIT,
-            ACROBATIC,
-            DIE
-        }
         // Run과 Idle은 결론적으로 같은 동작을 수행하므로 따로 처리하지 않는다.
         public sealed class RunState : State<PlayerController>
         {
             public override void Update(PlayerController t)
             { 
-                float speed = t.GetFromDirectionToSpeed(t._direction); /*Mathf.Max(Mathf.Abs(t._direction.x), Mathf.Abs(t._direction.y))*/ // 최적화
+                if (t.OnStartJump())
+                    return;
+
+                float speed = t.GetFromDirectionToSpeed(t._direction);
 
                 t._animator.speed = speed > 0.0f ? speed : 1;
-
-                if (Input.GetKeyDown(KeyCode.Space) || t._body.localPosition.y > float.Epsilon) // 스페이스 바를 누르거나 공중에 띄워져있을때
-                {
-                    t._playerState.SetState(new JumpState());
-                    return;
-                }
 
                 float x = Input.GetAxisRaw("FireHorizontal");
                 float y = Input.GetAxisRaw("FireVertical");
@@ -142,18 +148,70 @@ namespace OBJECT
         public sealed class JumpState : State<PlayerController>
         {
             float _jump;
+            bool _onSpace; // 스페이스바를 누르고 있는가..
+            bool _isDoubleJump;
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
+                _jump = 8.0f;
                 t._jump = t._body.localPosition.y < float.Epsilon ? _jump : t._jump;
+                _onSpace = t._jump < float.Epsilon ? false : true;
+                _isDoubleJump = false;
                 t.AddAfterResetCoroutine("Jump", t.Jumping());
             }
             public override void Update(PlayerController t)
             {
+                AddJumpPowerOnSpace(t);
+
+                if (t._body.localPosition.y < float.Epsilon)
+                {
+                    t._playerState.SetState(new RunState());
+                    return;
+                }
+
+                if (Input.GetKeyDown(KeyCode.Space) && !_isDoubleJump)
+                {
+                    t._playerState.SetState(new DoubleJumpState(this));
+                    _isDoubleJump = true;
+                }
+            }
+            private void AddJumpPowerOnSpace(PlayerController t)
+            {
+                if (Input.GetKey(KeyCode.Space) || !_onSpace || t._jumpValue < float.Epsilon) return;
+
+                 t._jump = t._jump * 0.5f;
+                 _onSpace = false;
+            }
+            public JumpState() {}
+        }
+        public sealed class DoubleJumpState : State<PlayerController>
+        {
+            Vector2 _saveDirection;
+            JumpState _jumpState;
+            public override void Enter(PlayerController t)
+            {
+                base.Enter(t);
+                _saveDirection = Mathf.Abs(t._direction.x) > float.Epsilon || 
+                                 Mathf.Abs(t._direction.y) > float.Epsilon ? 
+                                 t._direction.normalized : t._physics.rotation.eulerAngles.y == 180.0f ? Vector2.left : Vector2.right;
+                t._animator.SetTrigger("DoubleJump");
+                t._jump += 6.0f;
+                t._speed = 10.0f;
+            }
+            public override void Update(PlayerController t)
+            {
+                t._direction = _saveDirection;
+
                 if (t._body.localPosition.y < float.Epsilon)
                     t._playerState.SetState(new RunState());
             }
-            public JumpState(float jump = 7.0f) { _jump = jump; }
+            public override void Exit(PlayerController t)
+            {
+                t._speed = 5.0f;
+                t._playerState.SetState(_jumpState);
+            }
+
+            public DoubleJumpState(JumpState jumpState) { _jumpState = jumpState; }
         }
         public sealed class AttackState : State<PlayerController>
         {
@@ -161,6 +219,7 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
+
                 t._animator.speed = t._attackSpeed;
                 t._speed = 3.5f;
 
@@ -177,6 +236,9 @@ namespace OBJECT
             }
             public override void Update(PlayerController t)
             {
+                if (t.OnStartJump())
+                    return;
+
                 Vector2 dir = new Vector2(Input.GetAxisRaw("FireHorizontal"), Input.GetAxisRaw("FireVertical"));
                 t._lookAt = dir != Vector2.zero ? _saveLookAt = dir : _saveLookAt;
             }
@@ -194,6 +256,7 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
+
                 t._animator.SetTrigger("Die");
                 t._direction = Vector2.zero;
                 t.StartCoroutine(t.Respawn());

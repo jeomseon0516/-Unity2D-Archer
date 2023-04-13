@@ -99,27 +99,8 @@ namespace OBJECT
                     t._state.SetState(new TargetingState());
                     return;
                 }
-                if (_coolTime > 0.0f) // 쿨타임일땐 처리하지 않음
-                {
-                    _coolTime -= Time.deltaTime;
-                    return;
-                }
-                if (!_isMove) // 쿨타임이 끝났고 현재 랜덤한 위치로 이동중이지 않으면?
-                {
-                    _isMove = true;
-                    _randPoint = t.RandomMovePosition();
-                }
-                else // 랜덤한 위치로 이동중일때
-                {
-                    t._direction = (_randPoint - t._physics.position).normalized;
 
-                    if (Default.GetDistance(_randPoint, t._physics.position) <= 1.0f) // 목표 위치로 이동이 끝났다면
-                    {
-                        t._direction = Vector2.zero;
-                        _coolTime = Random.Range(0.0f, 3.0f);
-                        _isMove = false;
-                    }
-                }
+                t.RunStateMethod(ref _coolTime, ref _isMove, ref _randPoint);
             }
             public IdleState() {}
         }
@@ -151,8 +132,7 @@ namespace OBJECT
                     return;
                 }
 
-                t._direction = (movePoint - myPos).normalized;
-                t._lookAt =    (targetPos - myPos).normalized;
+                t.SetLookAtAndDirection(movePoint, targetPos, myPos);
             }
             public TargetingState() {}
         }
@@ -162,9 +142,7 @@ namespace OBJECT
             public override void Enter(EnemyController t) 
             {
                 base.Enter(t);
-                t._animator.SetTrigger("Attack");
-                t._direction = Vector2.zero;
-                t._lookAt = (t._target.transform.position - t._physics.position).normalized;
+                t.SetAttackState();
             }
             public override void Exit(EnemyController t) { t.OnAttackBox(0); } // 공격 박스 off
             public AttackState() {}
@@ -229,8 +207,7 @@ namespace OBJECT
                     return;
                 }
 
-                t._direction = (movePoint - myPos).normalized;
-                t._lookAt    = (targetPos - myPos).normalized;
+                t.SetLookAtAndDirection(movePoint, targetPos, myPos);
             }
             public SkillWait() { }
         }

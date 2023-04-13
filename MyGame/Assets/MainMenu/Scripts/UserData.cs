@@ -4,9 +4,11 @@ using UnityEngine;
 
 namespace USERDATA
 {
-    static public class URL
+    static public class CommonMacro
     {
         static public string url = "https://script.google.com/macros/s/AKfycbwH9NtpHxpdVkzHcKZkynlBzDMXiGclCotvnnALR3JJnH8uxtHjLgRPxElZHMgBgAVe/exec";
+        static public string eMailCheck = @"^([a-zA-Z0-9]+)@([a-zA-Z0-9-]+)(\.[a-zA-Z0-9]+){1,}$";
+        static public string conditionsKorean = @"^[ㄱ-ㅎ가-힣ㅏ-ㅣ]";
     }
 
     [System.Serializable]
@@ -18,8 +20,8 @@ namespace USERDATA
 
         public MemberForm(int pk, string name, int gender)
         {
-            this.pk = pk;
-            this.name = name;
+            this.pk     = pk;
+            this.name   = name;
             this.gender = gender;
         }
     }
@@ -33,8 +35,8 @@ namespace USERDATA
 
         public UserInfo(int pk, string id, string password)
         {
-            this.pk = pk;
-            this.id = id;
+            this.pk       = pk;
+            this.id       = id;
             this.password = password;
         }
     }
@@ -48,20 +50,23 @@ namespace USERDATA
         public UserData(string memberForm, string userInfo)
         {
             this.memberForm = memberForm;
-            this.userInfo = userInfo;
+            this.userInfo   = userInfo;
         }
     }
 
+    // pk를 받아온다.
     [System.Serializable]
-    public class GetOkData
+    public class GetSuccessData
     {
-        public bool isOk;
+        public int pk;
+        public bool isSuccess;
         public string message;
 
-        public GetOkData(bool isOk, string message)
+        public GetSuccessData(int pk, bool isSuccess, string message)
         {
-            this.isOk = isOk;
-            this.message = message;
+            this.pk        = pk;
+            this.isSuccess = isSuccess;
+            this.message   = message;
         }
     }
 }

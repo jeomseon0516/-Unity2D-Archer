@@ -28,6 +28,14 @@ public class MessageBoxController : MonoBehaviour, IPointerUpHandler, IPointerDo
     public void SetText(string text) { _text.text = text; }
     public void SetTextColor(Color color) { _text.color = color; }
 
+    static public bool ErrorMessage(MessageBoxController mgBox, bool condition, string message)
+    {
+        if (!condition) return false;
+
+        mgBox.gameObject.SetActive(true);
+        SetMgBox(mgBox, message, Color.red, true);
+        return true;
+    }
     static public void SetMgBox(MessageBoxController mgBox, string text, Color color, bool isLoad)
     {
         mgBox._isLoad = isLoad;

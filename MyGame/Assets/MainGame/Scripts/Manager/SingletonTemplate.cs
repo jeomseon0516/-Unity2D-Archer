@@ -7,10 +7,10 @@ using SINGLETON;
  */
 namespace SINGLETON
 {
-    public abstract class Singleton : MonoBehaviour { protected abstract void Awake(); }
+    public interface Singleton { protected void Awake() {} }
 }
 
-public abstract class SingletonTemplate<T> : Singleton where T : Singleton
+public abstract class SingletonTemplate<T> : MonoBehaviour, Singleton where T : MonoBehaviour
 {
     private static T _instance = null;
     private static object _obj = new object();
@@ -33,7 +33,7 @@ public abstract class SingletonTemplate<T> : Singleton where T : Singleton
 
         return _instance;
     }
-    protected sealed override void Awake()
+    protected void Awake()
     {
         if (FindObjectOfType<T>() != this)
         {

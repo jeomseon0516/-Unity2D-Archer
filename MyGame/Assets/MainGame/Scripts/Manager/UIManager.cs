@@ -20,7 +20,7 @@ public class UIManager : SingletonTemplate<UIManager>
         }
         catch (System.NullReferenceException ex)
         {
-            print("Catch : " + ex.Message + "해당 키 값이 존재하지 않습니다.");
+            print("Catch : " + ex.Message + "해당 밸류 값이 존재하지 않습니다.");
             return null;
         }
     }
@@ -32,7 +32,7 @@ public class UIManager : SingletonTemplate<UIManager>
         }
         catch (System.NullReferenceException ex)
         {
-            print("Catch : " + ex.Message + "해당 키 값이 존재하지 않습니다.");
+            print("Catch : " + ex.Message + "해당 밸류 값이 존재하지 않습니다.");
         }
     }
 
