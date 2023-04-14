@@ -529,8 +529,8 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 744243307}
-        m_TargetAssemblyTypeName: RegistController, Assembly-CSharp
-        m_MethodName: OnRegist
+        m_TargetAssemblyTypeName: RegisterController, Assembly-CSharp
+        m_MethodName: OnRegister
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

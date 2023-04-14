@@ -8,12 +8,12 @@ using USERDATA;
 
 public class RegisterController : MonoBehaviour
 {
+    private MessageBoxController _mgBox;
     private InputField _confirmPassword;
     private InputField _password;
     private InputField _id;
     private InputField _nickName;
     private Dropdown   _selectGender;
-    private MessageBoxController _mgBox;
 
     private void Start()
     {

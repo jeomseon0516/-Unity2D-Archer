@@ -44,8 +44,6 @@ public class DataManager : SingletonTemplate<DataManager>
 
         _value = Default.GetIntParseString(form.age);
         _userName = form.name;
-
-        print(jsonData);
     }
     private void Update()
     {

@@ -16,12 +16,13 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
         if (_isCreate) return;
         _isCreate = true;
         AddObject(OBJECTID.PLAYER,  "Player",     "Prefabs/Player/Player");
-        AddObject(OBJECTID.ENEMY,   "Prefab",    "Prefabs/Enemy/Enemy");
-        AddObject(OBJECTID.ENEMY,   "Bullet",    "Prefabs/Enemy/EnemyBullet");
-        AddObject(OBJECTID.PENGUIN, "Bullet",    "Prefabs/Enemy/Penguin/SnowBall");
-        AddObject(OBJECTID.PLAYER,  "Bullet",    "Prefabs/Player/Bullet");
-        AddObject(OBJECTID.FX,      "Smoke",     "Prefabs/FX/Smoke");
-        AddObject(OBJECTID.FX,      "HitEffect", "Prefabs/FX/HitEffect");
+        AddObject(OBJECTID.PLAYER,  "DeathSmoke", "Prefabs/Player/DeathSmoke");
+        AddObject(OBJECTID.PLAYER,  "Bullet",     "Prefabs/Player/Bullet");
+        AddObject(OBJECTID.ENEMY,   "Prefab",     "Prefabs/Enemy/Enemy");
+        AddObject(OBJECTID.ENEMY,   "Bullet",     "Prefabs/Enemy/EnemyBullet");
+        AddObject(OBJECTID.PENGUIN, "Bullet",     "Prefabs/Enemy/Penguin/SnowBall");
+        AddObject(OBJECTID.FX,      "Smoke",      "Prefabs/FX/Smoke");
+        AddObject(OBJECTID.FX,      "HitEffect",  "Prefabs/FX/HitEffect");
     }
     private void AddObject(OBJECTID id, string key, string path)
     {

@@ -174,9 +174,12 @@ namespace OBJECT
         /*
          * 해당 함수를 통해서만 _addForce에 접근 할 수 있습니다.
          */
-        private IEnumerator CoroutineAddForce(Vector2 force)
+        private IEnumerator CoroutineAddForce(Vector2 force, float limit)
         {
-            _addForce += force; // addForce는 중첩되서 들어올 수 있으므로
+            _addForce += limit < float.Epsilon ? force : 
+                         new Vector2(Mathf.Abs(_addForce.x) > limit ? 0.0f : force.x, 
+                                     Mathf.Abs(_addForce.y) > limit ? 0.0f : force.y); // addForce는 중첩되서 들어올 수 있으므로
+
             while (Mathf.Abs(_addForce.x) > float.Epsilon ||
                    Mathf.Abs(_addForce.y) > float.Epsilon)
             {
@@ -189,14 +192,15 @@ namespace OBJECT
 
                 addForceX -= 2.0f * Time.fixedDeltaTime;
                 addForceY -= 2.0f * Time.fixedDeltaTime;
+
                 _addForce = new Vector2(addForceX * xDir, addForceY * yDir);
 
                 yield return YieldCache.WaitForFixedUpdate;
             }
         }
-        protected void AddForce(Vector2 force)
+        protected void AddForce(Vector2 force, float limit = 0.0f)
         {
-            AddAfterResetCoroutine("AddForce", CoroutineAddForce(force));
+            AddAfterResetCoroutine("AddForce", CoroutineAddForce(force, limit));
         }
         // 하나의 객체에 공격이 여러번 호출 되는 것을 위한 처리
         protected bool CheckCollision(GameObject colObj)

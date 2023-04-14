@@ -208,6 +208,7 @@ namespace OBJECT
         {
             float _power;
             int _atk;
+            Vector2 _movePoint;
             public override void Enter(PenguinController t) 
             { 
                 base.Enter(t);
@@ -215,6 +216,9 @@ namespace OBJECT
                 t._jump = Random.Range(8.0f, 15.0f);
                 _power = Random.Range(20, 32);
                 t.StartCoroutine(t.Jumping(_power));
+
+                Transform targetTransform = t._target.GetPhysics();
+                _movePoint = new Vector2(targetTransform.position.x, targetTransform.position.y - t._target.GetOffsetY());
 
                 t._direction = Vector2.zero;
                 _atk = t._atk;
@@ -224,10 +228,10 @@ namespace OBJECT
             {
                 base.Enter(t);
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
-                float distance = Default.GetDistance(targetPos, myPos);
+                float distance = Default.GetDistance(_movePoint, myPos);
 
                 t._lookAt = (targetPos - myPos).normalized;
-                t.FastChaseTarget(myPos, targetPos, distance);
+                t.FastChaseTarget(myPos, _movePoint, distance);
 
                 if (!t._attackBox.activeSelf && t._jumpValue < float.Epsilon) //낙하하는 타이밍에 어택박스를 켜준다.
                     t.SetAttackBox(1, new Vector2(0, -1.63f), new Vector2(1.5f, 1.02f));
@@ -262,7 +266,7 @@ namespace OBJECT
                 t._atk = 10;
 
                 float distance = Default.GetDistance(_movePoint, myPos);
-                _movePoint += (_movePoint - myPos).normalized * distance * 60.0f * 0.01f;
+                _movePoint += (_movePoint - myPos).normalized * distance * 30.0f * 0.01f;
             }
             public override void Update(PenguinController t) 
             {
@@ -327,7 +331,7 @@ namespace OBJECT
 
                 Vector2 movement = new Vector2(x, y);
 
-                t.AddForce(movement);
+                t.AddForce(movement, 10.0f);
             }
             public override void Exit(PenguinController t) 
             {
