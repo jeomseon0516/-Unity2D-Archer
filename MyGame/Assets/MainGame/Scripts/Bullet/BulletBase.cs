@@ -22,6 +22,16 @@ namespace OBJECT
             yield return YieldCache.WaitForSeconds(_time);
             _hp = 0;
         }
+        protected internal override void TriggerAction(Collider2D col)
+        {
+            if (LayerMask.LayerToName(col.gameObject.layer).Contains("Wall")) return;
+            TriggerCollision(col, _colTransform.gameObject);
+        }
+        protected override void OnCollision(ObjectBase obj, Collider2D col)
+        {
+            Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
+            obj.TakeDamage(_atk, force * 2);
+        }
         protected override void ObjFixedUpdate() { BulletPattern(); }
         protected virtual void BulletPattern() { _lookAt = Vector2.zero; }
         protected abstract void BulletInit();

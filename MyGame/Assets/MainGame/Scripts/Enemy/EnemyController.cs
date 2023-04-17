@@ -34,28 +34,6 @@ namespace OBJECT
                     tPhysicsTransform.position.y + skill.GetOffsetY() - _target.GetOffsetY());
             }
         }
-        // TODO : HitAnimation재생
-        private void SetState(ENEMY_STATE state)
-        {
-            switch (state)
-            {
-                case ENEMY_STATE.IDLE:
-                    _state.SetState(new IdleState());
-                    break;
-                case ENEMY_STATE.TARGETING:
-                    _state.SetState(new TargetingState());
-                    break;
-                case ENEMY_STATE.HIT:
-                    _state.SetState(new HitState());
-                    break;
-                case ENEMY_STATE.ATTACK:
-                    _state.SetState(new AttackState());
-                    break;
-                case ENEMY_STATE.DIE:
-                    _state.SetState(new DieState());
-                    break;
-            }
-        }
         // 플레이어에게 피격 후 추적 중일때 추적 쿨타임
         protected override void Die()
         {
@@ -79,6 +57,27 @@ namespace OBJECT
             SKILL_WAIT,
             HIT,
             DIE
+        }
+        private void SetState(ENEMY_STATE state)
+        {
+            switch (state)
+            {
+                case ENEMY_STATE.IDLE:
+                    _state.SetState(new IdleState());
+                    break;
+                case ENEMY_STATE.TARGETING:
+                    _state.SetState(new TargetingState());
+                    break;
+                case ENEMY_STATE.HIT:
+                    _state.SetState(new HitState());
+                    break;
+                case ENEMY_STATE.ATTACK:
+                    _state.SetState(new AttackState());
+                    break;
+                case ENEMY_STATE.DIE:
+                    _state.SetState(new DieState());
+                    break;
+            }
         }
         /* -----------------------------------------------------------Idle-------------------------------------------------- */
         public sealed class IdleState : State<EnemyController>

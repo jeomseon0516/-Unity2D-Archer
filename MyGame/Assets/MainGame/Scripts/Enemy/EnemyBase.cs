@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using OBSERVER;
+using PUB_SUB;
 
 namespace OBJECT
 {
-    public abstract partial class EnemyBase : LivingObject, ISubject
+    public abstract partial class EnemyBase : LivingObject
     {
         protected GameObject _attackBox;
+        protected EnemyStatsPublisher _statsPublisher;
         protected ObjectBase _target;
         protected float _searchDis;
         protected float _attackDis;
@@ -17,10 +18,8 @@ namespace OBJECT
         protected override void Init()
         {
             base.Init();
-
+            
             CheckInComponent(PlayerManager.GetInstance().GetInGamePlayer().TryGetComponent(out _target));
-            CheckInComponent(_body.Find("HealthCanvas").Find("HpBar").TryGetComponent(out IEnemyObserver bar));
-            RegisterObserver(bar);
 
             _attackBox = _body.Find("AttackBox").gameObject;
             _attackBox.gameObject.AddComponent<AttackBox>().SetObjectBase(this);
@@ -30,6 +29,14 @@ namespace OBJECT
             _attackDis = 1.5f;
             _hp = _maxHp = 5;
         }
+        private void Start()
+        {
+            CheckInComponent(_body.Find("HealthCanvas").Find("HpBar").TryGetComponent(out IEnemyStatsSubscriber bar));
+
+            _statsPublisher = new EnemyStatsPublisher();
+            _statsPublisher.RegisterSubscriber(bar);
+            _statsPublisher.UpdateMaxHp(_maxHp);
+        }
         // 플레이어에게 피격 후 추적 중일때 추적 쿨타임
         protected IEnumerator TargetingObject()
         {
@@ -37,7 +44,7 @@ namespace OBJECT
             yield return YieldCache.WaitForSeconds(10.0f);
             _isHunting = false;
         }
-        public void OnAttackBox(float isOn)
+        public override void OnAttackBox(float isOn)
         {
             bool on = isOn > 0.0f ? true : false;
             _attackBox.SetActive(on);
@@ -119,36 +126,56 @@ namespace OBJECT
             _direction = (movePoint - myPos).normalized;
             _lookAt    = (targetPos - myPos).normalized;
         }
-        protected override void ObjUpdate() { NotifyObservers(); }
+        protected override void ObjUpdate() { _statsPublisher.UpdateHpAndAngle(_hp, _physics.rotation.eulerAngles.y); }
         protected override void GetDamageAction(int damage) { AddAfterResetCoroutine("Targeting", TargetingObject()); }
     }
 
-    public abstract partial class EnemyBase : LivingObject, ISubject
+    public class EnemyStatsPublisher
     {
-        List<IEnemyObserver> _observers = new List<IEnemyObserver>();
+        List<IEnemyStatsSubscriber> _statsSubscribers = new List<IEnemyStatsSubscriber>();
+        int _hp, _maxHp;
+        float _angle;
 
-        public void NotifyObservers()
+        public void UpdateHp(int hp)
         {
-            for (int i = 0; i < _observers.Count; ++i) { _observers[i].UpdateData(this); }
-        }
-        public void RegisterObserver(IEnemyObserver observer) 
-        {
-            if (_observers.Contains(observer)) return;
-            _observers.Add(observer);
-        }
-        public void RemoveObserver(IEnemyObserver observer) 
-        {
-            if (!_observers.Contains(observer)) return;
-            _observers.Remove(observer);
-        }
+            _hp = hp;
 
-        public void RegisterObserver(IObserver observer) { }
-        public void RemoveObserver(IObserver observer) {}
+            for (int i = 0; i < _statsSubscribers.Count; ++i)
+                _statsSubscribers[i].OnUpdateHp(_hp);
+        }
+        public void UpdateMaxHp(int maxHp)
+        {
+            _maxHp = maxHp;
+
+            for (int i = 0; i < _statsSubscribers.Count; ++i)
+                _statsSubscribers[i].OnUpdateMaxHp(_maxHp);
+        }
+        public void UpdateHpAndAngle(int hp, float angle)
+        {
+            _hp = hp;
+            _angle = angle;
+
+            for (int i = 0; i < _statsSubscribers.Count; ++i)
+            {
+                _statsSubscribers[i].OnUpdateHp(_hp);
+                _statsSubscribers[i].OnUpdateAngle(_angle);
+            }
+        }
+        public void RegisterSubscriber(IEnemyStatsSubscriber statsSubscriber) 
+        {
+            if (_statsSubscribers.Contains(statsSubscriber)) return;
+            _statsSubscribers.Add(statsSubscriber);
+        }
+        public void RemoveSubscriber(IEnemyStatsSubscriber statsSubscriber) 
+        {
+            if (!_statsSubscribers.Contains(statsSubscriber)) return;
+            _statsSubscribers.Remove(statsSubscriber);
+        }
     }
- 
-    public interface IEnemyObserver : IObserver
+
+    public interface IAngleSubscriber
     {
-        public void UpdateData(int hp, int maxHp);
-        public void UpdateData(ObjectBase obj) {}
+        public void OnUpdateAngle(float angle);
     }
+    public interface IEnemyStatsSubscriber : IHpSubscriber, IAngleSubscriber {}
 }

@@ -3,38 +3,34 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using OBJECT;
-using OBSERVER;
 
-public partial class EnemyHpBar : MonoBehaviour, IEnemyObserver
+public partial class EnemyHpBar : MonoBehaviour, IEnemyStatsSubscriber
 {
-    Slider _slider;
+    private Slider _slider;
 
-    private void Awake() { _slider = transform.GetComponent<Slider>(); }
+    private void Awake() 
+    { 
+        TryGetComponent(out _slider);
+        gameObject.SetActive(false);
+    }
 }
 
-public partial class EnemyHpBar : MonoBehaviour, IEnemyObserver
+public partial class EnemyHpBar : MonoBehaviour, IEnemyStatsSubscriber
 {
-    public void UpdateData(int hp, int maxHp)
+    public void OnUpdateAngle(float angle)
     {
-        _slider.maxValue = maxHp;
-        _slider.value = hp;
-    }
-    public void UpdateData(ObjectBase obj)
-    {
-        if (!gameObject.activeSelf)
-        {
-            if (obj.GetMaxHp() <= obj.GetHp()) return;
-            gameObject.SetActive(true);
-        }
-
-        _slider.maxValue = obj.GetMaxHp();
-        _slider.value    = obj.GetHp();
-
-        Quaternion rotation = obj.transform.rotation;
-        rotation.eulerAngles = rotation.eulerAngles.y == 180 ? Vector3.zero : new Vector3(0.0f, 180.0f, 0.0f);
+        Quaternion rotation = transform.rotation;
+        rotation.eulerAngles = angle == 180 ? Vector3.zero : new Vector3(0.0f, 180.0f, 0.0f);
 
         transform.localRotation = rotation;
     }
-    public void UpdateData(ISubject obj) {}
+    public void OnUpdateHp(int hp) 
+    {
+        if (!gameObject.activeSelf && hp < _slider.maxValue)
+            gameObject.SetActive(true);
+
+        _slider.value = hp; 
+    }
+    public void OnUpdateMaxHp(int maxHp) { _slider.maxValue = maxHp; }
 }
 

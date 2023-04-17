@@ -350,8 +350,6 @@ namespace OBJECT
         public sealed class DieState : State<PenguinController>
         {
             public override void Enter(PenguinController t) { base.Enter(t); }
-            public override void Update(PenguinController t) { }
-            public override void Exit(PenguinController t) { }
         }
         public sealed class SlideAttackWait : State<PenguinController>
         {

@@ -44,8 +44,7 @@ namespace OBJECT
         protected override void OnCollision(ObjectBase obj, Collider2D col)
         {
             --_hp;
-            Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
-            obj.TakeDamage(_atk, force * 2);
+            base.OnCollision(obj, col);
             CreateEffect(new Vector2(col.transform.position.x, transform.position.y), _hitEffect);
             ActionCamera(Camera.main.gameObject);
         }

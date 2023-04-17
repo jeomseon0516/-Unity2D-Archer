@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using OBSERVER;
+using PUB_SUB;
 
 /*
  * 코드 가독성을 위해 partial키워드로 분리
@@ -11,27 +11,30 @@ namespace OBJECT
     public partial class PlayerController : LivingObject
     {
         private StateMachine<PlayerController> _playerState;
-        private GameObject _deathSmoke;
+        private GameObject _groudSmoke;
+        private GameObject _dogSkill;
         private Vector2 _spawnPoint;
         private float _attackSpeed;
+        private int _stamina, _maxStamina;
         private int _jumpCount;
-        private bool _isDash;
         protected override void Init()
         {
             _id = OBJECTID.PLAYER;
             base.Init();
+            _stamina = _maxStamina = 30;
             _maxHp = _hp = 50;
             _attackSpeed = 4;
             _speed = 5.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
-            _deathSmoke = ResourcesManager.GetInstance().GetObjectToKey(_id, "DeathSmoke");
+            _groudSmoke = ResourcesManager.GetInstance().GetObjectToKey(_id, "GroundSmoke");
+            _dogSkill = ResourcesManager.GetInstance().GetObjectToKey(_id, "DogSkill");
             _spawnPoint = _physics.position;
             _jumpCount = 0;
-            _isDash = false;
 
             AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
+            AddAfterResetCoroutine("AddStamina", AddStamina());
         }
         protected override void Run()
         {
@@ -45,12 +48,24 @@ namespace OBJECT
             Transform objTransform = Instantiate(_bullet).transform;
             objTransform.position = _rigidbody.position;
 
+            //....
             CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out DefaultBullet controller));
             // 현재 방향키를 어떤 방향으로 누르고 있는지를 확인해서 쏠 방향을 구하고 이동중인 방향만큼 더 해주면 총알이 플레이어의 움직임의 영향을 받게 된다.
-            Vector2 dir = _lookAt.normalized + _direction * 0.25f;
-            controller.SetDirection(dir);
+            controller.SetDirection(_lookAt.normalized + _direction * 0.25f);
         }
-        /* 해당 함수는 하이어라키에서 애니메이션 이벤트로 호출되는 함수 입니다. 스크립트 내에서 상태 전환이 필요한 경우 new 키워드를 사용해 초기화 합니다. */
+        private void CreateDogSkill()
+        {
+            Transform objTransform = Instantiate(_dogSkill).transform;
+
+            CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out DogSkill dog));
+
+            float myPosY = _physics.position.y - _offsetY;
+            float bulletPosY = dog.GetPhysics().position.y - dog.GetOffsetY();
+            float difference = bulletPosY - myPosY;
+
+            objTransform.position = _physics.position;
+            dog.SetDirection(GetFromAngleToDirection() * 0.25f);
+        }
         private IEnumerator Respawn()
         {
             yield return YieldCache.WaitForSeconds(5.0f);
@@ -62,17 +77,27 @@ namespace OBJECT
             _animator.SetFloat("JumpSpeed", _jumpValue);
             _playerState.Update(this);
         }
+        private IEnumerator AddStamina()
+        {
+            while (true)
+            {
+                if (_stamina < _maxStamina)
+                    ++_stamina;
+
+                yield return YieldCache.WaitForSeconds(0.5f);
+            }
+        }
         private bool PlayDash()
         {
-            if (!Input.GetKeyDown(KeyCode.LeftShift)) return false;
+            if (!Input.GetKeyDown(KeyCode.LeftShift) || _stamina < 10) return false;
 
             _playerState.SetState(new DashState());
-            return false;
+            return true;
         }
-
         public void ResetPlayer()
         {
             AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
+            AddAfterResetCoroutine("AddStamina", AddStamina());
             _playerState.SetState(new RunState());
             _rigidbody.position = _spawnPoint;
             _isDie = false;
@@ -85,14 +110,55 @@ namespace OBJECT
             _playerState.SetState(new JumpState());
             return true;
         }
-        
+        private void FromButtonOnAttack(float horizontal, float vertical)
+        {
+            if (Mathf.Abs(horizontal) < float.Epsilon && Mathf.Abs(vertical) < float.Epsilon) return;
+
+            Vector2 attackDir = new Vector2(horizontal, vertical);
+            attackDir.x = horizontal == 0 ? _direction.x : horizontal;
+            _lookAt = attackDir;
+
+            _animator.SetTrigger("Attack");
+            _playerState.SetState(new AttackState(_lookAt));
+        }
+        private void FromButtonOnDogAttack()
+        {
+            if (!Input.GetKeyDown(KeyCode.Q)) return;
+
+            _animator.SetTrigger("DogSkill");
+            _playerState.SetState(new DogAttackState());
+        }
+        private void CreateGroundSmoke()
+        {
+            Transform deathSmoke = Instantiate(_groudSmoke).transform;
+
+            float xDir = _direction.x != 0 ? _direction.x < 0 ? 1 : -1 :
+                                             _physics.rotation.eulerAngles.y == 180.0f ? 1 : -1;
+            // Rotation
+            Quaternion rotation = deathSmoke.rotation;
+            rotation.eulerAngles = new Vector2(rotation.x, xDir == 1 ? 180.0f : 0.0f);
+            deathSmoke.rotation = rotation;
+
+            // Position
+            Vector2 position = new Vector2(_body.position.x, _body.position.y - _offsetY);
+            deathSmoke.position = position + new Vector2(0.5f * xDir, 0.0f);
+        }
         private Vector2 GetFromAngleAndSpeedToDirection()
         {
-            return Mathf.Abs(_direction.x) > float.Epsilon || Mathf.Abs(_direction.y) > float.Epsilon ?
-                             _direction.normalized : _physics.rotation.eulerAngles.y == 180.0f ? Vector2.left : Vector2.right;
+            return CheckMovePlayer() ? _direction.normalized : GetFromAngleToDirection();
+        }
+        private bool CheckMovePlayer()
+        {
+            return Mathf.Abs(_direction.x) > float.Epsilon || Mathf.Abs(_direction.y) > float.Epsilon;
+        }
+        private Vector2 GetFromAngleToDirection()
+        {
+            return _physics.rotation.eulerAngles.y == 180.0f ? Vector2.left : Vector2.right;
         }
         protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
         protected override void Die() { _playerState.SetState(new DieState()); }
+        public int GetStamina() { return _stamina; }
+        public int GetMaxStamina() { return _maxStamina; }
     }
     public partial class PlayerController : LivingObject
     {
@@ -104,11 +170,13 @@ namespace OBJECT
             DASH,
             ATTACK,
             HIT,
-            ACROBATIC,
             DIE
         }
+        /* 해당 함수는 하이어라키에서 애니메이션 이벤트로 호출되는 함수 입니다. 스크립트 내에서 상태 전환이 필요한 경우 new 키워드를 사용해 초기화 합니다. */
         private void SetState(PLR_STATE state)
         {
+            if (_isDie) return;
+
             switch (state)
             {
                 case PLR_STATE.RUN:
@@ -142,15 +210,8 @@ namespace OBJECT
                 float x = Input.GetAxisRaw("FireHorizontal");
                 float y = Input.GetAxisRaw("FireVertical");
 
-                Vector2 attackDir = new Vector2(x, y);
-
-                if (attackDir != Vector2.zero)
-                {
-                    attackDir.x = x == 0 ? t._direction.x : x;
-                    t._lookAt = attackDir;
-                    t._animator.SetTrigger("Attack");
-                    t._playerState.SetState(new AttackState(t._lookAt));
-                }
+                t.FromButtonOnAttack(x, y);
+                t.FromButtonOnDogAttack();
             }
             public override void Exit(PlayerController t) { t._animator.speed = 1; }
             public RunState() { }
@@ -159,13 +220,10 @@ namespace OBJECT
         {
             public override void Enter(PlayerController t)
             {
-                t._animator.SetTrigger("Hit");
                 base.Enter(t);
+                t._animator.SetTrigger("Hit");
             }
-            public override void Update(PlayerController t)
-            {
-                if (t.PlayDash()) return;
-            }
+            public override void Update(PlayerController t) { if (t.PlayDash()) return; }
             public HitState() { }
         }
         public sealed class JumpState : State<PlayerController>
@@ -176,8 +234,10 @@ namespace OBJECT
             {
                 base.Enter(t);
                 _jump = 8.0f;
+
                 t._jump = t._body.localPosition.y < float.Epsilon ? _jump : t._jump;
                 _onSpace = t._jump < float.Epsilon ? false : true;
+
                 t.AddAfterResetCoroutine("Jump", t.Jumping());
             }
             public override void Update(PlayerController t)
@@ -192,7 +252,6 @@ namespace OBJECT
                     t._jumpCount = 0;
                     return;
                 }
-
                 if (Input.GetKeyDown(KeyCode.Space) && t._jumpCount <= 0)
                     t._playerState.SetState(new DoubleJumpState());
             }
@@ -235,16 +294,24 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
+
                 _saveDirection = t.GetFromAngleAndSpeedToDirection();
-                t._animator.SetTrigger("Dash");
                 _keepSpeed = t._speed;
-                t._speed *= 4;
+
+                t._stamina -= 10;
+
+                if (t._stamina < 0)
+                    t._stamina = 0;
+
+                t._animator.SetTrigger("Dash");
+                t._speed *= 3;
+                t._jump = 0.0f;
+
+                t.CreateGroundSmoke();
+                t.FindCoroutineStop("Jump");
             }
             public override void Update(PlayerController t) { t._direction = _saveDirection; }
-            public override void Exit(PlayerController t)
-            {
-                t._speed = _keepSpeed;
-            }
+            public override void Exit(PlayerController t) { t._speed = _keepSpeed; }
             public DashState() {}
         }
         public sealed class AttackState : State<PlayerController>
@@ -271,9 +338,10 @@ namespace OBJECT
             public override void Update(PlayerController t)
             {
                 if (t.OnStartJump() || t.PlayDash()) return;
-
+               
                 Vector2 dir = new Vector2(Input.GetAxisRaw("FireHorizontal"), Input.GetAxisRaw("FireVertical"));
                 t._lookAt = dir != Vector2.zero ? _saveLookAt = dir : _saveLookAt;
+                t.FromButtonOnDogAttack();
             }
             public override void Exit(PlayerController t)
             {
@@ -283,6 +351,22 @@ namespace OBJECT
             }
             public AttackState() { _saveLookAt = Vector2.zero; }
             public AttackState(Vector2 dir) { _saveLookAt = dir; }
+        }
+        public sealed class DogAttackState : State<PlayerController>
+        {
+            public override void Enter(PlayerController t)
+            {
+                base.Enter(t);
+                t.CreateDogSkill();
+                t._speed *= 0.5f;
+            }
+            public override void Update(PlayerController t) 
+            {
+                t._lookAt = Vector2.zero;
+                if (t.OnStartJump() || t.PlayDash()) return; 
+            }
+            public override void Exit(PlayerController t) { t._speed = 5.0f; }
+            public DogAttackState() {}
         }
         public sealed class DieState : State<PlayerController>
         {

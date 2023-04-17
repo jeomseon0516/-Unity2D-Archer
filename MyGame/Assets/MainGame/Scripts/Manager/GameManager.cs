@@ -12,10 +12,13 @@ public class GameManager : SingletonTemplate<GameManager>
         PlayerManager.GetInstance().SetActivePlayer(true);
         UIManager.GetInstance().SetActiveUI("MainMenu", false);
         UIManager.GetInstance().SetActiveUI("PlayerHpBar", true);
+        UIManager.GetInstance().SetActiveUI("PlayerStaminaBar", true);
     }
     public void ExitGame()
     {
         UIManager.GetInstance().SetActiveUI("MainMenu", true);
+        UIManager.GetInstance().SetActiveUI("PlayerHpBar", false);
+        UIManager.GetInstance().SetActiveUI("PlayerStaminaBar", false);
         EnemyManager.GetInstance().SetIsMakeEnemy(false);
         EnemyManager.GetInstance().AllRemoveEnemy();
         PlayerManager.GetInstance().SetActivePlayer(false);

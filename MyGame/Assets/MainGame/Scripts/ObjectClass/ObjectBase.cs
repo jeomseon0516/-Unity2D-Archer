@@ -151,6 +151,11 @@ namespace OBJECT
             _body.localPosition = Vector2.zero;
         }
         /* 점프를 하지 않는 객체가 있으니 객체별로 따로 호출 해줍니다. */
+        public virtual void OnAttackBox(float isOn)
+        {
+            bool on = isOn > 0.0f ? true : false;
+            _colTransform.gameObject.SetActive(on);
+        }
         protected IEnumerator CheckFallingOrJumping()
         {
             while (true)
@@ -169,6 +174,7 @@ namespace OBJECT
                 _sprRen.color = new Color(keepColor.r, keepColor.g, keepColor.b, _sprRen.color.a - 0.01f);
                 yield return YieldCache.WaitForFixedUpdate;
             }
+
             DestroyObj();
         }
         /*
@@ -207,6 +213,7 @@ namespace OBJECT
         {
             for (int i = 0; i < _colList.Count; ++i)
             {
+                // ColList에 있는 오브젝트가 죽어서 삭제되었다면 제거 해준다.
                 if (ReferenceEquals(_colList[i], null) || !_colList[i])
                 {
                     _colList.RemoveAt(i);

@@ -21,16 +21,10 @@ namespace OBJECT
                 _speed = 5.0f;
                 StartCoroutine(CheckFallingOrJumping());
             }
-            protected internal override void TriggerAction(Collider2D col)
-            {
-                if (LayerMask.LayerToName(col.gameObject.layer).Contains("Wall")) return;
-                TriggerCollision(col, _colTransform.gameObject);
-            }
             protected override void OnCollision(ObjectBase obj, Collider2D col)
             {
                 DestroyObj();
-                Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
-                obj.TakeDamage(_atk, force * 2);
+                base.OnCollision(obj, col);
             }
             protected override void Die()
             {
