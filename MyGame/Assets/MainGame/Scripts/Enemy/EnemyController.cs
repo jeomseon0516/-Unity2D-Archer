@@ -87,8 +87,6 @@ namespace OBJECT
                     break;
             }
         }
-        /* -----------------------------------------------------------Idle-------------------------------------------------- */
-
         public sealed class SkillState : State<EnemyController>
         {
             public override void Enter(EnemyController t)
@@ -99,7 +97,6 @@ namespace OBJECT
                 t._lookAt = (t._target.transform.position - t._physics.position).normalized;
             }
             public override void Exit(EnemyController t) { t.StartCoroutine(t.CoolTime(t.SetUseSkill, 5.0f)); }
-            public SkillState() {}
         }
         /* -----------------------------------------------------------Hit-------------------------------------------------- */
         public sealed class HitState : State<EnemyController>
@@ -110,9 +107,7 @@ namespace OBJECT
                 t._animator.SetTrigger("Hit");
                 t._direction = Vector2.zero;
             }
-            public HitState() { }
         }
-
         public sealed class SkillWait : State<EnemyController>
         {
             float _yTemp;
@@ -129,28 +124,8 @@ namespace OBJECT
                     return;
                 }
 
-                t.SkillWaitMethod
-
-                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
-
-                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
-                Vector2 movePoint = new Vector2(targetPos.x + Random.Range(4.0f, 6.0f) * xDir, _yTemp);
-
-                if (Default.GetDistance(movePoint, myPos) <= 1.0f)
-                {
-                    t._state.SetState(new SkillState());
-                    return;
-                }
-
-                if (t.CheckAttack(t, new Vector2(targetPos.x + 1.5f * xDir, targetPos.y), myPos))
-                {
-                    t._state.SetState(new AttackState());
-                    return;
-                }
-
-                t.SetLookAtAndDirection(movePoint, targetPos, myPos);
+                t.CheckAttackAndSkillWait(Vector2.zero, Random.Range(4.0f, 6.0f), _yTemp);
             }
-            public SkillWait() { }
         }
     }
 }

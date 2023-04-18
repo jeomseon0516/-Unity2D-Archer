@@ -76,6 +76,7 @@ namespace OBJECT
         private void SetAttackBox(float onBox, Vector2 offset, Vector2 size)
         {
             OnAttackBox(onBox);
+
             _boxCol.offset = offset;
             _boxCol.size   = size;
         }
@@ -262,10 +263,11 @@ namespace OBJECT
                 _chaseTime -= Time.fixedDeltaTime;
 
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
-                float radian = Default.GetFromPositionToRadian(targetPos, myPos);
 
                 Vector3 moveDir = (t._physics.position - _beforePosition).normalized;
+
                 float distance = Default.GetDistance(t._physics.position, _beforePosition);
+                float radian   = Default.GetFromPositionToRadian(targetPos, myPos);
 
                 if (_chaseTime < float.Epsilon)
                 {
@@ -281,9 +283,7 @@ namespace OBJECT
                 float x = t._direction.x * 10 * 0.01f;
                 float y = t._direction.y * 10 * 0.01f;
 
-                Vector2 movement = new Vector2(x, y);
-
-                t.AddForce(movement, 10.0f);
+                t.AddForce(new Vector2(x, y), 10.0f);
             }
             public override void Exit(PenguinController t) 
             {
@@ -309,8 +309,9 @@ namespace OBJECT
                 base.Enter(t);
 
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
+
                 int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
-                int yDir = Random.Range(0, 2) == 0 ? 1 : -1;
+                int yDir = Random.Range(0, 2)   == 0 ? 1 : -1;
 
                 _keepTargetPos = new Vector2(targetPos.x + Random.Range(4.0f, 6.0f) * xDir,
                                                            Random.Range(0.0f, 1.5f) * yDir); // 오프셋을 랜덤으로 구하고 위쪽 방향인지 아래쪽방향인지 랜덤으로 구한다.
@@ -323,7 +324,7 @@ namespace OBJECT
                     return;
                 }
 
-                t.SkillWaitMethod(_keepTargetPos);
+                t.CheckAttackAndSkillWait(_keepTargetPos, Random.Range(4.0f, 7.0f), _keepTargetPos.y, false);
             }
         }
         public sealed class WaitState : State<PenguinController>
@@ -335,10 +336,7 @@ namespace OBJECT
                 t._direction = Vector2.zero;
                 t.AddAfterResetCoroutine("Wait", t.Wait(_time));
             }
-            public override void Exit(PenguinController t)
-            {
-                t.ZeroForce();
-            }
+            public override void Exit(PenguinController t) { t.ZeroForce(); }
             public WaitState(float time = 1.5f) { _time = time; } 
         }
     }

@@ -11,6 +11,7 @@ namespace OBJECT
         protected EnemyStatsPublisher _statsPublisher;
 
         protected ObjectBase _target;
+
         protected float _searchDis;
         protected float _attackDis;
         protected float _attackYDis;
@@ -137,33 +138,37 @@ namespace OBJECT
             _direction = (movePoint - myPos).normalized;
             _lookAt    = (targetPos - myPos).normalized;
         }
-        protected Vector2 GetFromTargetPosToMovePoint(Vector2 myPos, Vector2 targetPos)
+        protected Vector2 GetFromTargetPosToMovePoint(Vector2 myPos, Vector2 targetPos, float offsetX)
         {
             int xDir = myPos.x - targetPos.x > 0 ? 1 : -1;
-            return new Vector2(targetPos.x + 1.5f * xDir, targetPos.y);
+            return new Vector2(targetPos.x + offsetX * xDir, targetPos.y);
         }
         // TODO : 수정할 것
-        protected void SkillWaitMethod(Vector2 destination, float yTemp)
+        protected void CheckAttackAndSkillWait(Vector2 destination, float offsetX, float yTemp, bool isTargeting = true)
         {
             GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
 
             int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
-            Vector2 movePoint = new Vector2(targetPos.x + Random.Range(4.0f, 6.0f) * xDir, yTemp);
+            Vector2 movePoint = !isTargeting ? destination : new Vector2(targetPos.x + offsetX * xDir, yTemp);
 
-            if (Default.GetDistance(destination, myPos) <= 1.0f ||
+            if (Default.GetDistance(movePoint, myPos) <= 1.0f ||
                 Default.GetDistance(targetPos, myPos) >= 20.0f)
             {
                 SetSkillState();
                 return;
             }
 
-            if (CheckAttack(this, new Vector2(targetPos.x + 1.5f * xDir, targetPos.y), myPos, _attackYDis))
+            CheckAttackAndMove(movePoint, new Vector2(targetPos.x + 1.5f * xDir, targetPos.y), targetPos, myPos);
+        }
+        protected void CheckAttackAndMove(Vector2 movePoint, Vector2 AttackPoint, Vector2 targetPos, Vector2 myPos)
+        {
+            if (CheckAttack(this, AttackPoint, myPos, _attackYDis))
             {
                 _state.SetState(new AttackState());
                 return;
             }
 
-            SetLookAtAndDirection(destination, targetPos, myPos);
+            SetLookAtAndDirection(movePoint, targetPos, myPos);
         }
         protected bool CheckTarget()
         {
@@ -205,7 +210,6 @@ namespace OBJECT
         {
             public override void Update(T t)
             {
-
                 if (!t.CheckTarget()) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
                 {
                     t._state.SetState(new IdleState());
@@ -214,18 +218,12 @@ namespace OBJECT
 
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
 
-                Vector2 movePoint = t.GetFromTargetPosToMovePoint(myPos, targetPos);
+                Vector2 movePoint = t.GetFromTargetPosToMovePoint(myPos, targetPos, 1.5f);
 
                 if (t.TargetingMethod())
                     return;
 
-                if (t.CheckAttack(t, movePoint, myPos, t._attackYDis))
-                {
-                    t._state.SetState(new AttackState());
-                    return;
-                }
-
-                t.SetLookAtAndDirection(movePoint, targetPos, myPos);
+                t.CheckAttackAndMove(movePoint, movePoint, targetPos, myPos);
             }
         }
         public sealed class AttackState : State<T>
@@ -243,7 +241,6 @@ namespace OBJECT
                 t._animator.SetTrigger("Die");
                 t._direction = Vector2.zero;
             }
-            public DieState() { }
         }
     }
     public class EnemyStatsPublisher

@@ -43,24 +43,19 @@ namespace OBJECT
             _direction = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
             base.Run();
         }
-        protected override void CreateBullet()
+        protected void CreateBullet(GameObject bullet, Vector2 position, Vector2 direction)
         {
-            Transform objTransform = Instantiate(_bullet).transform;
-            objTransform.position = _rigidbody.position;
+            Transform objTransform = Instantiate(bullet).transform;
+            objTransform.position = position;
 
             //....
-            CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out DefaultBullet controller));
+            CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out BulletBase controller));
             // 현재 방향키를 어떤 방향으로 누르고 있는지를 확인해서 쏠 방향을 구하고 이동중인 방향만큼 더 해주면 총알이 플레이어의 움직임의 영향을 받게 된다.
-            controller.SetDirection(_lookAt.normalized + _direction * 0.25f);
+            controller.SetDirection(direction);
         }
-        private void CreateDogSkill()
+        private void CreateArrow()
         {
-            Transform objTransform = Instantiate(_dogSkill).transform;
-
-            CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out DogSkill dog));
-
-            objTransform.position = _physics.position;
-            dog.SetDirection(GetFromAngleToDirection() * 0.25f);
+            CreateBullet(_bullet, _rigidbody.position, _lookAt.normalized + _direction * 0.25f);
         }
         private IEnumerator Respawn()
         {
@@ -94,8 +89,11 @@ namespace OBJECT
         {
             AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
             AddAfterResetCoroutine("AddStamina",   AddStamina());
+
             _playerState.SetState(new RunState());
+
             _rigidbody.position = _spawnPoint;
+
             _isDie = false;
             _hp = _maxHp;
         }
@@ -353,7 +351,7 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
-                t.CreateDogSkill();
+                t.CreateBullet(t._dogSkill, t._rigidbody.position, t.GetFromAngleToDirection() * 0.25f);
                 t._speed *= 0.5f;
             }
             public override void Update(PlayerController t) 
