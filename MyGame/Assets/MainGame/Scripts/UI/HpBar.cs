@@ -15,6 +15,7 @@ public partial class HpBar : UI, IHpSubscriber
     {
         _uiName = "PlayerHpBar";
         TryGetComponent(out _slider);
+
         PlayerManager.GetInstance().GetPlayerPublisher().RegisterIHpSubscriber(this);
         gameObject.SetActive(false);
     }
