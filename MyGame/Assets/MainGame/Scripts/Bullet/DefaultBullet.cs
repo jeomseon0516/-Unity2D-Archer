@@ -19,7 +19,7 @@ namespace OBJECT
         protected override void BulletInit()
         {
             Quaternion rotation = transform.rotation;
-            float radian = Default.GetPositionToRadian(_direction, Vector2.zero);
+            float radian = Default.GetFromPositionToRadian(_direction, Vector2.zero);
             float angle  = Default.ConvertFromRadianToAngle(radian);
 
             rotation.eulerAngles = new Vector3(rotation.eulerAngles.x, rotation.eulerAngles.x, angle);

@@ -22,19 +22,19 @@ namespace OBJECT
             _id = OBJECTID.PLAYER;
             base.Init();
             _stamina = _maxStamina = 30;
-            _maxHp = _hp = 50;
+            _maxHp = _hp = 5;
             _attackSpeed = 4;
             _speed = 5.0f;
             _atk = 2;
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
             _groudSmoke = ResourcesManager.GetInstance().GetObjectToKey(_id, "GroundSmoke");
-            _dogSkill = ResourcesManager.GetInstance().GetObjectToKey(_id, "DogSkill");
+            _dogSkill   = ResourcesManager.GetInstance().GetObjectToKey(_id, "DogSkill");
             _spawnPoint = _physics.position;
             _jumpCount = 0;
 
             AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
-            AddAfterResetCoroutine("AddStamina", AddStamina());
+            AddAfterResetCoroutine("AddStamina",   AddStamina());
         }
         protected override void Run()
         {
@@ -58,10 +58,6 @@ namespace OBJECT
             Transform objTransform = Instantiate(_dogSkill).transform;
 
             CheckInComponent(objTransform.Find("Body").Find("Image").TryGetComponent(out DogSkill dog));
-
-            float myPosY = _physics.position.y - _offsetY;
-            float bulletPosY = dog.GetPhysics().position.y - dog.GetOffsetY();
-            float difference = bulletPosY - myPosY;
 
             objTransform.position = _physics.position;
             dog.SetDirection(GetFromAngleToDirection() * 0.25f);
@@ -97,7 +93,7 @@ namespace OBJECT
         public void ResetPlayer()
         {
             AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
-            AddAfterResetCoroutine("AddStamina", AddStamina());
+            AddAfterResetCoroutine("AddStamina",   AddStamina());
             _playerState.SetState(new RunState());
             _rigidbody.position = _spawnPoint;
             _isDie = false;

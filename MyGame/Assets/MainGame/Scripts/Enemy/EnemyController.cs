@@ -4,9 +4,8 @@ using UnityEngine;
 
 namespace OBJECT
 {
-    public partial class EnemyController : EnemyBase
+    public partial class EnemyController : EnemyBase<EnemyController>
     {
-        private StateMachine<EnemyController> _state;
         private GameObject _skill;
         private float _skillMaxDistance;
         private bool _useSkill;
@@ -14,9 +13,6 @@ namespace OBJECT
         {
             base.Init();
             _skill = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.ENEMY, "Bullet");
-
-            _state = new StateMachine<EnemyController>();
-            _state.SetState(new IdleState());
 
             _skillMaxDistance = 8.0f;
             _useSkill = true;
@@ -28,7 +24,9 @@ namespace OBJECT
             if (Default.GetDistance(tPhysicsTransform.position, transform.position) <= _skillMaxDistance)
             {
                 Transform skillTransform = Instantiate(_skill).transform;
+
                 CheckInComponent(skillTransform.Find("Body").Find("Image").TryGetComponent(out ObjectBase skill));
+
                 skillTransform.position = new Vector2(
                     tPhysicsTransform.position.x + 0.15f,
                     tPhysicsTransform.position.y + skill.GetOffsetY() - _target.GetOffsetY());
@@ -43,10 +41,20 @@ namespace OBJECT
         protected override void GetDamageAction(int damage) { _state.SetState(new HitState()); }
         protected override void ObjFixedUpdate() { _state.Update(this); }
         private void SetUseSkill(bool useSkill) { _useSkill = useSkill; }
+
+        protected override bool TargetingMethod()
+        {
+            if (!_useSkill) return false;
+
+            _state.SetState(new SkillWait());
+            return true;
+        }
+
+        protected override void SetSkillState() { _state.SetState(new SkillState()); }
     }
 
     // TODO : 에너미 상태 패턴 구현 
-    public partial class EnemyController : EnemyBase
+    public partial class EnemyController : EnemyBase<EnemyController>
     {
         public enum ENEMY_STATE
         {
@@ -80,72 +88,7 @@ namespace OBJECT
             }
         }
         /* -----------------------------------------------------------Idle-------------------------------------------------- */
-        public sealed class IdleState : State<EnemyController>
-        {
-            Vector3 _randPoint;
-            float   _coolTime;
-            bool    _isMove;
-            public override void Enter(EnemyController t)
-            {
-                _coolTime = Random.Range(0.0f, 3.0f);
-                _isMove = false;
-                base.Enter(t);
-            }
-            public override void Update(EnemyController t)
-            {
-                if (t._isHunting || Default.GetDistance(t._target.transform.position, t.transform.position) <= t._searchDis) // 타겟이 범위 안에 들어오면 타겟팅 패턴으로 전환
-                {
-                    t._state.SetState(new TargetingState());
-                    return;
-                }
 
-                t.RunStateMethod(ref _coolTime, ref _isMove, ref _randPoint);
-            }
-            public IdleState() {}
-        }
-        /* -----------------------------------------------------------Targeting-------------------------------------------------- */
-        public sealed class TargetingState : State<EnemyController>
-        {
-            public override void Update(EnemyController t)
-            {
-                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
-
-                if (!t._isHunting && Default.GetDistance(targetPos, myPos) > t._searchDis) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
-                {
-                    t._state.SetState(new IdleState());
-                    return;
-                }
-
-                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
-                Vector2 movePoint = new Vector2(targetPos.x + 1.5f * xDir, targetPos.y);
-
-                if (t._useSkill)
-                {
-                    t._state.SetState(new SkillWait());
-                    return;
-                }
-
-                if (t.CheckAttack(t, xDir, movePoint, myPos))
-                {
-                    t._state.SetState(new AttackState());
-                    return;
-                }
-
-                t.SetLookAtAndDirection(movePoint, targetPos, myPos);
-            }
-            public TargetingState() {}
-        }
-        /* -----------------------------------------------------------Attack-------------------------------------------------- */
-        public sealed class AttackState : State<EnemyController>
-        {
-            public override void Enter(EnemyController t) 
-            {
-                base.Enter(t);
-                t.SetAttackState();
-            }
-            public override void Exit(EnemyController t) { t.OnAttackBox(0); } // 공격 박스 off
-            public AttackState() {}
-        }
         public sealed class SkillState : State<EnemyController>
         {
             public override void Enter(EnemyController t)
@@ -169,16 +112,7 @@ namespace OBJECT
             }
             public HitState() { }
         }
-        /* -----------------------------------------------------------Die-------------------------------------------------- */
-        public sealed class DieState : State<EnemyController>
-        {
-            public override void Enter(EnemyController t)
-            {
-                t._animator.SetTrigger("Die");
-                t._direction = Vector2.zero;
-            }
-            public DieState() {}
-        }
+
         public sealed class SkillWait : State<EnemyController>
         {
             float _yTemp;
@@ -189,9 +123,17 @@ namespace OBJECT
             }
             public override void Update(EnemyController t)
             {
-                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
-                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
+                if (t._target.GetIsDie())
+                {
+                    t._state.SetState(new IdleState());
+                    return;
+                }
 
+                t.SkillWaitMethod
+
+                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
+
+                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
                 Vector2 movePoint = new Vector2(targetPos.x + Random.Range(4.0f, 6.0f) * xDir, _yTemp);
 
                 if (Default.GetDistance(movePoint, myPos) <= 1.0f)
@@ -200,7 +142,7 @@ namespace OBJECT
                     return;
                 }
 
-                if (t.CheckAttack(t, xDir, new Vector2(targetPos.x + 1.5f * xDir, targetPos.y), myPos))
+                if (t.CheckAttack(t, new Vector2(targetPos.x + 1.5f * xDir, targetPos.y), myPos))
                 {
                     t._state.SetState(new AttackState());
                     return;

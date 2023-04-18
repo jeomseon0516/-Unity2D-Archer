@@ -5,9 +5,8 @@ using OBJECT.SNOWBALL;
 
 namespace OBJECT
 {
-    public partial class PenguinController : EnemyBase
+    public partial class PenguinController : EnemyBase<PenguinController>
     {
-        StateMachine<PenguinController> _state;
         BoxCollider2D _boxCol;
         Vector2 _keepBoxSize;
         Vector2 _keepBoxOffset;
@@ -25,6 +24,8 @@ namespace OBJECT
             base.Init();
 
             _attackDis = 0.65f;
+            _attackYDis = 0.25f;
+
             _hp = _maxHp = 500;
 
             _jumpCoolTime = 12.5f;
@@ -45,9 +46,6 @@ namespace OBJECT
             AddAfterResetCoroutine("Jump", SetUseSkill(Random.Range(_jumpCoolTime - 2.5f, _jumpCoolTime + 2.5f), new JumpAttackState()));
             StartCoroutine(SetUseSkill(Random.Range(_chaseCoolTime - 1.5f, _chaseCoolTime + 1.5f), new ChaseAttackState()));
             StartCoroutine(SetUseSkill(Random.Range(_slideCoolTime - 1.5f, _slideCoolTime + 1.5f), new SlideAttackWait()));
-
-            _state = new StateMachine<PenguinController>();
-            _state.SetState(new IdleState());
         }
         protected override void ObjFixedUpdate()
         {
@@ -63,7 +61,7 @@ namespace OBJECT
         }
         private void FastChaseTarget(Vector2 myPos, Vector2 targetPos, float distance, float speed = 2)
         {
-            float radian = Default.GetPositionToRadian(targetPos, myPos);
+            float radian = Default.GetFromPositionToRadian(targetPos, myPos);
 
             float x = Mathf.Cos(radian) * distance * 95.0f * 0.01f * speed;
             float y = Mathf.Sin(radian) * distance * 95.0f * 0.01f * speed;
@@ -79,7 +77,7 @@ namespace OBJECT
         {
             OnAttackBox(onBox);
             _boxCol.offset = offset;
-            _boxCol.size  = size;
+            _boxCol.size   = size;
         }
         protected override void Die() 
         { 
@@ -91,8 +89,16 @@ namespace OBJECT
             Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
             obj.TakeDamage(_atk, force * 2);
         }
+        protected override bool TargetingMethod()
+        {
+            if (_skillQueue.Count <= 0) return false;
+
+            _state.SetState(_skillQueue.Dequeue());
+            return true;
+        }
+        protected override void SetSkillState() { _state.SetState(new SlideAttackState()); }
     }
-    public partial class PenguinController : EnemyBase
+    public partial class PenguinController : EnemyBase<PenguinController>
     {
         enum PENGUIN_STATE
         {
@@ -136,78 +142,10 @@ namespace OBJECT
                     break;
             }
         }
-        public sealed class IdleState : State<PenguinController>
-        {
-            Vector3 _randPoint;
-            float _coolTime;
-            bool _isMove;
-            public override void Enter(PenguinController t)
-            {
-                base.Enter(t);
-                t.ZeroForce();
-
-                _coolTime = Random.Range(0.0f, 3.0f);
-                _isMove = false;
-            }
-            public override void Update(PenguinController t)
-            {
-                if (t._isHunting || Default.GetDistance(t._target.transform.position, t.transform.position) <= t._searchDis) // 타겟이 범위 안에 들어오면 타겟팅 패턴으로 전환
-                {
-                    t._state.SetState(new TargetingState());
-                    return;
-                }
-
-                t.RunStateMethod(ref _coolTime, ref _isMove, ref _randPoint);
-            }
-        }
-        public sealed class TargetingState : State<PenguinController>
-        {
-            float _yTemp;
-            public override void Enter(PenguinController t)
-            {
-                _yTemp = Random.Range(0.0f, 1.5f) * Random.Range(0, 2) == 0 ? 1 : -1;
-                base.Enter(t);
-            }
-            public override void Update(PenguinController t)
-            {
-                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
-
-                if (!t._isHunting && Default.GetDistance(targetPos, myPos) > t._searchDis) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
-                {
-                    t._state.SetState(new IdleState());
-                    return;
-                }
-
-                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
-                Vector2 movePoint = new Vector2(targetPos.x + 1.5f * xDir, targetPos.y);
-
-                if (t._skillQueue.Count > 0)
-                {
-                    t._state.SetState(t._skillQueue.Dequeue());
-                    return;
-                }
-
-                if (t.CheckAttack(t, xDir, movePoint, myPos, 0.25f))
-                {
-                    t._state.SetState(new AttackState());
-                    return;
-                }
-
-                t.SetLookAtAndDirection(movePoint, targetPos, myPos);
-            }
-        }
-        public sealed class AttackState : State<PenguinController>
-        {
-            public override void Enter(PenguinController t)
-            {
-                base.Enter(t);
-                t.SetAttackState();
-            }
-        }
         public sealed class JumpAttackState : State<PenguinController>
         {
             float _power;
-            int _atk;
+            int _keepAtk;
             Vector2 _movePoint;
             public override void Enter(PenguinController t) 
             { 
@@ -215,18 +153,19 @@ namespace OBJECT
 
                 t._jump = Random.Range(8.0f, 15.0f);
                 _power = Random.Range(20, 32);
+
                 t.StartCoroutine(t.Jumping(_power));
 
                 Transform targetTransform = t._target.GetPhysics();
                 _movePoint = new Vector2(targetTransform.position.x, targetTransform.position.y - t._target.GetOffsetY());
 
                 t._direction = Vector2.zero;
-                _atk = t._atk;
+
+                _keepAtk = t._atk;
                 t._atk = 7;
             }
             public override void Update(PenguinController t) 
             {
-                base.Enter(t);
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
                 float distance = Default.GetDistance(_movePoint, myPos);
 
@@ -242,17 +181,19 @@ namespace OBJECT
             public override void Exit(PenguinController t) 
             {
                 CreateSnowBall.AllDirection(t._bullet, new Vector2(t._physics.position.x, t._physics.position.y - t._offsetY), _power);
+
                 t.AddAfterResetCoroutine("Jump", t.SetUseSkill(
                     Random.Range(t._jumpCoolTime - 2.5f, t._jumpCoolTime + 2.5f), 
                     new JumpAttackState()));
+
                 t.SetAttackBox(0, t._keepBoxOffset, t._keepBoxSize);
-                t._atk = _atk;
+                t._atk = _keepAtk;
             }
         }
         public sealed class SlideAttackState : State<PenguinController>
         {
             float _time;
-            int _atk;
+            int _keepAtk;
             Vector2 _movePoint;
             public override void Enter(PenguinController t)
             {
@@ -260,9 +201,11 @@ namespace OBJECT
 
                 t.SetAttackBox(1, new Vector2(0, -1.48f), new Vector2(2.36f, 1.43f));
                 t.GetTargetAndMyPos(out Vector2 myPos, out _movePoint);
+
                 t._animator.SetTrigger("Slide");
                 _time = 3.0f;
-                _atk = t._atk;
+
+                _keepAtk = t._atk;
                 t._atk = 10;
 
                 float distance = Default.GetDistance(_movePoint, myPos);
@@ -285,7 +228,8 @@ namespace OBJECT
             {
                 t.StartCoroutine(t.SetUseSkill(Random.Range(t._slideCoolTime - 1.5f, t._slideCoolTime + 1.5f), new SlideAttackWait()));
                 t.SetAttackBox(0, t._keepBoxOffset, t._keepBoxSize);
-                t._atk = _atk;
+
+                t._atk = _keepAtk;
             }
         }
         /*
@@ -299,6 +243,7 @@ namespace OBJECT
             public override void Enter(PenguinController t) 
             {
                 base.Enter(t);
+
                 _chaseTime = 2.0f;
                 _count = 3;
 
@@ -307,10 +252,17 @@ namespace OBJECT
             }
             public override void Update(PenguinController t)
             {
+                if (t._target.GetIsDie())
+                {
+                    _count = 0;
+                    t._state.SetState(new WaitState(2.0f));
+                    return;
+                }
+
                 _chaseTime -= Time.fixedDeltaTime;
 
                 t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
-                float radian = Default.GetPositionToRadian(targetPos, myPos);
+                float radian = Default.GetFromPositionToRadian(targetPos, myPos);
 
                 Vector3 moveDir = (t._physics.position - _beforePosition).normalized;
                 float distance = Default.GetDistance(t._physics.position, _beforePosition);
@@ -337,7 +289,9 @@ namespace OBJECT
             {
                 if (--_count <= 0)
                 {
-                    t._state.SetState(Random.Range(0, 2) == 0 ? new WaitState(2.0f) : new JumpAttackState());
+                    if (!t._target.GetIsDie())
+                        t._state.SetState(Random.Range(0, 2) == 0 ? new WaitState(2.0f) : new JumpAttackState());
+
                     t.StartCoroutine(t.SetUseSkill(Random.Range(t._chaseCoolTime - 1.5f, t._chaseCoolTime + 1.5f), new ChaseAttackState()));
                 }
                 else
@@ -346,10 +300,6 @@ namespace OBJECT
                     t._state.SetState(this);
                 }
             }
-        }
-        public sealed class DieState : State<PenguinController>
-        {
-            public override void Enter(PenguinController t) { base.Enter(t); }
         }
         public sealed class SlideAttackWait : State<PenguinController>
         {
@@ -367,27 +317,14 @@ namespace OBJECT
             }
             public override void Update(PenguinController t) 
             {
-                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
-                int xDir = myPos.x - targetPos.x > 0 ? 1 : -1;
-
-                if (Default.GetDistance(_keepTargetPos, myPos) <= 1.0f ||
-                    Default.GetDistance(targetPos, myPos) >= 20.0f)
+                if (t._target.GetIsDie())
                 {
-                    t._state.SetState(new SlideAttackState());
+                    t._state.SetState(new WaitState(2.0f));
                     return;
                 }
 
-                Vector2 movePoint = new Vector2(targetPos.x + 1.5f * xDir, targetPos.y);
-
-                if (t.CheckAttack(t, xDir, movePoint, myPos, 0.25f))
-                {
-                    t._state.SetState(new AttackState());
-                    return;
-                }
-
-                t.SetLookAtAndDirection(_keepTargetPos, targetPos, myPos);
+                t.SkillWaitMethod(_keepTargetPos);
             }
-            public override void Exit(PenguinController t) { }
         }
         public sealed class WaitState : State<PenguinController>
         {
@@ -397,6 +334,10 @@ namespace OBJECT
                 base.Enter(t);
                 t._direction = Vector2.zero;
                 t.AddAfterResetCoroutine("Wait", t.Wait(_time));
+            }
+            public override void Exit(PenguinController t)
+            {
+                t.ZeroForce();
             }
             public WaitState(float time = 1.5f) { _time = time; } 
         }

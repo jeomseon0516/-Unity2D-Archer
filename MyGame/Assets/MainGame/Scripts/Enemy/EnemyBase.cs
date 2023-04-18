@@ -5,14 +5,19 @@ using PUB_SUB;
 
 namespace OBJECT
 {
-    public abstract partial class EnemyBase : LivingObject
+    public abstract partial class EnemyBase<T> : LivingObject where T : EnemyBase<T>
     {
         protected GameObject _attackBox;
         protected EnemyStatsPublisher _statsPublisher;
+
         protected ObjectBase _target;
         protected float _searchDis;
         protected float _attackDis;
+        protected float _attackYDis;
+
         protected bool _isHunting;
+
+        protected StateMachine<T> _state;
 
         protected delegate void SetSkill(bool isUse);
         protected override void Init()
@@ -25,9 +30,15 @@ namespace OBJECT
             _attackBox.gameObject.AddComponent<AttackBox>().SetObjectBase(this);
 
             _isHunting = false;
+
             _searchDis = 8.0f;
             _attackDis = 1.5f;
+            _attackYDis = 0.085f;
+
             _hp = _maxHp = 5;
+
+            _state = new StateMachine<T>();
+            _state.SetState(new IdleState());
         }
         private void Start()
         {
@@ -43,15 +54,6 @@ namespace OBJECT
             _isHunting = true;
             yield return YieldCache.WaitForSeconds(10.0f);
             _isHunting = false;
-        }
-        public override void OnAttackBox(float isOn)
-        {
-            bool on = isOn > 0.0f ? true : false;
-            _attackBox.SetActive(on);
-
-            // 어택 박스가 꺼지면 리스트의 요소들을 모두 클리어한다.
-            if (!on)
-                ClearColList();
         }
         // 사용하지 않음
         protected IEnumerator CoolTime(SetSkill skill, float time)
@@ -75,7 +77,7 @@ namespace OBJECT
             Transform targetTransform = _target.GetPhysics();
             targetPos = new Vector2(targetTransform.position.x, targetTransform.position.y - _target.GetOffsetY());
         }
-        protected bool CheckAttack(EnemyBase t, int xDir, Vector2 movePoint, Vector2 myPosition, float yDis = 0.085f)
+        protected bool CheckAttack(EnemyBase<T> t, Vector2 movePoint, Vector2 myPosition, float yDis = 0.085f)
         {
             return Mathf.Abs(movePoint.x - myPosition.x) <= t._attackDis &&
                    Mathf.Abs(movePoint.y - myPosition.y) <= t._attackDis * yDis;
@@ -91,6 +93,15 @@ namespace OBJECT
         {
             Vector2 force = Default.GetFromPostionToDirection(obj.GetPhysics().position, _physics.position);
             obj.TakeDamage(_atk, force * 2);
+        }
+        public override void OnAttackBox(float isOn)
+        {
+            bool on = isOn > 0.0f ? true : false;
+            _attackBox.SetActive(on);
+
+            // 어택 박스가 꺼지면 리스트의 요소들을 모두 클리어한다.
+            if (!on)
+                ClearColList();
         }
         protected void RunStateMethod(ref float coolTime, ref bool isMove, ref Vector3 randPoint)
         {
@@ -126,10 +137,115 @@ namespace OBJECT
             _direction = (movePoint - myPos).normalized;
             _lookAt    = (targetPos - myPos).normalized;
         }
+        protected Vector2 GetFromTargetPosToMovePoint(Vector2 myPos, Vector2 targetPos)
+        {
+            int xDir = myPos.x - targetPos.x > 0 ? 1 : -1;
+            return new Vector2(targetPos.x + 1.5f * xDir, targetPos.y);
+        }
+        // TODO : 수정할 것
+        protected void SkillWaitMethod(Vector2 destination, float yTemp)
+        {
+            GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
+
+            int xDir = myPos.x - targetPos.x > 0 ? 1 : -1; // 보정해야 할 방향이 어느쪽인가?
+            Vector2 movePoint = new Vector2(targetPos.x + Random.Range(4.0f, 6.0f) * xDir, yTemp);
+
+            if (Default.GetDistance(destination, myPos) <= 1.0f ||
+                Default.GetDistance(targetPos, myPos) >= 20.0f)
+            {
+                SetSkillState();
+                return;
+            }
+
+            if (CheckAttack(this, new Vector2(targetPos.x + 1.5f * xDir, targetPos.y), myPos, _attackYDis))
+            {
+                _state.SetState(new AttackState());
+                return;
+            }
+
+            SetLookAtAndDirection(destination, targetPos, myPos);
+        }
+        protected bool CheckTarget()
+        {
+            return _target.GetIsDie() ? false : _isHunting || Default.GetDistance(_target.transform.position, transform.position) <= _searchDis;
+        }
+        // 타겟팅 상태일때 상속받는 객체 별로 할 수 있는 행동이 다르기 때문에
         protected override void ObjUpdate() { _statsPublisher.UpdateHpAndAngle(_hp, _physics.rotation.eulerAngles.y); }
         protected override void GetDamageAction(int damage) { AddAfterResetCoroutine("Targeting", TargetingObject()); }
+        protected abstract bool TargetingMethod();
+        protected abstract void SetSkillState();
     }
+    // 적들이 가져야할 기본적인 상태는 제네릭을 사용해서 EnemyBase클래스에서 구현한다. 이렇게 사용하면 EnemyBase를 상속받는 클래스마다 Idle, Targeting, Attack를 따로 구현할 필요가 없어진다.
+    public abstract partial class EnemyBase<T> : LivingObject where T : EnemyBase<T>
+    {
+        public sealed partial class IdleState : State<T>
+        {
+            Vector3 _randPoint;
+            float _coolTime;
+            bool _isMove;
+            public override void Enter(T t)
+            {
+                base.Enter(t);
 
+                _coolTime = Random.Range(0.0f, 3.0f);
+                _isMove = false;
+            }
+            public override void Update(T t)
+            {
+                if (t.CheckTarget()) // 타겟이 범위 안에 들어오면 타겟팅 패턴으로 전환
+                {
+                    t._state.SetState(new TargetingState());
+                    return;
+                }
+
+                t.RunStateMethod(ref _coolTime, ref _isMove, ref _randPoint);
+            }
+        }
+        public sealed class TargetingState : State<T>
+        {
+            public override void Update(T t)
+            {
+
+                if (!t.CheckTarget()) // 플레이어가 범위 밖으로 벗어났다면 다시 Idle패턴으로 전환
+                {
+                    t._state.SetState(new IdleState());
+                    return;
+                }
+
+                t.GetTargetAndMyPos(out Vector2 myPos, out Vector2 targetPos);
+
+                Vector2 movePoint = t.GetFromTargetPosToMovePoint(myPos, targetPos);
+
+                if (t.TargetingMethod())
+                    return;
+
+                if (t.CheckAttack(t, movePoint, myPos, t._attackYDis))
+                {
+                    t._state.SetState(new AttackState());
+                    return;
+                }
+
+                t.SetLookAtAndDirection(movePoint, targetPos, myPos);
+            }
+        }
+        public sealed class AttackState : State<T>
+        {
+            public override void Enter(T t)
+            {
+                base.Enter(t);
+                t.SetAttackState();
+            }
+        }
+        public sealed class DieState : State<T>
+        {
+            public override void Enter(T t)
+            {
+                t._animator.SetTrigger("Die");
+                t._direction = Vector2.zero;
+            }
+            public DieState() { }
+        }
+    }
     public class EnemyStatsPublisher
     {
         List<IEnemyStatsSubscriber> _statsSubscribers = new List<IEnemyStatsSubscriber>();
@@ -172,10 +288,6 @@ namespace OBJECT
             _statsSubscribers.Remove(statsSubscriber);
         }
     }
-
-    public interface IAngleSubscriber
-    {
-        public void OnUpdateAngle(float angle);
-    }
+    public interface IAngleSubscriber { public void OnUpdateAngle(float angle); }
     public interface IEnemyStatsSubscriber : IHpSubscriber, IAngleSubscriber {}
 }

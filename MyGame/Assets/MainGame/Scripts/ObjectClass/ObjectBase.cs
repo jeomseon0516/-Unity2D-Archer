@@ -272,7 +272,7 @@ namespace OBJECT
          * 오브젝트 베이스를 상속받는 모든 객체는 해당 함수로 움직입니다.. _direction에 정규화 시킨 벡터를 넣어주면 해당 방향으로 움직입니다.
          * 정규화가 아닌 벡터를 넣어주면 해당 크기만큼 빠르게 움직입니다.
          * AddForce를 통해서 힘을 받은 방향으로 밀립니다.
-         * */
+         */
         private void Move(float moveX, float moveY)
         {
             _rigidbody.MovePosition(_rigidbody.position + (new Vector2(moveX * _speed, moveY * (_speed * 0.5f)) + 
@@ -331,5 +331,6 @@ namespace OBJECT
         public int GetMaxHp() { return _maxHp; }
         public int GetHp() { return _hp; }
         public int GetAtk() { return _atk; }
+        public bool GetIsDie() { return _isDie; }
     }
 }
