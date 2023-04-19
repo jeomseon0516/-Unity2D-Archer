@@ -6,7 +6,8 @@ public class SkillUI : UI
 {
     protected override void Init()
     {
-        _uiName = gameObject.name + gameObject.transform.parent.childCount.ToString();
+        //print(gameObject.transform.parent.childCount.ToString());
+        _uiName = gameObject.name;
     }
 
     public string GetUIName() { return _uiName; }

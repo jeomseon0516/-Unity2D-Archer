@@ -10,6 +10,7 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
     protected override void Init()
     {
         StatusInit();
+        SkillInit();
     }
     private void Start()
     {
@@ -92,11 +93,15 @@ struct SkillInventory
 {
     public KeyCode key;
     public SkillData skillData;
+    public PlayerController.PLR_STATE _checkState;
+    public string skillName;
 
     public SkillInventory(KeyCode key)
     {
         this.key = key;
+        skillName = "";
         skillData = null;
+        _checkState = PlayerController.PLR_STATE.RUN;
     }
 }
 // ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.UI, "DogUI");
@@ -109,38 +114,59 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
     }
 
     // SkillData...UIData, skillArray 
+    SkillData[] _dogSkill;
 
     private SkillInventory[] _skillInventory;
+    private int _index;
 
     private void SkillInit()
     {
         _skillInventory = new SkillInventory[4];
+        _dogSkill = new SkillData[4];
+
+        GameObject skillList = GameObject.Find("SkillList");
+
+        for (int i = 0; i < 3; ++i)
+        {
+            GameObject obj = new GameObject();
+            _dogSkill[i] = obj.AddComponent<SkillData>();
+        }
 
         _skillInventory[0] = new SkillInventory(KeyCode.Q);
         _skillInventory[1] = new SkillInventory(KeyCode.E);
         _skillInventory[2] = new SkillInventory(KeyCode.R);
+        _index = 0;
     }
-
-    private void SelectRandomSkill(SKILL_KIND kind)
+    private void SkillUpdate()
     {
-        switch (kind)
+
+    }
+    private IEnumerator SelectRandomSkill(SKILL_KIND kind)
+    {
+        while (true)
         {
-            case SKILL_KIND.DOG:
-                /*
-                    ..구현..
-                    GC에 수집되지 않게 미리 적당한 양의 스킬들을 캐싱해둔다.
-                    사용이 가능한 스킬들은 _skillInventory로 옮겨둔다.
-                    UI에 신호를 주고 UI에서 스킬의 사용준비가 되면 SkillData에서 true값을 반환해서 받아온다 또는 Queue로 구현해서 가져온다. 
-                    SkillData는 자신이 어떤 스킬인지 변수로 가지고 있는다.
-                    스킬이 사
-                */
-                break;
+            yield return YieldCache.WaitForSeconds(Random.Range(2.0f, 4.0f));
+
+            switch (kind)
+            {
+                case SKILL_KIND.DOG:
+                    /*
+                        ..구현..
+                        GC에 수집되지 않게 미리 적당한 양의 스킬들을 캐싱해둔다.
+                        사용이 가능한 스킬들은 _skillInventory로 옮겨둔다.
+                        UI에 신호를 주고 UI에서 스킬의 사용준비가 되면 SkillData에서 true값을 반환해서 받아온다 또는 Queue로 구현해서 가져온다. 
+                        SkillData는 자신이 어떤 스킬인지 변수로 가지고 있는다.
+                        스킬이 사
+                    */
+                    break;
+            }
         }
     }
 }
 public class PlayerPublisher
 {
     int _hp, _maxHp, _stamina, _maxStamina;
+
     private List<IHpSubscriber> _hpSubscribers = new List<IHpSubscriber>();
     private List<IStaminaSubscriber> _staminaSubscribers = new List<IStaminaSubscriber>();
 
