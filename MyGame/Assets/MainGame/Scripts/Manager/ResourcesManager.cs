@@ -2,6 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+public enum OBJECTID
+{
+    PLAYER,
+    ENEMY,
+    PENGUIN,
+    BACKGROUND,
+    UI,
+    FX
+}
+
 public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
 {
     private Dictionary<OBJECTID,
@@ -24,6 +34,7 @@ public sealed class ResourcesManager : SingletonTemplate<ResourcesManager>
         AddObject(OBJECTID.PENGUIN, "Bullet",      "Prefabs/Enemy/Penguin/SnowBall");
         AddObject(OBJECTID.FX,      "Smoke",       "Prefabs/FX/Smoke");
         AddObject(OBJECTID.FX,      "HitEffect",   "Prefabs/FX/HitEffect");
+        AddObject(OBJECTID.UI,      "DogUI",       "Prefabs/SkillUI/Dog_UI");
     }
     private void AddObject(OBJECTID id, string key, string path)
     {

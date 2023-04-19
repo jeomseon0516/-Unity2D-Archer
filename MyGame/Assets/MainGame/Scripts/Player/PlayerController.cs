@@ -8,40 +8,68 @@ using PUB_SUB;
  */
 namespace OBJECT
 {
+
+    /*
+        _direction은 PlayerManager에서 받아옵니다. PlayerManager에서 PlayerCharacter를 참조하여 SetDirection으로 받아오는 식
+        마찬가지로 키입력은 InputManager또는 PlayerManager에서 받아오는 식으로 구현 합니다.
+    */
     public partial class PlayerController : LivingObject
     {
         private StateMachine<PlayerController> _playerState;
         private GameObject _groudSmoke;
         private GameObject _dogSkill;
         private Vector2 _spawnPoint;
+        private Vector2 _fireDirection;
         private float _attackSpeed;
         private int _stamina, _maxStamina;
         private int _jumpCount;
+
+        // 트리거는 매프레임마다 갱신되고 다음프레임까지 트리거에 해당하는 동작이 수행되지 않으면 자동으로 false 전환
+        private Dictionary<string, bool> _actionTrigger = new Dictionary<string, bool>();
+
         protected override void Init()
         {
             _id = OBJECTID.PLAYER;
             base.Init();
+
             _stamina = _maxStamina = 30;
-            _maxHp = _hp = 5;
+            _maxHp = _hp = 500;
             _attackSpeed = 4;
             _speed = 5.0f;
             _atk = 2;
+
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
+
             _groudSmoke = ResourcesManager.GetInstance().GetObjectToKey(_id, "GroundSmoke");
             _dogSkill   = ResourcesManager.GetInstance().GetObjectToKey(_id, "DogSkill");
+
             _spawnPoint = _physics.position;
             _jumpCount = 0;
+
+            _actionTrigger.Add("Jump", false);
+            _actionTrigger.Add("Dash", false);
+            _actionTrigger.Add("Dog",  false);
 
             AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
             AddAfterResetCoroutine("AddStamina",   AddStamina());
         }
-        protected override void Run()
+        private IEnumerator SetActionTrigger(string key)
         {
-            if (_isDie) return;
+            if (!_actionTrigger.ContainsKey(key)) yield break; // 해당 키 값이 존재하지 않는다면
 
-            _direction = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-            base.Run();
+            _actionTrigger[key] = true;
+            yield return YieldCache.WaitForFixedUpdate;
+            _actionTrigger[key] = false;
+        }
+        public void StartCoroutineTrigger(string name, string key)
+        {
+            AddAfterResetCoroutine(name, SetActionTrigger(key));
+        }
+        private bool GetActionTrigger(string key)
+        {
+            if (!_actionTrigger.TryGetValue(key, out bool trigger)) return false;
+            return trigger;
         }
         protected void CreateBullet(GameObject bullet, Vector2 position, Vector2 direction)
         {
@@ -60,13 +88,9 @@ namespace OBJECT
         private IEnumerator Respawn()
         {
             yield return YieldCache.WaitForSeconds(5.0f);
+
             _animator.SetTrigger("Respawn");
             ResetPlayer();
-        }
-        protected override void ObjFixedUpdate() 
-        {
-            _animator.SetFloat("JumpSpeed", _jumpValue);
-            _playerState.Update(this);
         }
         private IEnumerator AddStamina()
         {
@@ -78,9 +102,17 @@ namespace OBJECT
                 yield return YieldCache.WaitForSeconds(0.5f);
             }
         }
+        protected override void ObjFixedUpdate() 
+        {
+            if (_isDie)
+                _lookAt = _direction = Vector2.zero;
+
+            _animator.SetFloat("JumpSpeed", _jumpValue);
+            _playerState.Update(this);
+        }
         private bool PlayDash()
         {
-            if (!Input.GetKeyDown(KeyCode.LeftShift) || _stamina < 10) return false;
+            if (!GetActionTrigger("Dash") || _stamina < 10) return false;
 
             _playerState.SetState(new DashState());
             return true;
@@ -99,7 +131,7 @@ namespace OBJECT
         }
         public bool OnStartJump()
         {
-            if (!Input.GetKeyDown(KeyCode.Space) && _body.localPosition.y < float.Epsilon) return false; // 스페이스 바를 누르거나 공중에 띄워져있을때
+            if (!GetActionTrigger("Jump") && _body.localPosition.y < float.Epsilon) return false; // 스페이스 바를 누르거나 공중에 띄워져있을때
 
             _playerState.SetState(new JumpState());
             return true;
@@ -110,6 +142,7 @@ namespace OBJECT
 
             Vector2 attackDir = new Vector2(horizontal, vertical);
             attackDir.x = horizontal == 0 ? _direction.x : horizontal;
+
             _lookAt = attackDir;
 
             _animator.SetTrigger("Attack");
@@ -117,25 +150,25 @@ namespace OBJECT
         }
         private void FromButtonOnDogAttack()
         {
-            if (!Input.GetKeyDown(KeyCode.Q)) return;
+            if (!GetActionTrigger("Dog")) return;
 
             _animator.SetTrigger("DogSkill");
             _playerState.SetState(new DogAttackState());
         }
         private void CreateGroundSmoke()
         {
-            Transform deathSmoke = Instantiate(_groudSmoke).transform;
+            Transform groundSmoke = Instantiate(_groudSmoke).transform;
 
             float xDir = _direction.x != 0 ? _direction.x < 0 ? 1 : -1 :
                                              _physics.rotation.eulerAngles.y == 180.0f ? 1 : -1;
             // Rotation
-            Quaternion rotation = deathSmoke.rotation;
+            Quaternion rotation = groundSmoke.rotation;
             rotation.eulerAngles = new Vector2(rotation.x, xDir == 1 ? 180.0f : 0.0f);
-            deathSmoke.rotation = rotation;
+            groundSmoke.rotation = rotation;
 
             // Position
             Vector2 position = new Vector2(_body.position.x, _body.position.y - _offsetY);
-            deathSmoke.position = position + new Vector2(0.5f * xDir, 0.0f);
+            groundSmoke.position = position + new Vector2(0.5f * xDir, 0.0f);
         }
         private Vector2 GetFromAngleAndSpeedToDirection()
         {
@@ -151,6 +184,8 @@ namespace OBJECT
         }
         protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
         protected override void Die() { _playerState.SetState(new DieState()); }
+        public void SetDirection(Vector2 direction) { _direction = direction; }
+        public void SetFireDirection(Vector2 fireDirection) { _fireDirection = fireDirection; }
         public int GetStamina() { return _stamina; }
         public int GetMaxStamina() { return _maxStamina; }
     }
@@ -163,9 +198,12 @@ namespace OBJECT
             DOUBLEJUMP,
             DASH,
             ATTACK,
+            DOGATTACK,
             HIT,
             DIE
         }
+
+        private PLR_STATE _plrState;
         /* 해당 함수는 하이어라키에서 애니메이션 이벤트로 호출되는 함수 입니다. 스크립트 내에서 상태 전환이 필요한 경우 new 키워드를 사용해 초기화 합니다. */
         private void SetState(PLR_STATE state)
         {
@@ -193,6 +231,11 @@ namespace OBJECT
         // Run과 Idle은 결론적으로 같은 동작을 수행하므로 따로 처리하지 않는다.
         public sealed class RunState : State<PlayerController>
         {
+            public override void Enter(PlayerController t)
+            {
+                base.Enter(t);
+                t._plrState = PLR_STATE.RUN;
+            }
             public override void Update(PlayerController t)
             { 
                 if (t.OnStartJump() || t.PlayDash()) return;
@@ -201,24 +244,23 @@ namespace OBJECT
 
                 t._animator.speed = speed > 0.0f ? speed : 1;
 
-                float x = Input.GetAxisRaw("FireHorizontal");
-                float y = Input.GetAxisRaw("FireVertical");
+                float x = t._fireDirection.x;
+                float y = t._fireDirection.y;
 
                 t.FromButtonOnAttack(x, y);
                 t.FromButtonOnDogAttack();
             }
             public override void Exit(PlayerController t) { t._animator.speed = 1; }
-            public RunState() { }
         }
         public sealed class HitState : State<PlayerController>
         {
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
+                t._plrState = PLR_STATE.HIT;
                 t._animator.SetTrigger("Hit");
             }
             public override void Update(PlayerController t) { if (t.PlayDash()) return; }
-            public HitState() { }
         }
         public sealed class JumpState : State<PlayerController>
         {
@@ -227,6 +269,9 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
+
+                t._plrState = PLR_STATE.JUMP;
+
                 _jump = 8.0f;
 
                 t._jump = t._body.localPosition.y < float.Epsilon ? _jump : t._jump;
@@ -251,7 +296,7 @@ namespace OBJECT
             }
             private void AddJumpPowerOnSpace(PlayerController t)
             {
-                if (Input.GetKey(KeyCode.Space) || !_onSpace || t._jumpValue < float.Epsilon) return;
+                if (t.GetActionTrigger("Jump") || !_onSpace || t._jumpValue < float.Epsilon) return;
 
                  t._jump = t._jump * 0.5f;
                  _onSpace = false;
@@ -264,15 +309,20 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
+
+                t._plrState = PLR_STATE.DOUBLEJUMP;
+
                 _saveDirection = t.GetFromAngleAndSpeedToDirection();
+
                 ++t._jumpCount;
                 t._animator.SetTrigger("DoubleJump");
+
                 t._jump += 6.0f;
                 t._speed = 10.0f;
             }
             public override void Update(PlayerController t)
             {
-                t._direction = _saveDirection;
+                t._lookAt = t._direction = _saveDirection;
 
                 if (t._body.localPosition.y < float.Epsilon)
                     t._playerState.SetState(new RunState());
@@ -289,6 +339,8 @@ namespace OBJECT
             {
                 base.Enter(t);
 
+                t._plrState = PLR_STATE.DASH;
+
                 _saveDirection = t.GetFromAngleAndSpeedToDirection();
                 _keepSpeed = t._speed;
 
@@ -304,7 +356,7 @@ namespace OBJECT
                 t.CreateGroundSmoke();
                 t.FindCoroutineStop("Jump");
             }
-            public override void Update(PlayerController t) { t._direction = _saveDirection; }
+            public override void Update(PlayerController t) { t._lookAt = t._direction = _saveDirection; }
             public override void Exit(PlayerController t) { t._speed = _keepSpeed; }
             public DashState() {}
         }
@@ -315,13 +367,15 @@ namespace OBJECT
             {
                 base.Enter(t);
 
+                t._plrState = PLR_STATE.ATTACK;
+
                 t._animator.speed = t._attackSpeed;
                 t._speed = 3.5f;
 
                 if (_saveLookAt == Vector2.zero)
                 {
-                    float x = Input.GetAxisRaw("FireHorizontal");
-                    float y = Input.GetAxisRaw("FireVertical");
+                    float x = t._fireDirection.x;
+                    float y = t._fireDirection.y;
 
                     Vector2 dir = new Vector2(x, y);
                     _saveLookAt = dir != Vector2.zero ? dir : new Vector2(x != 0 ? x : t._lookAt.x, y != 0 ? y : t._lookAt.y);
@@ -333,8 +387,7 @@ namespace OBJECT
             {
                 if (t.OnStartJump() || t.PlayDash()) return;
                
-                Vector2 dir = new Vector2(Input.GetAxisRaw("FireHorizontal"), Input.GetAxisRaw("FireVertical"));
-                t._lookAt = dir != Vector2.zero ? _saveLookAt = dir : _saveLookAt;
+                t._lookAt = t._fireDirection != Vector2.zero ? _saveLookAt = t._fireDirection : _saveLookAt;
                 t.FromButtonOnDogAttack();
             }
             public override void Exit(PlayerController t)
@@ -351,6 +404,9 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
+
+                t._plrState = PLR_STATE.DOGATTACK;
+
                 t.CreateBullet(t._dogSkill, t._rigidbody.position, t.GetFromAngleToDirection() * 0.25f);
                 t._speed *= 0.5f;
             }
@@ -368,12 +424,16 @@ namespace OBJECT
             {
                 base.Enter(t);
 
+                t._plrState = PLR_STATE.DIE;
+
                 t._animator.SetTrigger("Die");
                 t._direction = Vector2.zero;
+
                 t.StartCoroutine(t.Respawn());
             }
             public override void Update(PlayerController t) { t._direction = Vector2.zero; }
             public DieState() { }
         }
+        public PLR_STATE GetPlrState() { return _plrState; }
     }
 }

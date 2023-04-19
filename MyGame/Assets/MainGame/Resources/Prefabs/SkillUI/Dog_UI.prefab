@@ -87,7 +87,7 @@ GameObject:
   - component: {fileID: 6333870649154520928}
   - component: {fileID: 6333870649154520933}
   - component: {fileID: 6333870649154520934}
-  - component: {fileID: 6333870649154520935}
+  - component: {fileID: 7267846856660077813}
   m_Layer: 5
   m_Name: Dog_UI
   m_TagString: Untagged
@@ -154,7 +154,7 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &6333870649154520935
+--- !u!114 &7267846856660077813
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -163,6 +163,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 6333870649154520929}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aceea46d14a20e24684952e1ca78111b, type: 3}
+  m_Script: {fileID: 11500000, guid: 320b13b20968eb34891022b8ad26effd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
