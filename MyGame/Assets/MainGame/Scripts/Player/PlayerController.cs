@@ -26,7 +26,7 @@ namespace OBJECT
 
         // 트리거는 매프레임마다 갱신되고 다음프레임까지 트리거에 해당하는 동작이 수행되지 않으면 자동으로 false 전환
         private Dictionary<string, bool> _actionTrigger = new Dictionary<string, bool>();
-        private List<string> _skillList = new List<string>(); // 트리거로 수행할 key값을 저장
+        private string[] _skillList = new string[4];
 
         protected override void Init()
         {
@@ -39,6 +39,8 @@ namespace OBJECT
             _speed = 5.0f;
             _atk = 2;
 
+            for (int i = 0; i < 3; ++i)
+                _skillList[i] = "";
             /*
              * Index에 스킬들을 저장 후에 어떤식으로 스킬을 뽑아서 쓸건지 사용자 입력에 따라 정해주어야 함
              * PlayerManager (사용자 관리자)는 캐릭터의 스킬 리스트 정보를 받아온다.
@@ -69,27 +71,32 @@ namespace OBJECT
             {
                 yield return YieldCache.WaitForSeconds(Random.Range(2.0f, 4.0f));
 
-                if (_skillList.Count >= 3) continue;
-
-                int randomSkill = Random.Range(0, 1);
-
-                switch (randomSkill)
+                for (int i = 0; i < 3; ++i)
                 {
-                    case 0:
-                        _skillList.Add("Dog");
-                        break;
+                    if (!string.IsNullOrEmpty(_skillList[i])) continue;
+
+                    int randomSkill = Random.Range(0, 1);
+
+                    switch (randomSkill)
+                    {
+                        case 0:
+                            _skillList[i] = "Dog";
+                            break;
+                    }
+                    break;
                 }
+
             }
         }
         public void FromIndexToSkillAction(int index)
         {
-            if (index < 0 || index >= 3 || _skillList.Count == 0) return;
+            if (index < 0 || index >= 3 || string.IsNullOrEmpty(_skillList[index])) return;
 
             string skillName = _skillList[index];
 
             StartCoroutineTrigger(skillName, skillName);
 
-            _skillList.RemoveAt(index);
+            _skillList[index] = "";
         }
         private IEnumerator SetActionTrigger(string key)
         {
@@ -228,8 +235,7 @@ namespace OBJECT
         public int GetMaxStamina() { return _maxStamina; }
         public string GetFromIndexToSkillListValue(int index)
         {
-            if (_skillList.Count <= 0 || index >= _skillList.Count || index < 0) return "";
-
+            if (string.IsNullOrEmpty(_skillList[index]) || index < 0) return "";
             return _skillList[index];
         }
     }
