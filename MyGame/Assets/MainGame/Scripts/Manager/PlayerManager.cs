@@ -19,6 +19,7 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
     private void Update()
     {
         StatusUpdate();
+        SkillUpdate();
     }
     private PlayerManager() {}
 }
@@ -78,7 +79,9 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
 
         SetPlayerActionTrigger(Input.GetKey(KeyCode.Space), "OnJump", "Jump");
         SetPlayerActionTrigger(Input.GetKeyDown(KeyCode.LeftShift), "Dash", "Dash");
-        SetPlayerActionTrigger(Input.GetKeyDown(KeyCode.Q), "Dog", "Dog");
+
+        if (Input.GetKeyDown(KeyCode.Q))
+            _inGamePlayer.FromIndexToSkillAction(0);
     }
     private void SetPlayerActionTrigger(bool condition, string name, string key)
     {
@@ -89,78 +92,98 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
 }
 
 // ..Skill..
-struct SkillInventory
-{
-    public KeyCode key;
-    public SkillData skillData;
-    public PlayerController.PLR_STATE _checkState;
-    public string skillName;
-
-    public SkillInventory(KeyCode key)
-    {
-        this.key = key;
-        skillName = "";
-        skillData = null;
-        _checkState = PlayerController.PLR_STATE.RUN;
-    }
-}
 // ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.UI, "DogUI");
 // Object.Instantiate(skillData).TryGetComponent(out this.skillData)
+
+struct InGameSkillData
+{
+    public SkillData inGameSkillUi;
+    public int index;
+
+    public InGameSkillData(SkillData inGameSkillUi, int index)
+    {
+        this.inGameSkillUi = inGameSkillUi;
+        this.index = index;
+    }
+}
+
 public partial class PlayerManager : SingletonTemplate<PlayerManager>
 {
-    public enum SKILL_KIND
-    { 
-        DOG
-    }
-
-    // SkillData...UIData, skillArray 
-    SkillData[] _dogSkill;
-
-    private SkillInventory[] _skillInventory;
-    private int _index;
+    // SkillData...UIData 
+    Queue<SkillData> _dogSkillUIList = new Queue<SkillData>();
+    List<InGameSkillData>  _inGameUIList   = new List<InGameSkillData>();
+    List<UI> _skillButtonList = new List<UI>();
 
     private void SkillInit()
     {
-        _skillInventory = new SkillInventory[4];
-        _dogSkill = new SkillData[4];
+        GameObject dogSkillUi = ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.UI, "DogUI");
 
-        GameObject skillList = GameObject.Find("SkillList");
+        _skillButtonList.Add(UIManager.GetInstance().GetFromKeyToUI("Q_UI"));
+        _skillButtonList.Add(UIManager.GetInstance().GetFromKeyToUI("E_UI"));
+        _skillButtonList.Add(UIManager.GetInstance().GetFromKeyToUI("R_UI"));
 
         for (int i = 0; i < 3; ++i)
         {
-            GameObject obj = new GameObject();
-            _dogSkill[i] = obj.AddComponent<SkillData>();
-        }
+            SkillData dogSkill = Instantiate(dogSkillUi).AddComponent<SkillData>();
 
-        _skillInventory[0] = new SkillInventory(KeyCode.Q);
-        _skillInventory[1] = new SkillInventory(KeyCode.E);
-        _skillInventory[2] = new SkillInventory(KeyCode.R);
-        _index = 0;
+            dogSkill.SetUIPrefab(dogSkillUi);
+            _dogSkillUIList.Enqueue(dogSkill);
+        }
     }
     private void SkillUpdate()
     {
-
-    }
-    private IEnumerator SelectRandomSkill(SKILL_KIND kind)
-    {
-        while (true)
+        for (int i = 0; i < 3; ++i)
         {
-            yield return YieldCache.WaitForSeconds(Random.Range(2.0f, 4.0f));
+            string skillName = _inGamePlayer.GetFromIndexToSkillListValue(i);
 
-            switch (kind)
+            if (CheckUseSkill(i, skillName))
             {
-                case SKILL_KIND.DOG:
-                    /*
-                        ..구현..
-                        GC에 수집되지 않게 미리 적당한 양의 스킬들을 캐싱해둔다.
-                        사용이 가능한 스킬들은 _skillInventory로 옮겨둔다.
-                        UI에 신호를 주고 UI에서 스킬의 사용준비가 되면 SkillData에서 true값을 반환해서 받아온다 또는 Queue로 구현해서 가져온다. 
-                        SkillData는 자신이 어떤 스킬인지 변수로 가지고 있는다.
-                        스킬이 사
-                    */
+                --i;
+                continue;
+            }
+
+            if (string.IsNullOrEmpty(skillName))
+                continue;
+
+            switch(skillName)
+            {
+                case "Dog":
+                    PushInGameSkillUI(_dogSkillUIList, i);
                     break;
             }
         }
+    }
+
+    private bool CheckUseSkill(int index, string skillName)
+    {
+        if (_inGameUIList.Count <= index || _inGameUIList.Count == 0 || !string.IsNullOrEmpty(skillName)) return false;
+
+        string uiName = _inGameUIList[index].inGameSkillUi.name;
+
+        if (uiName.Contains("Dog"))
+            _dogSkillUIList.Enqueue(_inGameUIList[index].inGameSkillUi);
+
+        _inGameUIList.RemoveAt(index);
+        return true;
+    }
+    private void PushInGameSkillUI(Queue<SkillData> skillQueue, int index)
+    {
+        if (index < 0 || _inGameUIList.Count <= index) return;
+        // 이미 생성했다면
+        if (_inGameUIList[index].index == index) return;
+
+        print("asdf");
+
+        SkillData dogSkill = skillQueue.Dequeue();
+        dogSkill.SetUIParent(_skillButtonList[index].transform);
+        dogSkill.Ready();
+
+        InGameSkillData inGameSkillData;
+
+        inGameSkillData.inGameSkillUi = dogSkill;
+        inGameSkillData.index = index;
+
+        _inGameUIList.Add(inGameSkillData);
     }
 }
 public class PlayerPublisher

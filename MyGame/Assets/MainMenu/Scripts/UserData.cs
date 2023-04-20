@@ -1,5 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
+using System.Security.Cryptography;
 using UnityEngine;
 
 namespace USERDATA
@@ -9,6 +11,20 @@ namespace USERDATA
         static public string url = "https://script.google.com/macros/s/AKfycbwH9NtpHxpdVkzHcKZkynlBzDMXiGclCotvnnALR3JJnH8uxtHjLgRPxElZHMgBgAVe/exec";
         static public string eMailCheck = @"^([a-zA-Z0-9]+)@([a-zA-Z0-9-]+)(\.[a-zA-Z0-9]+){1,}$";
         static public string conditionsKorean = @"^[ㄱ-ㅎ가-힣ㅏ-ㅣ]";
+
+        static public string GetSecurityPassword(string password)
+        {
+            SHA256 sha = new SHA256Managed();
+            byte[] hash = sha.ComputeHash(Encoding.ASCII.GetBytes(password));
+            StringBuilder stringBuilder = new StringBuilder();
+
+            foreach (byte b in hash)
+            {
+                stringBuilder.AppendFormat("{0:x2}", b);
+            }
+
+            return stringBuilder.ToString();
+        }
     }
 
     [System.Serializable]

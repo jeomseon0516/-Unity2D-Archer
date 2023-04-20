@@ -37,6 +37,7 @@ public class LoginController : MonoBehaviour
             "패스워드에 한글을 입력할 수 없습니다."))
             return;
 
+        password = CommonMacro.GetSecurityPassword(password);
         StartCoroutine(LoginUser(id, password));
     }
     private IEnumerator LoginUser(string id, string password)

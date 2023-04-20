@@ -26,6 +26,7 @@ namespace OBJECT
 
         // 트리거는 매프레임마다 갱신되고 다음프레임까지 트리거에 해당하는 동작이 수행되지 않으면 자동으로 false 전환
         private Dictionary<string, bool> _actionTrigger = new Dictionary<string, bool>();
+        private List<string> _skillList = new List<string>(); // 트리거로 수행할 key값을 저장
 
         protected override void Init()
         {
@@ -37,6 +38,13 @@ namespace OBJECT
             _attackSpeed = 4;
             _speed = 5.0f;
             _atk = 2;
+
+            /*
+             * Index에 스킬들을 저장 후에 어떤식으로 스킬을 뽑아서 쓸건지 사용자 입력에 따라 정해주어야 함
+             * PlayerManager (사용자 관리자)는 캐릭터의 스킬 리스트 정보를 받아온다.
+             * 사용자가 어떤 입력을 할때 스킬을 쓸건지 정의하는 것에 따라 스킬을 쓸 수 있게한다. 
+             * 캐릭터는 스킬을 발동하는 트리거만 구현하고 입력은 사용자 관리자에서 구현한다. 0번째 Index :  
+            */
 
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
@@ -53,6 +61,35 @@ namespace OBJECT
 
             AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
             AddAfterResetCoroutine("AddStamina",   AddStamina());
+            StartCoroutine(RandomSkillPush());
+        }
+        private IEnumerator RandomSkillPush()
+        {
+            while (true)
+            {
+                yield return YieldCache.WaitForSeconds(Random.Range(2.0f, 4.0f));
+
+                if (_skillList.Count >= 3) continue;
+
+                int randomSkill = Random.Range(0, 1);
+
+                switch (randomSkill)
+                {
+                    case 0:
+                        _skillList.Add("Dog");
+                        break;
+                }
+            }
+        }
+        public void FromIndexToSkillAction(int index)
+        {
+            if (index < 0 || index >= 3 || _skillList.Count == 0) return;
+
+            string skillName = _skillList[index];
+
+            StartCoroutineTrigger(skillName, skillName);
+
+            _skillList.RemoveAt(index);
         }
         private IEnumerator SetActionTrigger(string key)
         {
@@ -121,6 +158,7 @@ namespace OBJECT
         {
             AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
             AddAfterResetCoroutine("AddStamina",   AddStamina());
+            StartCoroutine(RandomSkillPush());
 
             _playerState.SetState(new RunState());
 
@@ -188,6 +226,12 @@ namespace OBJECT
         public void SetFireDirection(Vector2 fireDirection) { _fireDirection = fireDirection; }
         public int GetStamina() { return _stamina; }
         public int GetMaxStamina() { return _maxStamina; }
+        public string GetFromIndexToSkillListValue(int index)
+        {
+            if (_skillList.Count <= 0 || index >= _skillList.Count || index < 0) return "";
+
+            return _skillList[index];
+        }
     }
     public partial class PlayerController : LivingObject
     {

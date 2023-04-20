@@ -121,7 +121,7 @@ namespace OBJECT
             _direction = (randPoint - _physics.position).normalized;
 
             if (Default.GetDistance(randPoint, _physics.position) > 1.0f)
-                return; // 목표 위치로 이동이 끝났다면
+                return; // 목표 위치로 이동중이라면 리턴
 
             _direction = Vector2.zero;
             coolTime = Random.Range(0.0f, 3.0f);
@@ -240,6 +240,7 @@ namespace OBJECT
             {
                 t._animator.SetTrigger("Die");
                 t._direction = Vector2.zero;
+                t.ZeroForce();
             }
         }
     }

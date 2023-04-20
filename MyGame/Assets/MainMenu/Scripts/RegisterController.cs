@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
+using System.Text;
+using System.Security.Cryptography;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
@@ -49,6 +51,8 @@ public class RegisterController : MonoBehaviour
             "패스워드 확인을 다시 작성해주십시오."))
             return;
 
+        // ..암호화 & 복호화
+        password = CommonMacro.GetSecurityPassword(password);
         StartCoroutine(RegisterUser(new MemberForm(0, nickName, selectGender), new UserInfo(0, id, password)));
     }
     private IEnumerator RegisterUser(MemberForm memberForm, UserInfo userInfo)
