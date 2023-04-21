@@ -116,6 +116,7 @@
     <Compile Include="Assets\MainGame\Scripts\UI\ButtonBase.cs" />
     <Compile Include="Assets\MainGame\Scripts\Player\PlayerController.cs" />
     <Compile Include="Assets\MainGame\Scripts\BackGround\CreateBackGrounds.cs" />
+    <Compile Include="Assets\MainGame\Scripts\UI\ProgressBar.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets\99. Resource\JMO Assets\Cartoon FX (legacy)\Shaders\CFX3 Multiply Color.shader" />

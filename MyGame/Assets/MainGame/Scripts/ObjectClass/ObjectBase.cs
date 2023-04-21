@@ -89,6 +89,7 @@ namespace OBJECT
 
             _beforeHp = _hp;
             _lookAt = _direction;
+
             CheckDeadToHp();
             Run();
             ObjFixedUpdate();
@@ -309,7 +310,13 @@ namespace OBJECT
         /*
          * TryGetComponent로 불러와지는 것들을 위해 만든 함수.
          */
-        protected void CheckInComponent(bool inCom) { if (!inCom) print("해당 컴포넌트는 존재 하지 않습니다." + this.transform.root.name); }
+        protected void CheckInComponent(bool inCom) 
+        {
+#if UNITY_EDITOR_WIN
+            if (inCom) return;
+            print("해당 컴포넌트는 존재 하지 않습니다." + this.transform.root.name); 
+#endif
+        }
         protected void AddColList(GameObject obj) { _colList.Add(obj); }
         protected void DestroyObj() { Destroy(_physics.gameObject); }
         protected void ClearColList() { _colList.Clear(); }

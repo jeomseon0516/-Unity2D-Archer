@@ -155,7 +155,7 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
     {
         // 스킬이 아직 유저한테 존재하면 사용하지 않음
         SkillData skillData = _inGameUIList[index];
-        if (ReferenceEquals(skillData, null) || !string.IsNullOrEmpty(skillName)) return false;
+        if (ReferenceEquals(skillData, null) || !skillData || !string.IsNullOrEmpty(skillName)) return false;
 
         string uiName = skillData.name;
 

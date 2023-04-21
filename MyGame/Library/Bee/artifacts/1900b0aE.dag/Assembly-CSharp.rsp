@@ -404,6 +404,7 @@
 "Assets/MainGame/Scripts/UI/ExitButton.cs"
 "Assets/MainGame/Scripts/UI/HpBar.cs"
 "Assets/MainGame/Scripts/UI/MainMenu.cs"
+"Assets/MainGame/Scripts/UI/ProgressBar.cs"
 "Assets/MainGame/Scripts/UI/SkillUI.cs"
 "Assets/MainGame/Scripts/UI/StaminaBar.cs"
 "Assets/MainGame/Scripts/UI/StartButton.cs"

@@ -35,14 +35,20 @@ public class SkillData : MonoBehaviour
     protected IEnumerator FadeOutObject()
     {
         TryGetComponent(out CanvasGroup canvasGroup);
+        transform.Find("Image").TryGetComponent(out Image image);
+
+        Color keepColor = image.color;
 
         while (canvasGroup.alpha > float.Epsilon)
         {
-            canvasGroup.alpha -= 0.05f;
+            canvasGroup.alpha -= 5 * Time.fixedDeltaTime;
+            image.color = Color.Lerp(keepColor, Color.yellow, canvasGroup.alpha);
             yield return YieldCache.WaitForFixedUpdate;
         }
 
         canvasGroup.alpha = 1.0f;
+        image.color = keepColor;
+
         _uiRect.SetParent(_skillList, false);
         gameObject.SetActive(false);
     }

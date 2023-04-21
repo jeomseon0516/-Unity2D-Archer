@@ -38,6 +38,7 @@ namespace OBJECT
         private GameObject _dogSkill;
         private Vector2 _spawnPoint;
         private Vector2 _fireDirection;
+        private float _defaultSpeed;
         private float _attackSpeed;
         private int _stamina, _maxStamina;
         private int _jumpCount;
@@ -55,17 +56,11 @@ namespace OBJECT
             _stamina = _maxStamina = 30;
             _maxHp = _hp = 500;
             _attackSpeed = 4;
-            _speed = 5.0f;
+            _defaultSpeed = _speed = 5.0f;
             _atk = 2;
 
             for (int i = 0; i < 3; ++i)
                 _skillList[i] = "";
-            /*
-             * Index에 스킬들을 저장 후에 어떤식으로 스킬을 뽑아서 쓸건지 사용자 입력에 따라 정해주어야 함
-             * PlayerManager (사용자 관리자)는 캐릭터의 스킬 리스트 정보를 받아온다.
-             * 사용자가 어떤 입력을 할때 스킬을 쓸건지 정의하는 것에 따라 스킬을 쓸 수 있게한다. 
-             * 캐릭터는 스킬을 발동하는 트리거만 구현하고 입력은 사용자 관리자에서 구현한다. 0번째 Index :  
-            */
 
             _playerState = new StateMachine<PlayerController>();
             _playerState.SetState(new RunState());
@@ -225,13 +220,11 @@ namespace OBJECT
         {
             string skillValue = _skillList[index];
 
-            if (skillValue.Contains(skillName))
-            {
-                skillValue = "";
-                _skillList[index] = skillValue;
-
+            if (!skillValue.Contains(skillName))
                 return;
-            }
+
+            skillValue = "";
+            _skillList[index] = skillValue;
         }
         private void CreateGroundSmoke()
         {
@@ -286,7 +279,6 @@ namespace OBJECT
             DIE
         }
 
-        private PLR_STATE _plrState;
         /* 해당 함수는 하이어라키에서 애니메이션 이벤트로 호출되는 함수 입니다. 스크립트 내에서 상태 전환이 필요한 경우 new 키워드를 사용해 초기화 합니다. */
         private void SetState(PLR_STATE state)
         {
@@ -314,11 +306,6 @@ namespace OBJECT
         // Run과 Idle은 결론적으로 같은 동작을 수행하므로 따로 처리하지 않는다.
         public sealed class RunState : State<PlayerController>
         {
-            public override void Enter(PlayerController t)
-            {
-                base.Enter(t);
-                t._plrState = PLR_STATE.RUN;
-            }
             public override void Update(PlayerController t)
             { 
                 if (t.OnStartJump() || t.PlayDash()) return;
@@ -340,7 +327,6 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
-                t._plrState = PLR_STATE.HIT;
                 t._animator.SetTrigger("Hit");
             }
             public override void Update(PlayerController t) { if (t.PlayDash()) return; }
@@ -352,8 +338,6 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
-
-                t._plrState = PLR_STATE.JUMP;
 
                 _jump = 8.0f;
 
@@ -384,7 +368,6 @@ namespace OBJECT
                  t._jump = t._jump * 0.5f;
                  _onSpace = false;
             }
-            public JumpState() {}
         }
         public sealed class DoubleJumpState : State<PlayerController>
         {
@@ -392,8 +375,6 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
-
-                t._plrState = PLR_STATE.DOUBLEJUMP;
 
                 _saveDirection = t.GetFromAngleAndSpeedToDirection();
 
@@ -410,22 +391,16 @@ namespace OBJECT
                 if (t._body.localPosition.y < float.Epsilon)
                     t._playerState.SetState(new RunState());
             }
-            public override void Exit(PlayerController t) { t._speed = 5.0f; }
-
-            public DoubleJumpState() {}
+            public override void Exit(PlayerController t) { t._speed = t._defaultSpeed; }
         }
         public sealed class DashState : State<PlayerController>
         {
             Vector2 _saveDirection;
-            float _keepSpeed;
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
 
-                t._plrState = PLR_STATE.DASH;
-
                 _saveDirection = t.GetFromAngleAndSpeedToDirection();
-                _keepSpeed = t._speed;
 
                 t._stamina -= 10;
 
@@ -433,15 +408,14 @@ namespace OBJECT
                     t._stamina = 0;
 
                 t._animator.SetTrigger("Dash");
-                t._speed *= 3;
+                t._speed = t._defaultSpeed * 3;
                 t._jump = 0.0f;
 
                 t.CreateGroundSmoke();
                 t.FindCoroutineStop("Jump");
             }
             public override void Update(PlayerController t) { t._lookAt = t._direction = _saveDirection; }
-            public override void Exit(PlayerController t) { t._speed = _keepSpeed; }
-            public DashState() {}
+            public override void Exit(PlayerController t) { t._speed = t._defaultSpeed; }
         }
         public sealed class AttackState : State<PlayerController>
         {
@@ -449,8 +423,6 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
-
-                t._plrState = PLR_STATE.ATTACK;
 
                 t._animator.speed = t._attackSpeed;
                 t._speed = 3.5f;
@@ -477,29 +449,29 @@ namespace OBJECT
             {
                 t._animator.speed = 1;
                 t._lookAt = _saveLookAt;
-                t._speed = 5.0f;
+                t._speed = t._defaultSpeed;
             }
             public AttackState() { _saveLookAt = Vector2.zero; }
             public AttackState(Vector2 dir) { _saveLookAt = dir; }
         }
         public sealed class DogAttackState : State<PlayerController>
         {
+            Vector2 _saveLookAt;
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
 
-                t._plrState = PLR_STATE.DOGATTACK;
+                _saveLookAt = t.GetFromAngleToDirection();
 
-                t.CreateBullet(t._dogSkill, t._rigidbody.position, t.GetFromAngleToDirection() * 0.25f);
-                t._speed *= 0.5f;
+                t.CreateBullet(t._dogSkill, t._rigidbody.position, _saveLookAt * 0.25f);
+                t._speed = t._defaultSpeed * 0.5f;
             }
             public override void Update(PlayerController t) 
             {
-                t._lookAt = Vector2.zero;
                 if (t.OnStartJump() || t.PlayDash()) return; 
+                t._lookAt = _saveLookAt;
             }
             public override void Exit(PlayerController t) { t._speed = 5.0f; }
-            public DogAttackState() {}
         }
         public sealed class DieState : State<PlayerController>
         {
@@ -507,16 +479,12 @@ namespace OBJECT
             {
                 base.Enter(t);
 
-                t._plrState = PLR_STATE.DIE;
-
                 t._animator.SetTrigger("Die");
                 t._direction = Vector2.zero;
 
                 t.StartCoroutine(t.Respawn());
             }
             public override void Update(PlayerController t) { t._direction = Vector2.zero; }
-            public DieState() { }
         }
-        public PLR_STATE GetPlrState() { return _plrState; }
     }
 }
