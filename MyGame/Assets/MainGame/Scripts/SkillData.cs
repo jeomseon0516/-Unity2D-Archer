@@ -13,12 +13,11 @@ public class SkillData : MonoBehaviour
     {
         _skillList = GameObject.Find("SkillList").transform;
 
+        transform.SetParent(_skillList, false);
         gameObject.SetActive(false);
-        transform.SetParent(_skillList);
     }
     private IEnumerator ReadyCoroutine()
     {
-        gameObject.SetActive(true);
         _uiRect.localPosition = new Vector2(100.0f, 0.0f);
 
         for (float i = _uiRect.localPosition.x; i >= 0; i -= GetXMovement())
@@ -44,7 +43,7 @@ public class SkillData : MonoBehaviour
         }
 
         canvasGroup.alpha = 1.0f;
-        transform.parent = _skillList;
+        _uiRect.SetParent(_skillList, false);
         gameObject.SetActive(false);
     }
     public void Use()
@@ -62,5 +61,5 @@ public class SkillData : MonoBehaviour
         _uiPrefab.TryGetComponent(out _uiRect);
         name = _uiPrefab.name;
     }
-    public void SetUIParent(Transform parent) { _uiPrefab.transform.SetParent(parent); }
+    public void SetUIParent(Transform parent) { _uiPrefab.transform.SetParent(parent, false); }
 }

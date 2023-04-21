@@ -15,6 +15,24 @@ namespace OBJECT
     */
     public partial class PlayerController : LivingObject
     {
+        // skillRountine..
+        /*
+            Player -> 랜덤으로 배열에 스킬 생성 0 = Q, 1 = E, 2 = R에 대응(0번 인덱스부터 순서대로 채워짐) -> 
+            PlayerManager -> 플레이어가 배열에 스킬을 가지고 있는지 체크(어떤 스킬 인지까지) ->
+            PlayerManager -> 스킬이 있다면 미리 캐싱해둔 스킬UI 큐에서 화면 상에 보이는 InGameSkillUI리스트에 push
+            PlayerManager -> Q를 누르면 플레이어 스킬 트리거 인자 값에 0을 전달 (E : 1, R : 2) ->
+            Player -> Trigger 발동 다음 프레임에 Trigger해제 -> 
+            Trigger -> 상태를 다루는 클래스에서 Trigger 체크 -> 
+            만약 Trigger가 true이고 현재 플레이어가 배열안에 스킬을 보유중인가? true : 스킬 발동, false : 그냥 return ->
+            PlayerManager -> Player가 스킬을 사용했는지 체크 사용했다면 해당 스킬칸에 대응하는 UI에 스킬을 사용했다고 전달
+            UI -> FadeOut후 active = false ->
+            ...반복
+            
+            해당 방식은 번거롭지만 객체지향의 규칙을 지키기위한 설계
+            자동차와 자동차의 운전자를 따로 나눈 방식
+            사용자는 플레이어를 운전하며 조작하고 관찰하면서 관찰한 정보를 필요한 이들에게 전달하는 매니저 클래스
+         */
+
         private StateMachine<PlayerController> _playerState;
         private GameObject _groudSmoke;
         private GameObject _dogSkill;
@@ -27,6 +45,7 @@ namespace OBJECT
         // 트리거는 매프레임마다 갱신되고 다음프레임까지 트리거에 해당하는 동작이 수행되지 않으면 자동으로 false 전환
         private Dictionary<string, bool> _actionTrigger = new Dictionary<string, bool>();
         private string[] _skillList = new string[4];
+        private int _skillIndex;
 
         protected override void Init()
         {
@@ -95,9 +114,10 @@ namespace OBJECT
             string skillName = _skillList[index];
 
             StartCoroutineTrigger(skillName, skillName);
-
-            _skillList[index] = "";
+            // 해당 인덱스(keyCode를 저장)
+            _skillIndex = index;
         }
+        // 다음 프레임에 스킬의 트리거를 false로 바꿔준다. 상태에 따라서 스킬이 입력 되지 않을 수 있기 때문에
         private IEnumerator SetActionTrigger(string key)
         {
             if (!_actionTrigger.ContainsKey(key)) yield break; // 해당 키 값이 존재하지 않는다면
@@ -197,8 +217,21 @@ namespace OBJECT
         {
             if (!GetActionTrigger("Dog")) return;
 
+            FindFromIndexToSkill("Dog", _skillIndex);
             _animator.SetTrigger("DogSkill");
             _playerState.SetState(new DogAttackState());
+        }
+        private void FindFromIndexToSkill(string skillName, int index)
+        {
+            string skillValue = _skillList[index];
+
+            if (skillValue.Contains(skillName))
+            {
+                skillValue = "";
+                _skillList[index] = skillValue;
+
+                return;
+            }
         }
         private void CreateGroundSmoke()
         {

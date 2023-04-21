@@ -80,15 +80,21 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
 
         SetPlayerActionTrigger(Input.GetKey(KeyCode.Space), "OnJump", "Jump");
         SetPlayerActionTrigger(Input.GetKeyDown(KeyCode.LeftShift), "Dash", "Dash");
-
-        if (Input.GetKeyDown(KeyCode.Q))
-            _inGamePlayer.FromIndexToSkillAction(0);
+        SetPlayerSkillActionTrigger(Input.GetKeyDown(KeyCode.Q), 0);
+        SetPlayerSkillActionTrigger(Input.GetKeyDown(KeyCode.E), 1);
+        SetPlayerSkillActionTrigger(Input.GetKeyDown(KeyCode.R), 2);
     }
     private void SetPlayerActionTrigger(bool condition, string name, string key)
     {
         if (!condition) return;
 
         _inGamePlayer.StartCoroutineTrigger(name, key);
+    }
+    private void SetPlayerSkillActionTrigger(bool condition, int index)
+    {
+        if (!condition) return;
+
+        _inGamePlayer.FromIndexToSkillAction(index);
     }
 }
 
@@ -101,7 +107,7 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
 {
     // SkillData...UIData 
     Queue<SkillData> _dogSkillUIList = new Queue<SkillData>();
-    List<SkillData>  _inGameUIList   = new List<SkillData>();
+    SkillData[] _inGameUIList = new SkillData[4];
     List<UI> _skillButtonList = new List<UI>();
 
     private void SkillInit()
@@ -113,6 +119,8 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
 
             dogSkill.SetUIPrefab(dogSkillUi);
             _dogSkillUIList.Enqueue(dogSkill);
+
+            _inGameUIList[i] = null;
         }
     }
     private void SkillStart()
@@ -128,10 +136,7 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
             string skillName = _inGamePlayer.GetFromIndexToSkillListValue(i);
 
             if (CheckUseSkill(i, skillName))
-            {
-                --i;
                 continue;
-            }
 
             if (string.IsNullOrEmpty(skillName))
                 continue;
@@ -149,26 +154,28 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
     private bool CheckUseSkill(int index, string skillName)
     {
         // 스킬이 아직 유저한테 존재하면 사용하지 않음
-        if (_inGameUIList.Count <= index || !string.IsNullOrEmpty(skillName)) return false;
+        SkillData skillData = _inGameUIList[index];
+        if (ReferenceEquals(skillData, null) || !string.IsNullOrEmpty(skillName)) return false;
 
-        string uiName = _inGameUIList[index].name;
+        string uiName = skillData.name;
 
         if (uiName.Contains("Dog"))
-            _dogSkillUIList.Enqueue(_inGameUIList[index]);
+            _dogSkillUIList.Enqueue(skillData);
 
-        _inGameUIList[index].Use();
-        _inGameUIList.RemoveAt(index);
+        skillData.Use();
+        _inGameUIList[index] = null;
+
         return true;
     }
     private void PushInGameSkillUI(Queue<SkillData> skillQueue, int index)
     {
-        if (_inGameUIList.Count != index) return;
+        if (!ReferenceEquals(_inGameUIList[index], null)) return;
 
         SkillData dogSkill = skillQueue.Dequeue();
         dogSkill.Ready();
         dogSkill.SetUIParent(_skillButtonList[index].transform);
 
-        _inGameUIList.Add(dogSkill);
+        _inGameUIList[index] = dogSkill;
         // 이미 생성했다면
     }
 }
