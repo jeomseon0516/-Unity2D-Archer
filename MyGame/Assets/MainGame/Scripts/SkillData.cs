@@ -54,6 +54,8 @@ public class SkillData : MonoBehaviour
     }
     public void Use()
     {
+        if (!gameObject.activeSelf) return;
+
         StartCoroutine(FadeOutObject());
     }
     public void Ready() 

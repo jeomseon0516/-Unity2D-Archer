@@ -21,5 +21,9 @@ public partial class HpBar : ProgressBar, IHpSubscriber
 public partial class HpBar : ProgressBar, IHpSubscriber
 {
     public void OnUpdateHp(int hp) { _value = hp; }
-    public void OnUpdateMaxHp(int maxHp) { _slider.maxValue = maxHp; }
+    public void OnUpdateMaxHp(int maxHp) 
+    { 
+        _slider.maxValue = maxHp;
+        _slider.value = maxHp; 
+    }
 }

@@ -4,6 +4,12 @@ using UnityEngine;
 
 namespace OBJECT
 {
+    enum CREATE_BULLET_PATTERN
+    {
+        CONTINUOUS,
+        RADIAL_FORM
+    }
+
     public class DefaultBullet : BulletBase
     {
         private GameObject _smoke;
@@ -63,5 +69,23 @@ namespace OBJECT
         private void CreateEffect(Vector2 pos, GameObject effect) { if (_makeSmoke) Instantiate(effect).transform.position = pos; }
         private void ActionCamera(GameObject camera) { camera.AddComponent<VibratingCamera>(); } // 카메라 매니저를 만들어주는게 좋지않을까?
         public void SetAtk(int atk) { _atk = atk; }
+        public static void CreateRadialForm(GameObject bulletObj, Vector2 direction, Vector2 createPosition, int count)
+        {
+            float angle = 60 / count; // 45도는 방사할 최대 각도
+            float limitingAngle = 60 * 0.5f;
+            Vector2 tempPosition = createPosition + direction;
+            float squareRadian = Default.GetFromPositionToRadian(tempPosition, createPosition);
+
+            for (float i = -limitingAngle; i < limitingAngle; i += angle)
+            {
+                Transform bulletTransform = Object.Instantiate(bulletObj).transform;
+
+                float radian = Default.ConvertFromAngleToRadian(i);
+
+                bulletTransform.Find("Body").Find("Image").TryGetComponent(out DefaultBullet bullet);
+                bulletTransform.position = createPosition;
+                bullet.SetDirection(new Vector2(Mathf.Cos(squareRadian + radian), Mathf.Sin(squareRadian + radian)) + direction);
+            }
+        }
     }
 }

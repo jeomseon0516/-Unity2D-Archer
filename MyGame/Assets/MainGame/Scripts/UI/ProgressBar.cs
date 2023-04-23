@@ -7,12 +7,11 @@ public class ProgressBar : UI
 {
     protected Slider _slider;
     protected float _value; // 목표값
-    protected float _average;
 
     private void Update()
     {
-        _average = (_slider.maxValue - _value) * 90 * 0.01f * Time.deltaTime;
-        _slider.value = _value;
+        float average = (_slider.value - _value) * 90 * 0.01f * Time.deltaTime * 8;
+        _slider.value -= average;
     }
 
     protected override void Init() {}

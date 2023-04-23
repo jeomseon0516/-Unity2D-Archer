@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System;
 using UnityEngine;
 using OBJECT;
 using PUB_SUB;
@@ -98,15 +99,13 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
     }
 }
 
-// ..Skill..
-// ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.UI, "DogUI");
-// Object.Instantiate(skillData).TryGetComponent(out this.skillData)
-
-
 public partial class PlayerManager : SingletonTemplate<PlayerManager>
 {
     // SkillData...UIData 
     Queue<SkillData> _dogSkillUIList = new Queue<SkillData>();
+    Queue<SkillData> _continuousSkillUIList = new Queue<SkillData>();
+    Queue<SkillData> _radialFormSkillUIList = new Queue<SkillData>();
+
     SkillData[] _inGameUIList = new SkillData[4];
     List<UI> _skillButtonList = new List<UI>();
 
@@ -114,14 +113,30 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
     {
         for (int i = 0; i < 3; ++i)
         {
-            GameObject dogSkillUi = Instantiate(ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.UI, "DogUI"));
-            SkillData dogSkill = dogSkillUi.AddComponent<SkillData>();
-
-            dogSkill.SetUIPrefab(dogSkillUi);
-            _dogSkillUIList.Enqueue(dogSkill);
+            PushInSkillUIList(ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.UI, "DogUI"), "Dog");
+            PushInSkillUIList(ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.UI, "ContinuousUI"), "Continuous");
+            PushInSkillUIList(ResourcesManager.GetInstance().GetObjectToKey(OBJECTID.UI, "RadialFormUI"), "RadialForm");
 
             _inGameUIList[i] = null;
         }
+    }
+    private void PushInSkillUIList(GameObject ui, string skillName)
+    {
+        ui = Instantiate(ui);
+        SkillData skillData = ui.AddComponent<SkillData>();
+
+        skillData.SetUIPrefab(ui);
+
+        PushFromSkillName(skillName, skillData);
+    }
+    private void PushFromSkillName(string skillName, SkillData skillData)
+    {
+        if (skillName.Contains("Dog"))
+            _dogSkillUIList.Enqueue(skillData);
+        else if (skillName.Contains("Continuous"))
+            _continuousSkillUIList.Enqueue(skillData);
+        else if (skillName.Contains("RadialForm"))
+            _radialFormSkillUIList.Enqueue(skillData);
     }
     private void SkillStart()
     {
@@ -147,6 +162,12 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
                 case "Dog":
                     PushInGameSkillUI(_dogSkillUIList, i);
                     break;
+                case "RadialForm":
+                    PushInGameSkillUI(_radialFormSkillUIList, i);
+                    break;
+                case "Continuous":
+                    PushInGameSkillUI(_continuousSkillUIList, i);
+                    break;
             }
         }
     }
@@ -159,8 +180,7 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
 
         string uiName = skillData.name;
 
-        if (uiName.Contains("Dog"))
-            _dogSkillUIList.Enqueue(skillData);
+        PushFromSkillName(uiName, skillData);
 
         skillData.Use();
         _inGameUIList[index] = null;
@@ -176,7 +196,6 @@ public partial class PlayerManager : SingletonTemplate<PlayerManager>
         dogSkill.SetUIParent(_skillButtonList[index].transform);
 
         _inGameUIList[index] = dogSkill;
-        // 이미 생성했다면
     }
 }
 public class PlayerPublisher

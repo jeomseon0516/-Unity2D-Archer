@@ -20,5 +20,9 @@ public partial class StaminaBar : ProgressBar, IStaminaSubscriber
 public partial class StaminaBar : ProgressBar, IStaminaSubscriber
 {
     public void OnUpdateStamina(int stamina) { _value = stamina; }
-    public void OnUpdateMaxStamina(int maxStamina) { _slider.maxValue = maxStamina; }
+    public void OnUpdateMaxStamina(int maxStamina) 
+    {
+        _slider.maxValue = maxStamina;
+        _slider.value = maxStamina;
+    }
 }
