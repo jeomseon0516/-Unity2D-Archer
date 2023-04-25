@@ -66,21 +66,22 @@ namespace OBJECT
             _playerState.SetState(new RunState());
 
             _gronudSmoke = ResourcesManager.GetInstance().GetObjectToKey(_id, "GroundSmoke");
-            _dogSkill    = ResourcesManager.GetInstance().GetObjectToKey(_id,  "DogSkill");
+            _dogSkill = ResourcesManager.GetInstance().GetObjectToKey(_id, "DogSkill");
 
             _spawnPoint = _physics.position;
             _jumpCount = 0;
 
             _actionTrigger.Add("Jump", false);
             _actionTrigger.Add("Dash", false);
-            _actionTrigger.Add("Dog",  false);
+            _actionTrigger.Add("Dog", false);
             _actionTrigger.Add("Continuous", false);
             _actionTrigger.Add("RadialForm", false);
 
             _onRadialForm = false;
 
             AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
-            AddAfterResetCoroutine("AddStamina",   AddStamina());
+            AddAfterResetCoroutine("AddStamina", AddStamina());
+
             StartCoroutine(RandomSkillPush());
         }
         private IEnumerator RandomSkillPush()
@@ -131,10 +132,6 @@ namespace OBJECT
             yield return YieldCache.WaitForFixedUpdate;
             _actionTrigger[key] = false;
         }
-        public void StartCoroutineTrigger(string name, string key)
-        {
-            AddAfterResetCoroutine(name, SetActionTrigger(key));
-        }
         private bool GetActionTrigger(string key)
         {
             if (!_actionTrigger.TryGetValue(key, out bool trigger)) return false;
@@ -158,9 +155,7 @@ namespace OBJECT
                 _onRadialForm = false;
             }
             else
-            {
                 CreateBullet(_bullet, _rigidbody.position, _lookAt.normalized + _direction * 0.25f);
-            }
         }
         private IEnumerator Respawn()
         {
@@ -179,7 +174,7 @@ namespace OBJECT
                 yield return YieldCache.WaitForSeconds(0.5f);
             }
         }
-        protected override void ObjFixedUpdate() 
+        protected override void ObjFixedUpdate()
         {
             if (_isDie)
                 _lookAt = _direction = Vector2.zero;
@@ -197,7 +192,7 @@ namespace OBJECT
         public void ResetPlayer()
         {
             AddAfterResetCoroutine("CheckFalling", CheckFallingOrJumping());
-            AddAfterResetCoroutine("AddStamina",   AddStamina());
+            AddAfterResetCoroutine("AddStamina", AddStamina());
             StartCoroutine(RandomSkillPush());
 
             _playerState.SetState(new RunState());
@@ -219,7 +214,7 @@ namespace OBJECT
             if (Mathf.Abs(horizontal) < float.Epsilon && Mathf.Abs(vertical) < float.Epsilon) return;
 
             SetFromDirectionLookAt(horizontal, vertical);
-            _playerState.SetState(new AttackState(_lookAt));
+            _playerState.SetState(new AttackState());
         }
         private void SetFromDirectionLookAt(float horizontal, float vertical)
         {
@@ -273,34 +268,23 @@ namespace OBJECT
             Vector2 position = new Vector2(_body.position.x, _body.position.y - _offsetY);
             groundSmoke.position = position + new Vector2(0.5f * xDir, 0.0f);
         }
-        private Vector2 GetFromAngleAndSpeedToDirection()
-        {
-            return CheckMovePlayer() ? _direction.normalized : GetFromAngleToDirection();
-        }
-        private bool CheckMovePlayer()
-        {
-            return Mathf.Abs(_direction.x) > float.Epsilon || Mathf.Abs(_direction.y) > float.Epsilon;
-        }
-        private Vector2 GetFromAngleToDirection()
-        {
-            return _physics.rotation.eulerAngles.y == 180.0f ? Vector2.left : Vector2.right;
-        }
         private void CheckSkillsAfterAction()
         {
             OnSkill("Dog");
             OnSkill("Continuous");
             OnSkill("RadialForm");
         }
+        private Vector2 GetFromAngleAndSpeedToDirection() { return CheckMovePlayer() ? _direction.normalized : GetFromAngleToDirection(); }
+        private Vector2 GetFromAngleToDirection() { return _physics.rotation.eulerAngles.y == 180.0f ? Vector2.left : Vector2.right; }
+        private bool CheckMovePlayer() { return Mathf.Abs(_direction.x) > float.Epsilon || Mathf.Abs(_direction.y) > float.Epsilon; }
         protected override void GetDamageAction(int damage) { _playerState.SetState(new HitState()); }
         protected override void Die() { _playerState.SetState(new DieState()); }
-        public void SetDirection(Vector2 direction) { _direction = direction; }
+        public string GetFromIndexToSkillListValue(int index) { return string.IsNullOrEmpty(_skillList[index]) || index < 0 ? "" : _skillList[index]; }
+        public void StartCoroutineTrigger(string name, string key) { AddAfterResetCoroutine(name, SetActionTrigger(key)); }
         public void SetFireDirection(Vector2 fireDirection) { _fireDirection = fireDirection; }
+        public void SetDirection(Vector2 direction) { _direction = direction; }
         public int GetStamina() { return _stamina; }
         public int GetMaxStamina() { return _maxStamina; }
-        public string GetFromIndexToSkillListValue(int index)
-        {
-            return string.IsNullOrEmpty(_skillList[index]) || index < 0 ? "" : _skillList[index];
-        }
     }
     public partial class PlayerController : LivingObject
     {
@@ -346,7 +330,7 @@ namespace OBJECT
         public sealed class RunState : State<PlayerController>
         {
             public override void Update(PlayerController t)
-            { 
+            {
                 if (t.OnStartJump() || t.PlayDash()) return;
 
                 float speed = t.GetFromDirectionToSpeed(t._direction);
@@ -404,8 +388,8 @@ namespace OBJECT
             {
                 if (t.GetActionTrigger("Jump") || !_onSpace || t._jumpValue < float.Epsilon) return;
 
-                 t._jump = t._jump * 0.5f;
-                 _onSpace = false;
+                t._jump = t._jump * 0.5f;
+                _onSpace = false;
             }
         }
         public sealed class DoubleJumpState : State<PlayerController>
@@ -468,16 +452,13 @@ namespace OBJECT
                 t._animator.speed = t._attackSpeed;
                 t._speed = 3.5f;
 
-                if (_saveLookAt == Vector2.zero)
-                {
-                    float x = t._fireDirection.x;
-                    float y = t._fireDirection.y;
+                float x = t._fireDirection.x;
+                float y = t._fireDirection.y;
 
-                    Vector2 dir = new Vector2(x, y);
-                    _saveLookAt = dir != Vector2.zero ? dir : new Vector2(x != 0 ? x : t._lookAt.x, y != 0 ? y : t._lookAt.y);
-                }
+                Vector2 dir = new Vector2(x, y);
+                Vector2 angleToDir = t.GetFromAngleToDirection();
 
-                t._lookAt = _saveLookAt;
+                t._lookAt = _saveLookAt = dir != Vector2.zero ? dir : new Vector2(x != 0 ? x : angleToDir.x, y != 0 ? y : angleToDir.y);
             }
             public override void Update(PlayerController t)
             {
@@ -489,12 +470,11 @@ namespace OBJECT
             public override void Exit(PlayerController t)
             {
                 t._animator.speed = 1;
-                t._lookAt = _saveLookAt;
                 t._speed = t._defaultSpeed;
+
+                UpdateLookAt(t);
             }
-            protected void UpdateLookAt(PlayerController t) {  t._lookAt = t._fireDirection != Vector2.zero ? _saveLookAt = t._fireDirection : _saveLookAt; }
-            public AttackState() { _saveLookAt = Vector2.zero; }
-            public AttackState(Vector2 dir) { _saveLookAt = dir; }
+            protected void UpdateLookAt(PlayerController t) { t._lookAt = t._fireDirection != Vector2.zero ? _saveLookAt = t._fireDirection : _saveLookAt; }
         }
         public sealed class ContinuousAttackState : State<PlayerController>
         {
@@ -511,11 +491,13 @@ namespace OBJECT
                 t._speed = 3.5f;
                 _count = 5;
 
-                _saveLookAt = t._fireDirection != Vector2.zero ? t._fireDirection : t.GetFromAngleToDirection();
+                t._lookAt = _saveLookAt = t._fireDirection != Vector2.zero ? t._fireDirection : t.GetFromAngleToDirection();
             }
             public override void Update(PlayerController t) { t._lookAt = _saveLookAt; }
             public override void Exit(PlayerController t)
             {
+                t._lookAt = _saveLookAt = t._fireDirection != Vector2.zero ? t._fireDirection : t.GetFromAngleToDirection();
+
                 if (--_count > 0)
                 {
                     t._animator.SetTrigger("Attack");
@@ -534,19 +516,17 @@ namespace OBJECT
             public override void Enter(PlayerController t)
             {
                 base.Enter(t);
-                _saveLookAt = t._fireDirection == Vector2.zero ? t.GetFromAngleToDirection() : t._fireDirection;
+                t._lookAt = _saveLookAt = t._fireDirection == Vector2.zero ? t.GetFromAngleToDirection() : t._fireDirection;
             }
             public override void Update(PlayerController t) { UpdateLookAt(t); }
             public override void Exit(PlayerController t)
             {
+                UpdateLookAt(t);
+
                 if (t._onRadialForm)
-                {
                     t._playerState.SetState(this);
-                }
                 else
-                {
                     base.Exit(t);
-                }
             }
         }
         public sealed class DogAttackState : State<PlayerController>
@@ -562,9 +542,9 @@ namespace OBJECT
                 t.CreateBullet(t._dogSkill, t._rigidbody.position, _saveLookAt * 0.25f);
                 t._speed = t._defaultSpeed * 0.5f;
             }
-            public override void Update(PlayerController t) 
+            public override void Update(PlayerController t)
             {
-                if (t.OnStartJump() || t.PlayDash()) return; 
+                if (t.OnStartJump() || t.PlayDash()) return;
                 t._lookAt = _saveLookAt;
             }
             public override void Exit(PlayerController t) { t._speed = 5.0f; }
