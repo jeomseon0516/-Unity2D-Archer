@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ProgressScene.unity
     guid: b9c4353ef4fc72c4cb4150175755a841
+  - enabled: 1
+    path: Assets/Scenes/Light.unity
+    guid: 8d8c66d791330af46bbc58acde09661a
   m_configObjects: {}
