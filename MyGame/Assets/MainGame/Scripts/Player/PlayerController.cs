@@ -54,7 +54,7 @@ namespace OBJECT
             base.Init();
 
             _stamina = _maxStamina = 30;
-            _maxHp = _hp = 500;
+            _maxHp = _hp = 80;
             _attackSpeed = 4;
             _defaultSpeed = _speed = 5.0f;
             _atk = 2;
@@ -84,6 +84,7 @@ namespace OBJECT
 
             StartCoroutine(RandomSkillPush());
         }
+
         private IEnumerator RandomSkillPush()
         {
             while (true)
@@ -110,9 +111,9 @@ namespace OBJECT
                     }
                     break;
                 }
-
             }
         }
+
         public void FromIndexToSkillAction(int index)
         {
             if (index < 0 || index >= 3 || string.IsNullOrEmpty(_skillList[index])) return;

@@ -26,7 +26,7 @@ namespace OBJECT
             _attackDis = 0.65f;
             _attackYDis = 0.25f;
 
-            _hp = _maxHp = 500;
+            _hp = _maxHp = 250;
 
             _jumpCoolTime = 12.5f;
             _chaseCoolTime = 8.0f;
